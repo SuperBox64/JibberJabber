@@ -282,6 +282,7 @@ You can create standalone executables from transpiled code. Here's the size comp
 |--------|------|------|
 | C | ~33KB | gcc/clang |
 | ARM64 Assembly | ~49KB | as + ld |
+| Swift | ~100KB | swiftc |
 | JavaScript | ~722KB | QuickJS |
 | Python | ~3.4MB | PyInstaller |
 
@@ -302,6 +303,14 @@ swift run jjswift transpile ../examples/fibonacci.jj asm > fib.s
 as -o fib.o fib.s
 ld -o fib_asm fib.o -lSystem -syslibroot $(xcrun -sdk macosx --show-sdk-path) -e _main -arch arm64
 ./fib_asm
+```
+
+### Swift Binaries
+```bash
+# Transpile and compile
+swift run jjswift transpile ../examples/fibonacci.jj swift > fib.swift
+swiftc -O -o fib_swift fib.swift
+./fib_swift
 ```
 
 ### JavaScript Binaries (QuickJS)
