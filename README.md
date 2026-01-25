@@ -384,7 +384,7 @@ JJ Source Code
 ## Contributing
 
 This is an experimental language - contributions welcome! Areas of interest:
-- Additional transpiler targets (Rust, Go, Java)
+- Additional transpiler targets (Swift, Go, Rust, C++, AppleScript)
 - Language features (arrays, objects, imports)
 - Optimization passes
 - IDE/editor syntax highlighting
