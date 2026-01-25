@@ -345,6 +345,8 @@ This ensures both Swift and Python implementations produce identical output.
 
 ### The Pipeline
 
+<div align="center">
+
 ```mermaid
 flowchart TD
     A[📄 JJ Source Code<br><code>~>frob❴7a3❵::emit❨#42❩</code>] --> B
@@ -379,6 +381,8 @@ flowchart TD
     style F fill:#00ff88,stroke:#00ff88,color:#000
     style H fill:#ff6b6b,stroke:#ff6b6b,color:#000
 ```
+
+</div>
 
 ### Pipeline Step-by-Step
 
