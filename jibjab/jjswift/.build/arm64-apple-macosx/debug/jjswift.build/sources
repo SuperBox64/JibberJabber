@@ -1,0 +1,10 @@
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/AST.swift
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Interpreter.swift
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Lexer.swift
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Parser.swift
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Token.swift
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/AssemblyTranspiler.swift
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/CTranspiler.swift
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/JavaScriptTranspiler.swift
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/PythonTranspiler.swift
+/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/main.swift

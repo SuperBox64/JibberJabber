@@ -1,0 +1,75 @@
+{
+  "": {
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/master.swiftdeps"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/AST.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AST.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AST.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AST~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AST.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AST.dia"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Interpreter.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Interpreter.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Interpreter.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Interpreter~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Interpreter.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Interpreter.dia"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Lexer.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Lexer.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Lexer.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Lexer~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Lexer.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Lexer.dia"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Parser.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Parser.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Parser.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Parser~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Parser.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Parser.dia"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Token.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Token.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Token.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Token~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Token.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Token.dia"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/AssemblyTranspiler.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AssemblyTranspiler.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AssemblyTranspiler.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AssemblyTranspiler~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AssemblyTranspiler.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AssemblyTranspiler.dia"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/CTranspiler.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/CTranspiler.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/CTranspiler.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/CTranspiler~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/CTranspiler.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/CTranspiler.dia"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/JavaScriptTranspiler.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/JavaScriptTranspiler.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/JavaScriptTranspiler.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/JavaScriptTranspiler~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/JavaScriptTranspiler.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/JavaScriptTranspiler.dia"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/PythonTranspiler.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/PythonTranspiler.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/PythonTranspiler.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/PythonTranspiler~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/PythonTranspiler.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/PythonTranspiler.dia"
+  },
+  "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/main.swift": {
+    "dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/main.d",
+    "object": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/main.swift.o",
+    "swiftmodule": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/main.swiftdeps",
+    "diagnostics": "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/main.dia"
+  }
+}

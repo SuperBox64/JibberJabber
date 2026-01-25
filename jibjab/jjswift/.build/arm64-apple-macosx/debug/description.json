@@ -1,0 +1,434 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.jjswift-arm64-apple-macosx26.0-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/sources",
+      "importPath" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/AST.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Interpreter.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Lexer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Parser.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Token.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/AssemblyTranspiler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/CTranspiler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/JavaScriptTranspiler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/PythonTranspiler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/main.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "jjswift",
+      "moduleOutputPath" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/Modules/jjswift.swiftmodule",
+      "objects" : [
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AST.swift.o",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Interpreter.swift.o",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Lexer.swift.o",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Parser.swift.o",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Token.swift.o",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AssemblyTranspiler.swift.o",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/CTranspiler.swift.o",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/JavaScriptTranspiler.swift.o",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/PythonTranspiler.swift.o",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/main.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx13.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "jjswift_main",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.0.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.0.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "jjswift"
+      ],
+      "outputFileMapPath" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AST.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Interpreter.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Lexer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Parser.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Token.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AssemblyTranspiler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/CTranspiler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/JavaScriptTranspiler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/PythonTranspiler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/main.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/Modules/jjswift.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/AST.swift",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Interpreter.swift",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Lexer.swift",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Parser.swift",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Token.swift",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/AssemblyTranspiler.swift",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/CTranspiler.swift",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/JavaScriptTranspiler.swift",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/PythonTranspiler.swift",
+        "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/main.swift"
+      ],
+      "tempsPath" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "jjswift" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "jjswift",
+      "-package-name",
+      "jjswift",
+      "-c",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/AST.swift",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Interpreter.swift",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Lexer.swift",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Parser.swift",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Token.swift",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/AssemblyTranspiler.swift",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/CTranspiler.swift",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/JavaScriptTranspiler.swift",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/PythonTranspiler.swift",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/main.swift",
+      "-I",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx13.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "jjswift_main",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.0.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.0.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "jjswift",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "jjswift" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift-entitlement.plist" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<entitlement-plist>"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<com.apple.security.get-task-allow>"
+        }
+      ],
+      "outputFilePath" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift-entitlement.plist"
+    },
+    "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/AST.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Interpreter.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Lexer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Parser.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Token.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/AssemblyTranspiler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/CTranspiler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/JavaScriptTranspiler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/JJ/Transpilers/PythonTranspiler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/Sources/jjswift/main.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/sources"
+    },
+    "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AST.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/AssemblyTranspiler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/CTranspiler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Interpreter.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/JavaScriptTranspiler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Lexer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Parser.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/PythonTranspiler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/Token.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.build/main.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/jjswift.product/Objects.LinkFileList"
+    },
+    "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}
