@@ -51,6 +51,13 @@ jibjab/
 │   ├── fibonacci.jj
 │   └── fizzbuzz.jj
 │
+├── output/                  # Pre-built transpiled code and binaries
+│   ├── *.c, *.js, *.py, *.s # Transpiled source files
+│   ├── *_c                  # C binaries (~33KB)
+│   ├── *_asm                # ARM64 Assembly binaries (~49KB)
+│   ├── *_qjs                # QuickJS JavaScript binaries (~722KB)
+│   └── *_py                 # PyInstaller Python binaries (~3.4MB)
+│
 ├── README.md                # This file
 └── SPEC.md                  # Complete language specification
 ```
