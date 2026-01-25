@@ -370,7 +370,7 @@ flowchart TD
     I --> M
     J --> M
     K --> M
-    M --> N[🚀 RUN BIN]
+    M --> N[🚀 LAUNCH BIN]
     N --> O[🖥️ Program Output]
 
     style M fill:#16213e,stroke:#ffa500,color:#fff
