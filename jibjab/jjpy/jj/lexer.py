@@ -1,8 +1,11 @@
 """
 JibJab Lexer - Tokenizes JJ source code
+Uses shared language definition from common/jj.json
 """
 
 import re
+import json
+import os
 from typing import Any, List, Optional
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -10,61 +13,61 @@ from enum import Enum, auto
 
 class TokenType(Enum):
     # Keywords
-    PRINT = auto()      # ~>frob{7a3}
-    INPUT = auto()      # ~>slurp{9f2}
-    LOOP = auto()       # <~loop{...}>>
-    WHEN = auto()       # <~when{...}>>
-    ELSE = auto()       # <~else>>
-    MORPH = auto()      # <~morph{...}>>
-    YEET = auto()       # ~>yeet{...}
-    SNAG = auto()       # ~>snag{...}
-    INVOKE = auto()     # ~>invoke{...}
-    TRY = auto()        # <~try>>
-    OOPS = auto()       # <~oops>>
-    BLOCK_END = auto()  # <~>>
+    PRINT = auto()
+    INPUT = auto()
+    LOOP = auto()
+    WHEN = auto()
+    ELSE = auto()
+    MORPH = auto()
+    YEET = auto()
+    SNAG = auto()
+    INVOKE = auto()
+    TRY = auto()
+    OOPS = auto()
+    BLOCK_END = auto()
 
     # Operators
-    ADD = auto()        # <+>
-    SUB = auto()        # <->
-    MUL = auto()        # <*>
-    DIV = auto()        # </>
-    MOD = auto()        # <%>
-    EQ = auto()         # <=>
-    NEQ = auto()        # <!=>
-    LT = auto()         # <lt>
-    GT = auto()         # <gt>
-    AND = auto()        # <&&>
-    OR = auto()         # <||>
-    NOT = auto()        # <!>
+    ADD = auto()
+    SUB = auto()
+    MUL = auto()
+    DIV = auto()
+    MOD = auto()
+    EQ = auto()
+    NEQ = auto()
+    LT = auto()
+    GT = auto()
+    AND = auto()
+    OR = auto()
+    NOT = auto()
 
     # Literals
-    NUMBER = auto()     # #42 or #3.14
-    STRING = auto()     # "..."
-    ARRAY = auto()      # [...]
-    MAP = auto()        # {...}
-    NIL = auto()        # ~nil
-    TRUE = auto()       # ~yep
-    FALSE = auto()      # ~nope
+    NUMBER = auto()
+    STRING = auto()
+    ARRAY = auto()
+    MAP = auto()
+    NIL = auto()
+    TRUE = auto()
+    FALSE = auto()
 
     # Structure
-    ACTION = auto()     # ::
-    EMIT = auto()       # emit
-    GRAB = auto()       # grab
-    VAL = auto()        # val
-    WITH = auto()       # with
-    RANGE = auto()      # ..
-    COLON = auto()      # :
-    LPAREN = auto()     # (
-    RPAREN = auto()     # )
-    LBRACKET = auto()   # [
-    RBRACKET = auto()   # ]
-    LBRACE = auto()     # {
-    RBRACE = auto()     # }
-    COMMA = auto()      # ,
+    ACTION = auto()
+    EMIT = auto()
+    GRAB = auto()
+    VAL = auto()
+    WITH = auto()
+    RANGE = auto()
+    COLON = auto()
+    LPAREN = auto()
+    RPAREN = auto()
+    LBRACKET = auto()
+    RBRACKET = auto()
+    LBRACE = auto()
+    RBRACE = auto()
+    COMMA = auto()
 
     # Other
     IDENTIFIER = auto()
-    COMMENT = auto()    # @@
+    COMMENT = auto()
     NEWLINE = auto()
     EOF = auto()
 
@@ -75,6 +78,23 @@ class Token:
     value: Any
     line: int
     col: int
+
+
+def load_jj_config():
+    """Load language definition from common/jj.json"""
+    config_paths = [
+        os.path.join(os.path.dirname(__file__), '..', '..', 'common', 'jj.json'),
+        os.path.join(os.path.dirname(__file__), '..', '..', '..', 'common', 'jj.json'),
+    ]
+    for path in config_paths:
+        if os.path.exists(path):
+            with open(path) as f:
+                return json.load(f)
+    raise FileNotFoundError("Could not find common/jj.json")
+
+
+# Load config at module level
+JJ = load_jj_config()
 
 
 class Lexer:
@@ -129,7 +149,7 @@ class Lexer:
             return
 
         # Comments
-        if self.match('@@'):
+        if self.match(JJ['literals']['comment']):
             while self.peek() and self.peek() != '\n':
                 self.advance()
             return
@@ -140,102 +160,109 @@ class Lexer:
             self.add_token(TokenType.NEWLINE)
             return
 
-        # Keywords and special tokens
-        if self.match('~>frob{7a3}'):
+        # Keywords
+        if self.match(JJ['keywords']['print']):
             self.add_token(TokenType.PRINT)
             return
-        if self.match('~>slurp{9f2}'):
+        if self.match(JJ['keywords']['input']):
             self.add_token(TokenType.INPUT)
             return
-        if self.match('~>yeet'):
+        if self.match(JJ['keywords']['yeet']):
             self.add_token(TokenType.YEET)
             return
-        if self.match('~>snag'):
+        if self.match(JJ['keywords']['snag']):
             self.add_token(TokenType.SNAG)
             return
-        if self.match('~>invoke'):
+        if self.match(JJ['keywords']['invoke']):
             self.add_token(TokenType.INVOKE)
             return
-        if self.match('~nil'):
+        if self.match(JJ['keywords']['nil']):
             self.add_token(TokenType.NIL)
             return
-        if self.match('~yep'):
+        if self.match(JJ['keywords']['true']):
             self.add_token(TokenType.TRUE)
             return
-        if self.match('~nope'):
+        if self.match(JJ['keywords']['false']):
             self.add_token(TokenType.FALSE)
             return
 
         # Block structures
-        if m := self.match_regex(r'<~loop\{([^}]*)\}>>'):
-            self.add_token(TokenType.LOOP, m[7:-3])
+        loop_prefix = JJ['blocks']['loop']
+        when_prefix = JJ['blocks']['when']
+        morph_prefix = JJ['blocks']['morph']
+        block_suffix = JJ['blockSuffix']
+
+        if m := self.match_regex(rf'{re.escape(loop_prefix)}([^}}]*){re.escape(block_suffix)}'):
+            content = m[len(loop_prefix):-len(block_suffix)]
+            self.add_token(TokenType.LOOP, content)
             return
-        if m := self.match_regex(r'<~when\{([^}]*)\}>>'):
-            content = m[7:-3]
+        if m := self.match_regex(rf'{re.escape(when_prefix)}([^}}]*){re.escape(block_suffix)}'):
+            content = m[len(when_prefix):-len(block_suffix)]
             self.add_token(TokenType.WHEN, content)
             return
-        if self.match('<~else>>'):
+        if self.match(JJ['blocks']['else']):
             self.add_token(TokenType.ELSE)
             return
-        if m := self.match_regex(r'<~morph\{([^}]*)\}>>'):
-            self.add_token(TokenType.MORPH, m[8:-3])
+        if m := self.match_regex(rf'{re.escape(morph_prefix)}([^}}]*){re.escape(block_suffix)}'):
+            content = m[len(morph_prefix):-len(block_suffix)]
+            self.add_token(TokenType.MORPH, content)
             return
-        if self.match('<~try>>'):
+        if self.match(JJ['blocks']['try']):
             self.add_token(TokenType.TRY)
             return
-        if self.match('<~oops>>'):
+        if self.match(JJ['blocks']['oops']):
             self.add_token(TokenType.OOPS)
             return
-        if self.match('<~>>'):
+        if self.match(JJ['blocks']['end']):
             self.add_token(TokenType.BLOCK_END)
             return
 
         # Operators
-        if self.match('<+>'):
+        if self.match(JJ['operators']['add']):
             self.add_token(TokenType.ADD)
             return
-        if self.match('<->'):
+        if self.match(JJ['operators']['sub']):
             self.add_token(TokenType.SUB)
             return
-        if self.match('<*>'):
+        if self.match(JJ['operators']['mul']):
             self.add_token(TokenType.MUL)
             return
-        if self.match('</>'):
+        if self.match(JJ['operators']['div']):
             self.add_token(TokenType.DIV)
             return
-        if self.match('<%>'):
+        if self.match(JJ['operators']['mod']):
             self.add_token(TokenType.MOD)
             return
-        if self.match('<!=>'):
+        if self.match(JJ['operators']['neq']):
             self.add_token(TokenType.NEQ)
             return
-        if self.match('<=>'):
+        if self.match(JJ['operators']['eq']):
             self.add_token(TokenType.EQ)
             return
-        if self.match('<lt>'):
+        if self.match(JJ['operators']['lt']):
             self.add_token(TokenType.LT)
             return
-        if self.match('<gt>'):
+        if self.match(JJ['operators']['gt']):
             self.add_token(TokenType.GT)
             return
-        if self.match('<&&>'):
+        if self.match(JJ['operators']['and']):
             self.add_token(TokenType.AND)
             return
-        if self.match('<||>'):
+        if self.match(JJ['operators']['or']):
             self.add_token(TokenType.OR)
             return
-        if self.match('<!>'):
+        if self.match(JJ['operators']['not']):
             self.add_token(TokenType.NOT)
             return
 
         # Structure
-        if self.match('::'):
+        if self.match(JJ['structure']['action']):
             self.add_token(TokenType.ACTION)
             return
-        if self.match('..'):
+        if self.match(JJ['structure']['range']):
             self.add_token(TokenType.RANGE)
             return
-        if self.match(':'):
+        if self.match(JJ['structure']['colon']):
             self.add_token(TokenType.COLON)
             return
 
@@ -254,7 +281,7 @@ class Lexer:
             return
 
         # Numbers (with # prefix for JJ syntax)
-        if self.peek() == '#':
+        if self.peek() == JJ['literals']['numberPrefix']:
             self.advance()
             num = self.match_regex(r'-?\d+\.?\d*')
             if num:
@@ -275,10 +302,10 @@ class Lexer:
                 return
 
         # Strings
-        if self.peek() == '"':
+        if self.peek() == JJ['literals']['stringDelim']:
             self.advance()
             value = ''
-            while self.peek() and self.peek() != '"':
+            while self.peek() and self.peek() != JJ['literals']['stringDelim']:
                 if self.peek() == '\\':
                     self.advance()
                     escapes = {'n': '\n', 't': '\t', 'r': '\r', '"': '"', '\\': '\\'}
@@ -290,17 +317,17 @@ class Lexer:
             self.add_token(TokenType.STRING, value)
             return
 
-        # Keywords
-        if self.match('emit'):
+        # Syntax keywords
+        if self.match(JJ['syntax']['emit']):
             self.add_token(TokenType.EMIT)
             return
-        if self.match('grab'):
+        if self.match(JJ['syntax']['grab']):
             self.add_token(TokenType.GRAB)
             return
-        if self.match('val'):
+        if self.match(JJ['syntax']['val']):
             self.add_token(TokenType.VAL)
             return
-        if self.match('with'):
+        if self.match(JJ['syntax']['with']):
             self.add_token(TokenType.WITH)
             return
 

@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "keywords": {
+    "print": "~>frob{7a3}",
+    "input": "~>slurp{9f2}",
+    "yeet": "~>yeet",
+    "snag": "~>snag",
+    "invoke": "~>invoke",
+    "nil": "~nil",
+    "true": "~yep",
+    "false": "~nope"
+  },
+  "blocks": {
+    "loop": "<~loop{",
+    "when": "<~when{",
+    "else": "<~else>>",
+    "morph": "<~morph{",
+    "try": "<~try>>",
+    "oops": "<~oops>>",
+    "end": "<~>>"
+  },
+  "blockSuffix": "}>>",
+  "operators": {
+    "add": "<+>",
+    "sub": "<->",
+    "mul": "<*>",
+    "div": "</>",
+    "mod": "<%>",
+    "eq": "<=>",
+    "neq": "<!=>",
+    "lt": "<lt>",
+    "gt": "<gt>",
+    "and": "<&&>",
+    "or": "<||>",
+    "not": "<!>"
+  },
+  "structure": {
+    "action": "::",
+    "range": "..",
+    "colon": ":"
+  },
+  "syntax": {
+    "emit": "emit",
+    "grab": "grab",
+    "val": "val",
+    "with": "with"
+  },
+  "literals": {
+    "numberPrefix": "#",
+    "stringDelim": "\"",
+    "comment": "@@"
+  }
+}

@@ -1,4 +1,5 @@
 /// JibJab Lexer - Tokenizes JJ source code
+/// Uses shared language definition from common/jj.json via JJConfig
 import Foundation
 
 class Lexer {
@@ -78,7 +79,7 @@ class Lexer {
         guard pos < source.endIndex else { return }
 
         // Comments
-        if match("@@") != nil {
+        if match(JJ.literals.comment) != nil {
             while let ch = peek(), ch != "\n" {
                 _ = advance()
             }
@@ -92,140 +93,144 @@ class Lexer {
             return
         }
 
-        // Keywords and special tokens
-        if match("~>frob{7a3}") != nil {
+        // Keywords
+        if match(JJ.keywords.print) != nil {
             addToken(.print)
             return
         }
-        if match("~>slurp{9f2}") != nil {
+        if match(JJ.keywords.input) != nil {
             addToken(.input)
             return
         }
-        if match("~>yeet") != nil {
+        if match(JJ.keywords.yeet) != nil {
             addToken(.yeet)
             return
         }
-        if match("~>snag") != nil {
+        if match(JJ.keywords.snag) != nil {
             addToken(.snag)
             return
         }
-        if match("~>invoke") != nil {
+        if match(JJ.keywords.invoke) != nil {
             addToken(.invoke)
             return
         }
-        if match("~nil") != nil {
+        if match(JJ.keywords.nil) != nil {
             addToken(.nil)
             return
         }
-        if match("~yep") != nil {
+        if match(JJ.keywords.true) != nil {
             addToken(.true)
             return
         }
-        if match("~nope") != nil {
+        if match(JJ.keywords.false) != nil {
             addToken(.false)
             return
         }
 
         // Block structures
-        if let m = matchRegex("<~loop\\{([^}]*)\\}>>") {
-            // Extract content between { and }
-            let start = m.index(m.startIndex, offsetBy: 7) // skip "<~loop{"
-            let end = m.index(m.endIndex, offsetBy: -3)    // skip "}>>"
+        let loopPrefix = NSRegularExpression.escapedPattern(for: JJ.blocks.loop)
+        let whenPrefix = NSRegularExpression.escapedPattern(for: JJ.blocks.when)
+        let morphPrefix = NSRegularExpression.escapedPattern(for: JJ.blocks.morph)
+        let blockSuffix = NSRegularExpression.escapedPattern(for: JJ.blockSuffix)
+
+        if let m = matchRegex("\(loopPrefix)([^}]*)\(blockSuffix)") {
+            let start = m.index(m.startIndex, offsetBy: JJ.blocks.loop.count)
+            let end = m.index(m.endIndex, offsetBy: -JJ.blockSuffix.count)
             let content = String(m[start..<end])
             addToken(.loop, value: content)
             return
         }
-        if let m = matchRegex("<~when\\{([^}]*)\\}>>") {
-            let start = m.index(m.startIndex, offsetBy: 7)
-            let end = m.index(m.endIndex, offsetBy: -3)
+        if let m = matchRegex("\(whenPrefix)([^}]*)\(blockSuffix)") {
+            let start = m.index(m.startIndex, offsetBy: JJ.blocks.when.count)
+            let end = m.index(m.endIndex, offsetBy: -JJ.blockSuffix.count)
             let content = String(m[start..<end])
             addToken(.when, value: content)
             return
         }
-        if match("<~else>>") != nil {
+        if match(JJ.blocks.else) != nil {
             addToken(.else)
             return
         }
-        if let m = matchRegex("<~morph\\{([^}]*)\\}>>") {
-            let start = m.index(m.startIndex, offsetBy: 8)
-            let end = m.index(m.endIndex, offsetBy: -3)
+        if let m = matchRegex("\(morphPrefix)([^}]*)\(blockSuffix)") {
+            let start = m.index(m.startIndex, offsetBy: JJ.blocks.morph.count)
+            let end = m.index(m.endIndex, offsetBy: -JJ.blockSuffix.count)
             let content = String(m[start..<end])
             addToken(.morph, value: content)
             return
         }
-        if match("<~try>>") != nil {
+        if match(JJ.blocks.try) != nil {
             addToken(.try)
             return
         }
-        if match("<~oops>>") != nil {
+        if match(JJ.blocks.oops) != nil {
             addToken(.oops)
             return
         }
-        if match("<~>>") != nil {
+        if match(JJ.blocks.end) != nil {
             addToken(.blockEnd)
             return
         }
 
         // Operators
-        if match("<+>") != nil {
+        if match(JJ.operators.add) != nil {
             addToken(.add)
             return
         }
-        if match("<->") != nil {
+        if match(JJ.operators.sub) != nil {
             addToken(.sub)
             return
         }
-        if match("<*>") != nil {
+        if match(JJ.operators.mul) != nil {
             addToken(.mul)
             return
         }
-        if match("</>") != nil {
+        if match(JJ.operators.div) != nil {
             addToken(.div)
             return
         }
-        if match("<%>") != nil {
+        if match(JJ.operators.mod) != nil {
             addToken(.mod)
             return
         }
-        if match("<!=>") != nil {
+        if match(JJ.operators.neq) != nil {
             addToken(.neq)
             return
         }
-        if match("<=>") != nil {
+        if match(JJ.operators.eq) != nil {
             addToken(.eq)
             return
         }
-        if match("<lt>") != nil {
+        if match(JJ.operators.lt) != nil {
             addToken(.lt)
             return
         }
-        if match("<gt>") != nil {
+        if match(JJ.operators.gt) != nil {
             addToken(.gt)
             return
         }
-        if match("<&&>") != nil {
+        if match(JJ.operators.and) != nil {
             addToken(.and)
             return
         }
-        if match("<||>") != nil {
+        if match(JJ.operators.or) != nil {
             addToken(.or)
             return
         }
-        if match("<!>") != nil {
+        if match(JJ.operators.not) != nil {
             addToken(.not)
             return
         }
 
         // Structure
-        if match("::") != nil {
+        if match(JJ.structure.action) != nil {
             addToken(.action)
             return
         }
-        if match("..") != nil {
+        if match(JJ.structure.range) != nil {
             addToken(.range)
             return
         }
-        if match(":") != nil {
+        if match(JJ.structure.colon) != nil {
             addToken(.colon)
             return
         }
@@ -267,7 +272,7 @@ class Lexer {
         }
 
         // Numbers (with # prefix for JJ syntax)
-        if peek() == "#" {
+        if peek() == Character(JJ.literals.numberPrefix) {
             _ = advance()
             if let num = matchRegex("-?\\d+\\.?\\d*") {
                 if num.contains(".") {
@@ -292,10 +297,10 @@ class Lexer {
         }
 
         // Strings
-        if peek() == "\"" {
+        if peek() == Character(JJ.literals.stringDelim) {
             _ = advance()
             var value = ""
-            while let ch = peek(), ch != "\"" {
+            while let ch = peek(), ch != Character(JJ.literals.stringDelim) {
                 if ch == "\\" {
                     _ = advance()
                     if let esc = peek() {
@@ -312,20 +317,20 @@ class Lexer {
             return
         }
 
-        // Keywords
-        if match("emit") != nil {
+        // Syntax keywords
+        if match(JJ.syntax.emit) != nil {
             addToken(.emit)
             return
         }
-        if match("grab") != nil {
+        if match(JJ.syntax.grab) != nil {
             addToken(.grab)
             return
         }
-        if match("val") != nil {
+        if match(JJ.syntax.val) != nil {
             addToken(.val)
             return
         }
-        if match("with") != nil {
+        if match(JJ.syntax.with) != nil {
             addToken(.with)
             return
         }
