@@ -15,7 +15,8 @@ from .transpilers import (
     PythonTranspiler,
     JavaScriptTranspiler,
     CTranspiler,
-    AssemblyTranspiler
+    AssemblyTranspiler,
+    SwiftTranspiler
 )
 
 __version__ = '1.0.0'
@@ -36,4 +37,5 @@ __all__ = [
     'JavaScriptTranspiler',
     'CTranspiler',
     'AssemblyTranspiler',
+    'SwiftTranspiler',
 ]

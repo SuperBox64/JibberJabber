@@ -16,6 +16,7 @@ func main() {
         print("  jjswift transpile <file.jj> js   - Transpile to JavaScript")
         print("  jjswift transpile <file.jj> c    - Transpile to C")
         print("  jjswift transpile <file.jj> asm  - Transpile to ARM64 Assembly")
+        print("  jjswift transpile <file.jj> swift - Transpile to Swift")
         exit(1)
     }
 
@@ -60,9 +61,12 @@ func main() {
         case "asm":
             let transpiler = AssemblyTranspiler()
             print(transpiler.transpile(program))
+        case "swift":
+            let transpiler = SwiftTranspiler()
+            print(transpiler.transpile(program))
         default:
             print("Unknown target: \(target)")
-            print("Valid targets: py, js, c, asm")
+            print("Valid targets: py, js, c, asm, swift")
             exit(1)
         }
     } else {

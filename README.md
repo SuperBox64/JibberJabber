@@ -19,10 +19,11 @@ JibJab is an experimental programming language where the syntax is optimized for
 - 📜 **JavaScript/Node.js** - Web and server-side
 - ⚙️ **C** - Native performance
 - 🔧 **ARM64 Assembly** - Apple Silicon native code
+- 🍎 **Swift** - Apple ecosystem development
 
 Not only does JibJab transpile to these languages, but it can also **compile them to binaries** and **test and run**!
 
-**More languages coming soon:** Go, Swift, AppleScript, and more!
+**More languages coming soon:** Go, AppleScript, Rust, and more!
 
 ---
 
@@ -46,7 +47,7 @@ JibJab has **two complete implementations** that share a common language definit
 
 Both implementations support:
 - Direct interpretation (run JJ programs)
-- Transpilation to Python, JavaScript, C, and ARM64 Assembly
+- Transpilation to Python, JavaScript, C, ARM64 Assembly, and Swift
 
 ---
 
@@ -103,6 +104,9 @@ swift run jjswift transpile ../examples/fibonacci.jj c
 
 # Transpile to ARM64 Assembly
 swift run jjswift transpile ../examples/fibonacci.jj asm
+
+# Transpile to Swift
+swift run jjswift transpile ../examples/fibonacci.jj swift
 ```
 
 ### Swift Usage Examples
@@ -117,6 +121,7 @@ swift run jjswift run ../examples/fizzbuzz.jj
 # Transpile and execute
 swift run jjswift transpile ../examples/fibonacci.jj py > /tmp/fib.py && python3 /tmp/fib.py
 swift run jjswift transpile ../examples/fibonacci.jj c > /tmp/fib.c && clang /tmp/fib.c -o /tmp/fib && /tmp/fib
+swift run jjswift transpile ../examples/fibonacci.jj swift > /tmp/fib.swift && swiftc /tmp/fib.swift -o /tmp/fib && /tmp/fib
 ```
 
 ---
@@ -151,6 +156,9 @@ python3 jj.py transpile ../examples/fibonacci.jj c
 
 # Transpile to ARM64 Assembly (macOS Apple Silicon)
 python3 jj.py transpile ../examples/fibonacci.jj asm
+
+# Transpile to Swift
+python3 jj.py transpile ../examples/fibonacci.jj swift
 ```
 
 ### Python Usage Examples
@@ -161,6 +169,7 @@ python3 jj.py transpile ../examples/fibonacci.jj py > /tmp/fib.py && python3 /tm
 python3 jj.py transpile ../examples/fibonacci.jj js > /tmp/fib.js && node /tmp/fib.js
 python3 jj.py transpile ../examples/fibonacci.jj c > /tmp/fib.c && clang /tmp/fib.c -o /tmp/fib && /tmp/fib
 python3 jj.py transpile ../examples/fibonacci.jj asm > /tmp/fib.s && clang /tmp/fib.s -o /tmp/fib && /tmp/fib
+python3 jj.py transpile ../examples/fibonacci.jj swift > /tmp/fib.swift && swiftc /tmp/fib.swift -o /tmp/fib && /tmp/fib
 ```
 
 ---
@@ -281,12 +290,12 @@ python3 jj.py transpile ../examples/fibonacci.jj asm > /tmp/fib.s && clang /tmp/
 
 All examples have been tested across both implementations and all execution modes:
 
-| Example | Swift Interp | Python Interp | Python | JavaScript | C | ARM64 ASM |
-|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---------:|
-| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Example | Swift Interp | Python Interp | Python | JavaScript | C | ARM64 ASM | Swift |
+|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---------:|:-----:|
+| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -351,7 +360,7 @@ Both implementations share a common language definition in `jibjab/common/jj.jso
 - **Keywords**: Token patterns for `print`, `input`, `return`, etc.
 - **Blocks**: Syntax for loops, conditionals, functions
 - **Operators**: All operator symbols and their emitted equivalents
-- **Targets**: Transpilation templates for Python, JavaScript, C
+- **Targets**: Transpilation templates for Python, JavaScript, C, Swift
 
 This ensures both Swift and Python implementations produce identical output.
 
@@ -381,11 +390,13 @@ flowchart TD
     G --> I[JavaScript 📜]
     G --> J[C ⚙️]
     G --> K[ARM64 ASM 🔧]
+    G --> L[Swift 🍎]
 
     H --> M[🔨 CREATE BIN]
     I --> M
     J --> M
     K --> M
+    L --> M
     M --> N[🚀 LAUNCH BIN]
     N --> O[🖥️ Program Output]
 

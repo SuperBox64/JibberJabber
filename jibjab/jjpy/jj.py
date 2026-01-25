@@ -9,7 +9,7 @@ This is the CLI entry point. The implementation is in the jj/ package.
 import sys
 from jj import (
     Lexer, Parser, Interpreter,
-    PythonTranspiler, JavaScriptTranspiler, CTranspiler, AssemblyTranspiler
+    PythonTranspiler, JavaScriptTranspiler, CTranspiler, AssemblyTranspiler, SwiftTranspiler
 )
 
 
@@ -22,6 +22,7 @@ def main():
         print("  python3 jj.py transpile <file.jj> js   - Transpile to JavaScript")
         print("  python3 jj.py transpile <file.jj> c    - Transpile to C")
         print("  python3 jj.py transpile <file.jj> asm  - Transpile to ARM64 Assembly")
+        print("  python3 jj.py transpile <file.jj> swift - Transpile to Swift")
         sys.exit(1)
 
     command = sys.argv[1]
@@ -45,10 +46,11 @@ def main():
             'js': JavaScriptTranspiler,
             'c': CTranspiler,
             'asm': AssemblyTranspiler,
+            'swift': SwiftTranspiler,
         }
         if target not in transpilers:
             print(f"Unknown target: {target}")
-            print("Valid targets: py, js, c, asm")
+            print("Valid targets: py, js, c, asm, swift")
             sys.exit(1)
         transpiler = transpilers[target]()
         print(transpiler.transpile(program))

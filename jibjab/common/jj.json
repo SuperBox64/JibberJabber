@@ -116,6 +116,26 @@
       "false": "0",
       "nil": "0",
       "main": "int main() {\n{body}    return 0;\n}"
+    },
+    "swift": {
+      "name": "Swift",
+      "ext": ".swift",
+      "header": "// Transpiled from JibJab\n",
+      "print": "print({expr})",
+      "var": "var {name} = {value}",
+      "forRange": "for {var} in {start}..<{end} {",
+      "forIn": "for {var} in {collection} {",
+      "while": "while {condition} {",
+      "if": "if {condition} {",
+      "else": "} else {",
+      "func": "func {name}({params}) -> Int {",
+      "return": "return {value}",
+      "call": "{name}({args})",
+      "blockEnd": "}",
+      "indent": "    ",
+      "true": "true",
+      "false": "false",
+      "nil": "nil"
     }
   }
 }

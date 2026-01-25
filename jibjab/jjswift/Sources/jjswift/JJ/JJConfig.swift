@@ -77,6 +77,7 @@ struct JJConfig: Codable {
         let py: TargetPy
         let js: TargetJS
         let c: TargetC
+        let swift: TargetSwift
     }
 
     struct TargetPy: Codable {
@@ -146,6 +147,27 @@ struct JJConfig: Codable {
         let `false`: String
         let `nil`: String
         let main: String
+    }
+
+    struct TargetSwift: Codable {
+        let name: String
+        let ext: String
+        let header: String
+        let print: String
+        let `var`: String
+        let forRange: String
+        let forIn: String
+        let `while`: String
+        let `if`: String
+        let `else`: String
+        let `func`: String
+        let `return`: String
+        let call: String
+        let blockEnd: String
+        let indent: String
+        let `true`: String
+        let `false`: String
+        let `nil`: String
     }
 }
 
