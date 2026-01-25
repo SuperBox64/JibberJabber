@@ -353,6 +353,10 @@ flowchart TD
     B --> C[🌳 PARSER<br>Builds AST]
     C --> D{run or transpile?}
 
+    A -.- A1[".jj file with<br>JibJab syntax"]
+    B -.- B1["Breaks code into<br>tokens"]
+    C -.- C1["Builds Abstract<br>Syntax Tree"]
+
     D -->|run| E[⚡ INTERPRETER]
     E --> F[🖥️ Program Output]
 
