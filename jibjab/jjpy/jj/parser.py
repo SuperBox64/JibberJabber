@@ -1,15 +1,19 @@
 """
 JibJab Parser - Parses tokens into AST
+Uses shared config from common/jj.json for operator emit values
 """
 
 import re
 from typing import List, Optional
 
-from .lexer import Lexer, Token, TokenType
+from .lexer import Lexer, Token, TokenType, JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
 )
+
+# Get operator emit values from config
+OP = JJ['operators']
 
 
 class Parser:
@@ -149,23 +153,23 @@ class Parser:
         left = self.parse_and()
         while self.match(TokenType.OR):
             right = self.parse_and()
-            left = BinaryOp(left, '||', right)
+            left = BinaryOp(left, OP['or']['emit'], right)
         return left
 
     def parse_and(self) -> ASTNode:
         left = self.parse_equality()
         while self.match(TokenType.AND):
             right = self.parse_equality()
-            left = BinaryOp(left, '&&', right)
+            left = BinaryOp(left, OP['and']['emit'], right)
         return left
 
     def parse_equality(self) -> ASTNode:
         left = self.parse_comparison()
         while True:
             if self.match(TokenType.EQ):
-                left = BinaryOp(left, '==', self.parse_comparison())
+                left = BinaryOp(left, OP['eq']['emit'], self.parse_comparison())
             elif self.match(TokenType.NEQ):
-                left = BinaryOp(left, '!=', self.parse_comparison())
+                left = BinaryOp(left, OP['neq']['emit'], self.parse_comparison())
             else:
                 break
         return left
@@ -174,9 +178,9 @@ class Parser:
         left = self.parse_additive()
         while True:
             if self.match(TokenType.LT):
-                left = BinaryOp(left, '<', self.parse_additive())
+                left = BinaryOp(left, OP['lt']['emit'], self.parse_additive())
             elif self.match(TokenType.GT):
-                left = BinaryOp(left, '>', self.parse_additive())
+                left = BinaryOp(left, OP['gt']['emit'], self.parse_additive())
             else:
                 break
         return left
@@ -185,9 +189,9 @@ class Parser:
         left = self.parse_multiplicative()
         while True:
             if self.match(TokenType.ADD):
-                left = BinaryOp(left, '+', self.parse_multiplicative())
+                left = BinaryOp(left, OP['add']['emit'], self.parse_multiplicative())
             elif self.match(TokenType.SUB):
-                left = BinaryOp(left, '-', self.parse_multiplicative())
+                left = BinaryOp(left, OP['sub']['emit'], self.parse_multiplicative())
             else:
                 break
         return left
@@ -196,18 +200,18 @@ class Parser:
         left = self.parse_unary()
         while True:
             if self.match(TokenType.MUL):
-                left = BinaryOp(left, '*', self.parse_unary())
+                left = BinaryOp(left, OP['mul']['emit'], self.parse_unary())
             elif self.match(TokenType.DIV):
-                left = BinaryOp(left, '/', self.parse_unary())
+                left = BinaryOp(left, OP['div']['emit'], self.parse_unary())
             elif self.match(TokenType.MOD):
-                left = BinaryOp(left, '%', self.parse_unary())
+                left = BinaryOp(left, OP['mod']['emit'], self.parse_unary())
             else:
                 break
         return left
 
     def parse_unary(self) -> ASTNode:
         if self.match(TokenType.NOT):
-            return UnaryOp('!', self.parse_unary())
+            return UnaryOp(OP['not']['emit'], self.parse_unary())
         return self.parse_primary()
 
     def parse_primary(self) -> ASTNode:

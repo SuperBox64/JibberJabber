@@ -1,11 +1,15 @@
 """
 JibJab ARM64 Assembly Transpiler - Converts JJ to ARM64 Assembly (macOS)
+Uses emit values from common/jj.json
 """
 
+from ..lexer import JJ
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
 )
+
+OP = JJ['operators']
 
 
 class AssemblyTranspiler:
@@ -244,12 +248,10 @@ class AssemblyTranspiler:
             self.asm_lines.append("    cmp w9, w0")
 
             branches = {
-                '==': 'b.ne',
-                '!=': 'b.eq',
-                '<': 'b.ge',
-                '>': 'b.le',
-                '<=': 'b.gt',
-                '>=': 'b.lt',
+                OP['eq']['emit']: 'b.ne',
+                OP['neq']['emit']: 'b.eq',
+                OP['lt']['emit']: 'b.ge',
+                OP['gt']['emit']: 'b.le',
             }
             if node.op in branches:
                 self.asm_lines.append(f"    {branches[node.op]} {false_label}")
@@ -290,32 +292,32 @@ class AssemblyTranspiler:
             self.asm_lines.append("    mov w1, w0")
             self.asm_lines.append("    ldr w0, [sp], #16")
 
-            if node.op == '+':
+            if node.op == OP['add']['emit']:
                 self.asm_lines.append("    add w0, w0, w1")
-            elif node.op == '-':
+            elif node.op == OP['sub']['emit']:
                 self.asm_lines.append("    sub w0, w0, w1")
-            elif node.op == '*':
+            elif node.op == OP['mul']['emit']:
                 self.asm_lines.append("    mul w0, w0, w1")
-            elif node.op == '/':
+            elif node.op == OP['div']['emit']:
                 self.asm_lines.append("    sdiv w0, w0, w1")
-            elif node.op == '%':
+            elif node.op == OP['mod']['emit']:
                 self.asm_lines.append("    sdiv w2, w0, w1")
                 self.asm_lines.append("    msub w0, w2, w1, w0")
-            elif node.op == '==':
+            elif node.op == OP['eq']['emit']:
                 self.asm_lines.append("    cmp w0, w1")
                 self.asm_lines.append("    cset w0, eq")
-            elif node.op == '!=':
+            elif node.op == OP['neq']['emit']:
                 self.asm_lines.append("    cmp w0, w1")
                 self.asm_lines.append("    cset w0, ne")
-            elif node.op == '<':
+            elif node.op == OP['lt']['emit']:
                 self.asm_lines.append("    cmp w0, w1")
                 self.asm_lines.append("    cset w0, lt")
-            elif node.op == '>':
+            elif node.op == OP['gt']['emit']:
                 self.asm_lines.append("    cmp w0, w1")
                 self.asm_lines.append("    cset w0, gt")
-            elif node.op == '&&':
+            elif node.op == OP['and']['emit']:
                 self.asm_lines.append("    and w0, w0, w1")
-            elif node.op == '||':
+            elif node.op == OP['or']['emit']:
                 self.asm_lines.append("    orr w0, w0, w1")
 
         elif isinstance(node, FuncCall):

@@ -1,4 +1,5 @@
 /// JibJab Parser - Parses tokens into AST
+/// Uses emit values from common/jj.json via JJConfig
 import Foundation
 
 class Parser {
@@ -179,7 +180,7 @@ class Parser {
         var left = try parseAnd()
         while match(.or) != nil {
             let right = try parseAnd()
-            left = BinaryOp(left: left, op: "||", right: right)
+            left = BinaryOp(left: left, op: JJ.operators.or.emit, right: right)
         }
         return left
     }
@@ -188,7 +189,7 @@ class Parser {
         var left = try parseEquality()
         while match(.and) != nil {
             let right = try parseEquality()
-            left = BinaryOp(left: left, op: "&&", right: right)
+            left = BinaryOp(left: left, op: JJ.operators.and.emit, right: right)
         }
         return left
     }
@@ -197,9 +198,9 @@ class Parser {
         var left = try parseComparison()
         while true {
             if match(.eq) != nil {
-                left = BinaryOp(left: left, op: "==", right: try parseComparison())
+                left = BinaryOp(left: left, op: JJ.operators.eq.emit, right: try parseComparison())
             } else if match(.neq) != nil {
-                left = BinaryOp(left: left, op: "!=", right: try parseComparison())
+                left = BinaryOp(left: left, op: JJ.operators.neq.emit, right: try parseComparison())
             } else {
                 break
             }
@@ -211,9 +212,9 @@ class Parser {
         var left = try parseAdditive()
         while true {
             if match(.lt) != nil {
-                left = BinaryOp(left: left, op: "<", right: try parseAdditive())
+                left = BinaryOp(left: left, op: JJ.operators.lt.emit, right: try parseAdditive())
             } else if match(.gt) != nil {
-                left = BinaryOp(left: left, op: ">", right: try parseAdditive())
+                left = BinaryOp(left: left, op: JJ.operators.gt.emit, right: try parseAdditive())
             } else {
                 break
             }
@@ -225,9 +226,9 @@ class Parser {
         var left = try parseMultiplicative()
         while true {
             if match(.add) != nil {
-                left = BinaryOp(left: left, op: "+", right: try parseMultiplicative())
+                left = BinaryOp(left: left, op: JJ.operators.add.emit, right: try parseMultiplicative())
             } else if match(.sub) != nil {
-                left = BinaryOp(left: left, op: "-", right: try parseMultiplicative())
+                left = BinaryOp(left: left, op: JJ.operators.sub.emit, right: try parseMultiplicative())
             } else {
                 break
             }
@@ -239,11 +240,11 @@ class Parser {
         var left = try parseUnary()
         while true {
             if match(.mul) != nil {
-                left = BinaryOp(left: left, op: "*", right: try parseUnary())
+                left = BinaryOp(left: left, op: JJ.operators.mul.emit, right: try parseUnary())
             } else if match(.div) != nil {
-                left = BinaryOp(left: left, op: "/", right: try parseUnary())
+                left = BinaryOp(left: left, op: JJ.operators.div.emit, right: try parseUnary())
             } else if match(.mod) != nil {
-                left = BinaryOp(left: left, op: "%", right: try parseUnary())
+                left = BinaryOp(left: left, op: JJ.operators.mod.emit, right: try parseUnary())
             } else {
                 break
             }
@@ -253,7 +254,7 @@ class Parser {
 
     private func parseUnary() throws -> ASTNode {
         if match(.not) != nil {
-            return UnaryOp(op: "!", operand: try parseUnary())
+            return UnaryOp(op: JJ.operators.not.emit, operand: try parseUnary())
         }
         return try parsePrimary()
     }

@@ -1,4 +1,7 @@
 /// JibJab ARM64 Assembly Transpiler - Converts JJ to ARM64 Assembly (macOS)
+/// Uses emit values from common/jj.json
+
+private let OP = JJ.operators
 
 class AssemblyTranspiler {
     private var asmLines: [String] = []
@@ -263,12 +266,10 @@ class AssemblyTranspiler {
             asmLines.append("    cmp w9, w0")
 
             let branches: [String: String] = [
-                "==": "b.ne",
-                "!=": "b.eq",
-                "<": "b.ge",
-                ">": "b.le",
-                "<=": "b.gt",
-                ">=": "b.lt"
+                JJ.operators.eq.emit: "b.ne",
+                JJ.operators.neq.emit: "b.eq",
+                JJ.operators.lt.emit: "b.ge",
+                JJ.operators.gt.emit: "b.le"
             ]
             if let branch = branches[binaryOp.op] {
                 asmLines.append("    \(branch) \(falseLabel)")
@@ -314,32 +315,32 @@ class AssemblyTranspiler {
             asmLines.append("    ldr w0, [sp], #16")
 
             switch binaryOp.op {
-            case "+":
+            case let op where op == OP.add.emit:
                 asmLines.append("    add w0, w0, w1")
-            case "-":
+            case let op where op == OP.sub.emit:
                 asmLines.append("    sub w0, w0, w1")
-            case "*":
+            case let op where op == OP.mul.emit:
                 asmLines.append("    mul w0, w0, w1")
-            case "/":
+            case let op where op == OP.div.emit:
                 asmLines.append("    sdiv w0, w0, w1")
-            case "%":
+            case let op where op == OP.mod.emit:
                 asmLines.append("    sdiv w2, w0, w1")
                 asmLines.append("    msub w0, w2, w1, w0")
-            case "==":
+            case let op where op == OP.eq.emit:
                 asmLines.append("    cmp w0, w1")
                 asmLines.append("    cset w0, eq")
-            case "!=":
+            case let op where op == OP.neq.emit:
                 asmLines.append("    cmp w0, w1")
                 asmLines.append("    cset w0, ne")
-            case "<":
+            case let op where op == OP.lt.emit:
                 asmLines.append("    cmp w0, w1")
                 asmLines.append("    cset w0, lt")
-            case ">":
+            case let op where op == OP.gt.emit:
                 asmLines.append("    cmp w0, w1")
                 asmLines.append("    cset w0, gt")
-            case "&&":
+            case let op where op == OP.and.emit:
                 asmLines.append("    and w0, w0, w1")
-            case "||":
+            case let op where op == OP.or.emit:
                 asmLines.append("    orr w0, w0, w1")
             default:
                 break

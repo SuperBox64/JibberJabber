@@ -1,11 +1,16 @@
 """
 JibJab C Transpiler - Converts JJ to C
+Uses shared config from common/jj.json
 """
 
+from ..lexer import JJ
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
 )
+
+# Get target config
+T = JJ['targets']['c']
 
 
 class CTranspiler:
@@ -13,17 +18,13 @@ class CTranspiler:
         self.indent = 0
 
     def transpile(self, program: Program) -> str:
-        lines = [
-            '// Transpiled from JibJab',
-            '#include <stdio.h>',
-            '#include <stdlib.h>',
-            '',
-        ]
+        lines = [T['header'].rstrip(), '']
 
         # Forward declarations
         funcs = [s for s in program.statements if isinstance(s, FuncDef)]
         for f in funcs:
-            lines.append(f"int {f.name}({', '.join(f'int {p}' for p in f.params)});")
+            params = ', '.join(f'int {p}' for p in f.params)
+            lines.append(T['funcDecl'].format(name=f.name, params=params))
         if funcs:
             lines.append('')
 
@@ -39,52 +40,54 @@ class CTranspiler:
             self.indent = 1
             for stmt in main_stmts:
                 lines.append(self.stmt(stmt))
-            lines.append('    return 0;')
+            lines.append(f"{T['indent']}return 0;")
             lines.append('}')
 
         return '\n'.join(lines)
 
     def ind(self) -> str:
-        return '    ' * self.indent
+        return T['indent'] * self.indent
 
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
             expr = node.expr
             if isinstance(expr, Literal) and isinstance(expr.value, str):
-                return f'{self.ind()}printf("%s\\n", {self.expr(expr)});'
-            return f'{self.ind()}printf("%d\\n", {self.expr(expr)});'
+                return self.ind() + T['printStr'].format(expr=self.expr(expr))
+            return self.ind() + T['printInt'].format(expr=self.expr(expr))
         elif isinstance(node, VarDecl):
-            return f"{self.ind()}int {node.name} = {self.expr(node.value)};"
+            return self.ind() + T['var'].format(name=node.name, value=self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
-                header = f"{self.ind()}for (int {node.var} = {self.expr(node.start)}; {node.var} < {self.expr(node.end)}; {node.var}++) {{"
+                header = self.ind() + T['forRange'].format(
+                    var=node.var, start=self.expr(node.start), end=self.expr(node.end))
             else:
-                header = f"{self.ind()}while ({self.expr(node.condition)}) {{"
+                header = self.ind() + T['while'].format(condition=self.expr(node.condition))
             self.indent += 1
             body = '\n'.join(self.stmt(s) for s in node.body)
             self.indent -= 1
-            return f"{header}\n{body}\n{self.ind()}}}"
+            return f"{header}\n{body}\n{self.ind()}{T['blockEnd']}"
         elif isinstance(node, IfStmt):
-            header = f"{self.ind()}if ({self.expr(node.condition)}) {{"
+            header = self.ind() + T['if'].format(condition=self.expr(node.condition))
             self.indent += 1
             then = '\n'.join(self.stmt(s) for s in node.then_body)
             self.indent -= 1
-            result = f"{header}\n{then}\n{self.ind()}}}"
+            result = f"{header}\n{then}\n{self.ind()}{T['blockEnd']}"
             if node.else_body:
-                result += f" else {{"
+                result = result[:-len(T['blockEnd'])] + T['else']
                 self.indent += 1
                 result += '\n' + '\n'.join(self.stmt(s) for s in node.else_body)
                 self.indent -= 1
-                result += f"\n{self.ind()}}}"
+                result += f"\n{self.ind()}{T['blockEnd']}"
             return result
         elif isinstance(node, FuncDef):
-            header = f"int {node.name}({', '.join(f'int {p}' for p in node.params)}) {{"
+            params = ', '.join(f'int {p}' for p in node.params)
+            header = T['func'].format(name=node.name, params=params)
             self.indent = 1
             body = '\n'.join(self.stmt(s) for s in node.body)
             self.indent = 0
-            return f"{header}\n{body}\n}}"
+            return f"{header}\n{body}\n{T['blockEnd']}"
         elif isinstance(node, ReturnStmt):
-            return f"{self.ind()}return {self.expr(node.value)};"
+            return self.ind() + T['return'].format(value=self.expr(node.value))
         return ""
 
     def expr(self, node: ASTNode) -> str:
@@ -92,9 +95,9 @@ class CTranspiler:
             if isinstance(node.value, str):
                 return f'"{node.value}"'
             elif node.value is None:
-                return '0'
+                return T['nil']
             elif isinstance(node.value, bool):
-                return '1' if node.value else '0'
+                return T['true'] if node.value else T['false']
             return str(int(node.value))
         elif isinstance(node, VarRef):
             return node.name
@@ -103,6 +106,5 @@ class CTranspiler:
         elif isinstance(node, UnaryOp):
             return f"({node.op}{self.expr(node.operand)})"
         elif isinstance(node, FuncCall):
-            args = ', '.join(self.expr(a) for a in node.args)
-            return f"{node.name}({args})"
+            return T['call'].format(name=node.name, args=', '.join(self.expr(a) for a in node.args))
         return ""

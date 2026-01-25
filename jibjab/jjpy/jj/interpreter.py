@@ -1,13 +1,17 @@
 """
 JibJab Interpreter - Executes JJ programs directly
+Uses emit values from common/jj.json
 """
 
 from typing import Any, Dict, List
 
+from .lexer import JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
 )
+
+OP = JJ['operators']
 
 
 class Interpreter:
@@ -79,22 +83,22 @@ class Interpreter:
             left = self.evaluate(node.left)
             right = self.evaluate(node.right)
             ops = {
-                '+': lambda a, b: a + b,
-                '-': lambda a, b: a - b,
-                '*': lambda a, b: a * b,
-                '/': lambda a, b: a / b,
-                '%': lambda a, b: a % b,
-                '==': lambda a, b: a == b,
-                '!=': lambda a, b: a != b,
-                '<': lambda a, b: a < b,
-                '>': lambda a, b: a > b,
-                '&&': lambda a, b: a and b,
-                '||': lambda a, b: a or b,
+                OP['add']['emit']: lambda a, b: a + b,
+                OP['sub']['emit']: lambda a, b: a - b,
+                OP['mul']['emit']: lambda a, b: a * b,
+                OP['div']['emit']: lambda a, b: a / b,
+                OP['mod']['emit']: lambda a, b: a % b,
+                OP['eq']['emit']: lambda a, b: a == b,
+                OP['neq']['emit']: lambda a, b: a != b,
+                OP['lt']['emit']: lambda a, b: a < b,
+                OP['gt']['emit']: lambda a, b: a > b,
+                OP['and']['emit']: lambda a, b: a and b,
+                OP['or']['emit']: lambda a, b: a or b,
             }
             return ops[node.op](left, right)
         elif isinstance(node, UnaryOp):
             operand = self.evaluate(node.operand)
-            if node.op == '!':
+            if node.op == OP['not']['emit']:
                 return not operand
         elif isinstance(node, InputExpr):
             prompt = self.evaluate(node.prompt)

@@ -11,6 +11,7 @@ struct JJConfig: Codable {
     let structure: Structure
     let syntax: Syntax
     let literals: Literals
+    let targets: Targets
 
     struct Keywords: Codable {
         let print: String
@@ -71,11 +72,85 @@ struct JJConfig: Codable {
         let stringDelim: String
         let comment: String
     }
+
+    struct Targets: Codable {
+        let py: TargetPy
+        let js: TargetJS
+        let c: TargetC
+    }
+
+    struct TargetPy: Codable {
+        let name: String
+        let ext: String
+        let header: String
+        let print: String
+        let `var`: String
+        let forRange: String
+        let forIn: String
+        let `while`: String
+        let `if`: String
+        let `else`: String
+        let `func`: String
+        let `return`: String
+        let call: String
+        let indent: String
+        let `true`: String
+        let `false`: String
+        let `nil`: String
+        let and: String
+        let or: String
+        let not: String
+    }
+
+    struct TargetJS: Codable {
+        let name: String
+        let ext: String
+        let header: String
+        let print: String
+        let `var`: String
+        let forRange: String
+        let forIn: String
+        let `while`: String
+        let `if`: String
+        let `else`: String
+        let `func`: String
+        let `return`: String
+        let call: String
+        let blockEnd: String
+        let indent: String
+        let `true`: String
+        let `false`: String
+        let `nil`: String
+        let eq: String
+        let neq: String
+    }
+
+    struct TargetC: Codable {
+        let name: String
+        let ext: String
+        let header: String
+        let printInt: String
+        let printStr: String
+        let `var`: String
+        let forRange: String
+        let `while`: String
+        let `if`: String
+        let `else`: String
+        let `func`: String
+        let funcDecl: String
+        let `return`: String
+        let call: String
+        let blockEnd: String
+        let indent: String
+        let `true`: String
+        let `false`: String
+        let `nil`: String
+        let main: String
+    }
 }
 
 /// Global JJ configuration - MUST load from common/jj.json
 let JJ: JJConfig = {
-    // Find the common/jj.json file
     let cwd = FileManager.default.currentDirectoryPath
 
     let possiblePaths = [

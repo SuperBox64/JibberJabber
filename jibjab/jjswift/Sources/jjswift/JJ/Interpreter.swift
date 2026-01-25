@@ -1,5 +1,8 @@
 /// JibJab Interpreter - Executes JJ programs directly
+/// Uses emit values from common/jj.json
 import Foundation
+
+private let OP = JJ.operators
 
 class Interpreter {
     private var globals: [String: Any] = [:]
@@ -89,39 +92,39 @@ class Interpreter {
             let right = evaluate(binaryOp.right)
 
             switch binaryOp.op {
-            case "+":
+            case let op where op == OP.add.emit:
                 if let l = left as? Int, let r = right as? Int { return l + r }
                 if let l = left as? Double, let r = right as? Double { return l + r }
                 if let l = left as? Int, let r = right as? Double { return Double(l) + r }
                 if let l = left as? Double, let r = right as? Int { return l + Double(r) }
                 if let l = left as? String, let r = right as? String { return l + r }
                 return stringify(left) + stringify(right)
-            case "-":
+            case let op where op == OP.sub.emit:
                 return toDouble(left) - toDouble(right)
-            case "*":
+            case let op where op == OP.mul.emit:
                 return toDouble(left) * toDouble(right)
-            case "/":
+            case let op where op == OP.div.emit:
                 return toDouble(left) / toDouble(right)
-            case "%":
+            case let op where op == OP.mod.emit:
                 return toInt(left) % toInt(right)
-            case "==":
+            case let op where op == OP.eq.emit:
                 return isEqual(left, right)
-            case "!=":
+            case let op where op == OP.neq.emit:
                 return !isEqual(left, right)
-            case "<":
+            case let op where op == OP.lt.emit:
                 return toDouble(left) < toDouble(right)
-            case ">":
+            case let op where op == OP.gt.emit:
                 return toDouble(left) > toDouble(right)
-            case "&&":
+            case let op where op == OP.and.emit:
                 return toBool(left) && toBool(right)
-            case "||":
+            case let op where op == OP.or.emit:
                 return toBool(left) || toBool(right)
             default:
                 fatalError("Unknown operator: \(binaryOp.op)")
             }
         } else if let unaryOp = node as? UnaryOp {
             let operand = evaluate(unaryOp.operand)
-            if unaryOp.op == "!" {
+            if unaryOp.op == OP.not.emit {
                 return !toBool(operand)
             }
         } else if let inputExpr = node as? InputExpr {
