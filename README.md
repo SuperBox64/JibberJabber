@@ -363,7 +363,9 @@ flowchart TD
     G --> K[ARM64 ASM 🔧]
     G --> L[FUTURE 🚀]
 
-    J --> M[🔨 BUILD]
+    H --> M[🔨 RUN/BUILD]
+    I --> M
+    J --> M
     K --> M
     M --> N[🖥️ Program Output]
 
