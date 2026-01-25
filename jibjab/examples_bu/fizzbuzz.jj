@@ -1,0 +1,18 @@
+@@ JibJab FizzBuzz
+@@ The classic interview question, now incomprehensible to humans
+
+<~loop{n:1..101}>>
+  <~when{(n <%> #15) <=> #0}>>
+    ~>frob{7a3}::emit("FizzBuzz")
+  <~else>>
+    <~when{(n <%> #3) <=> #0}>>
+      ~>frob{7a3}::emit("Fizz")
+    <~else>>
+      <~when{(n <%> #5) <=> #0}>>
+        ~>frob{7a3}::emit("Buzz")
+      <~else>>
+        ~>frob{7a3}::emit(n)
+      <~>>
+    <~>>
+  <~>>
+<~>>
