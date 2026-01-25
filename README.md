@@ -363,7 +363,7 @@ flowchart TD
     G --> K[ARM64 ASM 🔧]
     G --> L[FUTURE 🚀]
 
-    H --> M[🔨 RUN/BUILD]
+    H --> M[🔨 Build and Run]
     I --> M
     J --> M
     K --> M
