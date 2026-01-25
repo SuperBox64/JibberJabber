@@ -171,52 +171,52 @@ class Lexer {
             return
         }
 
-        // Operators
-        if match(JJ.operators.add) != nil {
+        // Operators (use .symbol for matching)
+        if match(JJ.operators.add.symbol) != nil {
             addToken(.add)
             return
         }
-        if match(JJ.operators.sub) != nil {
+        if match(JJ.operators.sub.symbol) != nil {
             addToken(.sub)
             return
         }
-        if match(JJ.operators.mul) != nil {
+        if match(JJ.operators.mul.symbol) != nil {
             addToken(.mul)
             return
         }
-        if match(JJ.operators.div) != nil {
+        if match(JJ.operators.div.symbol) != nil {
             addToken(.div)
             return
         }
-        if match(JJ.operators.mod) != nil {
+        if match(JJ.operators.mod.symbol) != nil {
             addToken(.mod)
             return
         }
-        if match(JJ.operators.neq) != nil {
+        if match(JJ.operators.neq.symbol) != nil {
             addToken(.neq)
             return
         }
-        if match(JJ.operators.eq) != nil {
+        if match(JJ.operators.eq.symbol) != nil {
             addToken(.eq)
             return
         }
-        if match(JJ.operators.lt) != nil {
+        if match(JJ.operators.lt.symbol) != nil {
             addToken(.lt)
             return
         }
-        if match(JJ.operators.gt) != nil {
+        if match(JJ.operators.gt.symbol) != nil {
             addToken(.gt)
             return
         }
-        if match(JJ.operators.and) != nil {
+        if match(JJ.operators.and.symbol) != nil {
             addToken(.and)
             return
         }
-        if match(JJ.operators.or) != nil {
+        if match(JJ.operators.or.symbol) != nil {
             addToken(.or)
             return
         }
-        if match(JJ.operators.not) != nil {
+        if match(JJ.operators.not.symbol) != nil {
             addToken(.not)
             return
         }

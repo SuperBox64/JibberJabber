@@ -217,41 +217,41 @@ class Lexer:
             self.add_token(TokenType.BLOCK_END)
             return
 
-        # Operators
-        if self.match(JJ['operators']['add']):
+        # Operators (now have symbol/emit format)
+        if self.match(JJ['operators']['add']['symbol']):
             self.add_token(TokenType.ADD)
             return
-        if self.match(JJ['operators']['sub']):
+        if self.match(JJ['operators']['sub']['symbol']):
             self.add_token(TokenType.SUB)
             return
-        if self.match(JJ['operators']['mul']):
+        if self.match(JJ['operators']['mul']['symbol']):
             self.add_token(TokenType.MUL)
             return
-        if self.match(JJ['operators']['div']):
+        if self.match(JJ['operators']['div']['symbol']):
             self.add_token(TokenType.DIV)
             return
-        if self.match(JJ['operators']['mod']):
+        if self.match(JJ['operators']['mod']['symbol']):
             self.add_token(TokenType.MOD)
             return
-        if self.match(JJ['operators']['neq']):
+        if self.match(JJ['operators']['neq']['symbol']):
             self.add_token(TokenType.NEQ)
             return
-        if self.match(JJ['operators']['eq']):
+        if self.match(JJ['operators']['eq']['symbol']):
             self.add_token(TokenType.EQ)
             return
-        if self.match(JJ['operators']['lt']):
+        if self.match(JJ['operators']['lt']['symbol']):
             self.add_token(TokenType.LT)
             return
-        if self.match(JJ['operators']['gt']):
+        if self.match(JJ['operators']['gt']['symbol']):
             self.add_token(TokenType.GT)
             return
-        if self.match(JJ['operators']['and']):
+        if self.match(JJ['operators']['and']['symbol']):
             self.add_token(TokenType.AND)
             return
-        if self.match(JJ['operators']['or']):
+        if self.match(JJ['operators']['or']['symbol']):
             self.add_token(TokenType.OR)
             return
-        if self.match(JJ['operators']['not']):
+        if self.match(JJ['operators']['not']['symbol']):
             self.add_token(TokenType.NOT)
             return
 

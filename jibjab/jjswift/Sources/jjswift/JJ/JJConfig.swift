@@ -33,19 +33,24 @@ struct JJConfig: Codable {
         let end: String
     }
 
+    struct Operator: Codable {
+        let symbol: String
+        let emit: String
+    }
+
     struct Operators: Codable {
-        let add: String
-        let sub: String
-        let mul: String
-        let div: String
-        let mod: String
-        let eq: String
-        let neq: String
-        let lt: String
-        let gt: String
-        let and: String
-        let or: String
-        let not: String
+        let add: Operator
+        let sub: Operator
+        let mul: Operator
+        let div: Operator
+        let mod: Operator
+        let eq: Operator
+        let neq: Operator
+        let lt: Operator
+        let gt: Operator
+        let and: Operator
+        let or: Operator
+        let not: Operator
     }
 
     struct Structure: Codable {
@@ -127,18 +132,18 @@ let JJ: JJConfig = {
         ),
         blockSuffix: "}>>",
         operators: JJConfig.Operators(
-            add: "<+>",
-            sub: "<->",
-            mul: "<*>",
-            div: "</>",
-            mod: "<%>",
-            eq: "<=>",
-            neq: "<!=>",
-            lt: "<lt>",
-            gt: "<gt>",
-            and: "<&&>",
-            or: "<||>",
-            not: "<!>"
+            add: JJConfig.Operator(symbol: "<+>", emit: "+"),
+            sub: JJConfig.Operator(symbol: "<->", emit: "-"),
+            mul: JJConfig.Operator(symbol: "<*>", emit: "*"),
+            div: JJConfig.Operator(symbol: "</>", emit: "/"),
+            mod: JJConfig.Operator(symbol: "<%>", emit: "%"),
+            eq: JJConfig.Operator(symbol: "<=>", emit: "=="),
+            neq: JJConfig.Operator(symbol: "<!=>", emit: "!="),
+            lt: JJConfig.Operator(symbol: "<lt>", emit: "<"),
+            gt: JJConfig.Operator(symbol: "<gt>", emit: ">"),
+            and: JJConfig.Operator(symbol: "<&&>", emit: "&&"),
+            or: JJConfig.Operator(symbol: "<||>", emit: "||"),
+            not: JJConfig.Operator(symbol: "<!>", emit: "!")
         ),
         structure: JJConfig.Structure(
             action: "::",
