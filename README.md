@@ -363,7 +363,13 @@ flowchart TD
     G --> K[ARM64 ASM 🔧]
     G --> L[FUTURE 🚀]
 
+    J --> M[🔨 BUILD]
+    K --> M
+    M --> N[🖥️ Program Output]
+
     style L fill:#1a1a2e,stroke:#666,color:#888,stroke-dasharray: 5 5
+    style M fill:#16213e,stroke:#ffa500,color:#fff
+    style N fill:#00ff88,stroke:#00ff88,color:#000
 
     style A fill:#1a1a2e,stroke:#00d4ff,color:#fff
     style B fill:#16213e,stroke:#00d4ff,color:#fff
