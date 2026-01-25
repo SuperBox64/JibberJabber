@@ -298,30 +298,42 @@ xcode-select --install
 ### C Binaries
 
 ```bash
-# Transpile and compile
+# Step 1: Transpile JJ to C
 swift run jjswift transpile ../examples/fibonacci.jj c > fib.c
+
+# Step 2: Compile C to binary
 gcc -o fib_c fib.c
+
+# Step 3: Run the binary
 ./fib_c
 ```
 
 ### ARM64 Assembly Binaries (macOS)
 
 ```bash
-# Transpile
+# Step 1: Transpile JJ to Assembly
 swift run jjswift transpile ../examples/fibonacci.jj asm > fib.s
 
-# Assemble and link
+# Step 2: Assemble to object file
 as -o fib.o fib.s
+
+# Step 3: Link to binary
 ld -o fib_asm fib.o -lSystem -syslibroot $(xcrun -sdk macosx --show-sdk-path) -e _main -arch arm64
+
+# Step 4: Run the binary
 ./fib_asm
 ```
 
 ### Swift Binaries
 
 ```bash
-# Transpile and compile
+# Step 1: Transpile JJ to Swift
 swift run jjswift transpile ../examples/fibonacci.jj swift > fib.swift
+
+# Step 2: Compile Swift to binary
 swiftc -O -o fib_swift fib.swift
+
+# Step 3: Run the binary
 ./fib_swift
 ```
 
@@ -330,12 +342,16 @@ swiftc -O -o fib_swift fib.swift
 QuickJS produces small standalone JS executables (~722KB vs ~44MB for Node.js pkg).
 
 ```bash
-# Install QuickJS
+# Step 1: Install QuickJS (one time)
 brew install quickjs
 
-# Transpile and compile
+# Step 2: Transpile JJ to JavaScript
 swift run jjswift transpile ../examples/fibonacci.jj js > fib.js
+
+# Step 3: Compile JS to binary
 qjsc -o fib_qjs fib.js
+
+# Step 4: Run the binary
 ./fib_qjs
 ```
 
@@ -344,14 +360,16 @@ qjsc -o fib_qjs fib.js
 PyInstaller creates standalone Python executables (~3.4MB).
 
 ```bash
-# Install PyInstaller
+# Step 1: Install PyInstaller (one time)
 pip3 install pyinstaller --user
 
-# Transpile
+# Step 2: Transpile JJ to Python
 swift run jjswift transpile ../examples/fibonacci.jj py > fib.py
 
-# Create standalone binary
+# Step 3: Compile Python to binary
 python3 -m PyInstaller --onefile --distpath . --workpath /tmp/pyinstaller --specpath /tmp/pyinstaller fib.py
+
+# Step 4: Run the binary
 ./fib
 ```
 
