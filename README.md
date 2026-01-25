@@ -361,9 +361,9 @@ flowchart TD
     G --> I[JavaScript 📜]
     G --> J[C ⚙️]
     G --> K[ARM64 ASM 🔧]
-    G ~~~ L[" ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ "]
+    G --> L[FUTURE 🚀]
 
-    style L fill:none,stroke:none,color:none
+    style L fill:#1a1a2e,stroke:#666,color:#888,stroke-dasharray: 5 5
 
     style A fill:#1a1a2e,stroke:#00d4ff,color:#fff
     style B fill:#16213e,stroke:#00d4ff,color:#fff
