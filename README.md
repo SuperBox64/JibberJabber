@@ -345,17 +345,49 @@ This ensures both Swift and Python implementations produce identical output.
 
 ### The Pipeline
 
+```mermaid
+flowchart TD
+    A[📄 JJ Source Code<br><code>~>frob❴7a3❵::emit❨#42❩</code>] --> B
+
+    B[🔤 <b>LEXER</b><br>Tokenizer] --> C
+    B -.- B1[Breaks code into tokens:<br>keywords, operators, literals]
+
+    C[🌳 <b>PARSER</b><br>Syntax Analyzer] --> D
+    C -.- C1[Builds Abstract Syntax Tree<br>from token stream]
+
+    D{Output Mode?}
+
+    D -->|run| E[⚡ <b>INTERPRETER</b><br>Direct Execution]
+    E --> F[🖥️ Program Output]
+    E -.- E1[Walks AST and executes<br>each node directly]
+
+    D -->|transpile| G[🔄 <b>TRANSPILER</b><br>Code Generator]
+    G --> H[📝 Target Source Code]
+    G -.- G1[Converts AST to:<br>Python, JS, C, or Assembly]
+
+    H --> I[Python 🐍]
+    H --> J[JavaScript 📜]
+    H --> K[C ⚙️]
+    H --> L[ARM64 ASM 🔧]
+
+    style A fill:#1a1a2e,stroke:#00d4ff,color:#fff
+    style B fill:#16213e,stroke:#00d4ff,color:#fff
+    style C fill:#16213e,stroke:#00d4ff,color:#fff
+    style D fill:#0f3460,stroke:#e94560,color:#fff
+    style E fill:#1a1a2e,stroke:#00ff88,color:#fff
+    style G fill:#1a1a2e,stroke:#ff6b6b,color:#fff
+    style F fill:#00ff88,stroke:#00ff88,color:#000
+    style H fill:#ff6b6b,stroke:#ff6b6b,color:#000
 ```
-JJ Source Code
-      ↓
-   [Lexer]        → Breaks code into tokens (keywords, operators, literals)
-      ↓
-   [Parser]       → Builds an Abstract Syntax Tree (AST)
-      ↓
-   [Interpreter]  → Executes the AST directly
-      OR
-   [Transpiler]   → Converts AST to Python/JS/C/Assembly
-```
+
+### Pipeline Step-by-Step
+
+| Step | Component | Input | Output | Description |
+|------|-----------|-------|--------|-------------|
+| 1 | **Lexer** | Source code | Tokens | Scans characters, produces token stream |
+| 2 | **Parser** | Tokens | AST | Builds tree structure from tokens |
+| 3a | **Interpreter** | AST | Output | Executes directly (for `run` command) |
+| 3b | **Transpiler** | AST | Code | Generates target language (for `transpile`) |
 
 ### Why LLMs Understand JibJab
 
