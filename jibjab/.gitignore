@@ -1,0 +1,21 @@
+# Swift build artifacts
+.build/
+.swiftpm/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+dist/
+build/
+*.spec
+
+# macOS
+.DS_Store
+
+# Binaries
+*_asm
+*_c
+*_py
+*_qjs
+*_swift

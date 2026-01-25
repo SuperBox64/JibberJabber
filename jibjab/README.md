@@ -52,11 +52,20 @@ jibjab/
 │   └── fizzbuzz.jj
 │
 ├── output/                  # Pre-built transpiled code and binaries
-│   ├── *.c, *.js, *.py, *.s # Transpiled source files
-│   ├── *_c                  # C binaries (~33KB)
-│   ├── *_asm                # ARM64 Assembly binaries (~49KB)
-│   ├── *_qjs                # QuickJS JavaScript binaries (~722KB)
-│   └── *_py                 # PyInstaller Python binaries (~3.4MB)
+│   ├── jjpy/                # Output from Python implementation (jjpy)
+│   │   ├── *.c, *.js, *.py, *.s, *.swift  # Transpiled source files
+│   │   ├── *_c              # C binaries (~33KB)
+│   │   ├── *_asm            # ARM64 Assembly binaries (~49KB)
+│   │   ├── *_swift          # Swift binaries (~50KB)
+│   │   ├── *_qjs            # QuickJS JavaScript binaries (~722KB)
+│   │   └── *_py             # PyInstaller Python binaries (~3.4MB)
+│   └── jjswift/             # Output from Swift implementation (jjswift)
+│       ├── *.c, *.js, *.py, *.s, *.swift  # Transpiled source files
+│       ├── *_c              # C binaries (~33KB)
+│       ├── *_asm            # ARM64 Assembly binaries (~49KB)
+│       ├── *_swift          # Swift binaries (~50KB)
+│       ├── *_qjs            # QuickJS JavaScript binaries (~722KB)
+│       └── *_py             # PyInstaller Python binaries (~3.4MB)
 │
 ├── README.md                # This file
 └── SPEC.md                  # Complete language specification

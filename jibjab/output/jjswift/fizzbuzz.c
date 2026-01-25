@@ -1,4 +1,4 @@
- // Transpiled from JibJab
+// Transpiled from JibJab
 #include <stdio.h>
 #include <stdlib.h>
 
