@@ -73,93 +73,27 @@ struct JJConfig: Codable {
     }
 }
 
-/// Global JJ configuration loaded from common/jj.json
+/// Global JJ configuration - MUST load from common/jj.json
 let JJ: JJConfig = {
+    // Find the common/jj.json file
+    let cwd = FileManager.default.currentDirectoryPath
+
     let possiblePaths = [
-        // When running from jjswift directory
-        "../../common/jj.json",
-        "../common/jj.json",
-        "common/jj.json",
-        // Absolute fallback paths
-        FileManager.default.currentDirectoryPath + "/../common/jj.json",
-        FileManager.default.currentDirectoryPath + "/../../common/jj.json",
+        cwd + "/common/jj.json",
+        cwd + "/../common/jj.json",
+        cwd + "/../../common/jj.json",
     ]
 
-    // Also try relative to executable
-    let executableURL = URL(fileURLWithPath: CommandLine.arguments[0])
-    let execDir = executableURL.deletingLastPathComponent()
-    let additionalPaths = [
-        execDir.appendingPathComponent("../../../common/jj.json").path,
-        execDir.appendingPathComponent("../../../../common/jj.json").path,
-        execDir.appendingPathComponent("../../../../../common/jj.json").path,
-    ]
-
-    let allPaths = possiblePaths + additionalPaths
-
-    for path in allPaths {
-        let url = URL(fileURLWithPath: path)
-        if FileManager.default.fileExists(atPath: url.path) {
+    for path in possiblePaths {
+        if FileManager.default.fileExists(atPath: path) {
             do {
-                let data = try Data(contentsOf: url)
+                let data = try Data(contentsOf: URL(fileURLWithPath: path))
                 return try JSONDecoder().decode(JJConfig.self, from: data)
             } catch {
-                continue
+                fatalError("Error parsing common/jj.json: \(error)")
             }
         }
     }
 
-    // Fallback: embedded defaults
-    return JJConfig(
-        version: "1.0.0",
-        keywords: JJConfig.Keywords(
-            print: "~>frob{7a3}",
-            input: "~>slurp{9f2}",
-            yeet: "~>yeet",
-            snag: "~>snag",
-            invoke: "~>invoke",
-            nil: "~nil",
-            true: "~yep",
-            false: "~nope"
-        ),
-        blocks: JJConfig.Blocks(
-            loop: "<~loop{",
-            when: "<~when{",
-            else: "<~else>>",
-            morph: "<~morph{",
-            try: "<~try>>",
-            oops: "<~oops>>",
-            end: "<~>>"
-        ),
-        blockSuffix: "}>>",
-        operators: JJConfig.Operators(
-            add: JJConfig.Operator(symbol: "<+>", emit: "+"),
-            sub: JJConfig.Operator(symbol: "<->", emit: "-"),
-            mul: JJConfig.Operator(symbol: "<*>", emit: "*"),
-            div: JJConfig.Operator(symbol: "</>", emit: "/"),
-            mod: JJConfig.Operator(symbol: "<%>", emit: "%"),
-            eq: JJConfig.Operator(symbol: "<=>", emit: "=="),
-            neq: JJConfig.Operator(symbol: "<!=>", emit: "!="),
-            lt: JJConfig.Operator(symbol: "<lt>", emit: "<"),
-            gt: JJConfig.Operator(symbol: "<gt>", emit: ">"),
-            and: JJConfig.Operator(symbol: "<&&>", emit: "&&"),
-            or: JJConfig.Operator(symbol: "<||>", emit: "||"),
-            not: JJConfig.Operator(symbol: "<!>", emit: "!")
-        ),
-        structure: JJConfig.Structure(
-            action: "::",
-            range: "..",
-            colon: ":"
-        ),
-        syntax: JJConfig.Syntax(
-            emit: "emit",
-            grab: "grab",
-            val: "val",
-            with: "with"
-        ),
-        literals: JJConfig.Literals(
-            numberPrefix: "#",
-            stringDelim: "\"",
-            comment: "@@"
-        )
-    )
+    fatalError("Could not find common/jj.json - run from jibjab directory")
 }()
