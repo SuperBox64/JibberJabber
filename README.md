@@ -20,7 +20,7 @@ JibJab is an experimental programming language where the syntax is optimized for
 - ⚙️ **C** - Native performance
 - 🔧 **ARM64 Assembly** - Apple Silicon native code
 
-Not only does JibJab transpile to these languages, but it can also **compile them to binaries** and **test and run** the executables automatically!
+Not only does JibJab transpile to these languages, but it can also **compile them to binaries** and **test and run**!
 
 **More languages coming soon:** Go, Swift, AppleScript, and more!
 
@@ -28,10 +28,10 @@ Not only does JibJab transpile to these languages, but it can also **compile the
 
 ### Why Would Anyone Want This?
 
-1. **AI-First Development** - As AI coding assistants become more prevalent, languages optimized for AI parsing could be more efficient
-2. **Research** - Explore how LLMs process and understand code structure
-3. **Obfuscation** - Code that's readable by AI but opaque to casual human inspection
-4. **Fun** - It's a fascinating experiment in language design!
+- 🤖 **AI-First Development** - As AI coding assistants become more prevalent, languages optimized for AI parsing could be more efficient
+- 🔬 **Research** - Explore how LLMs process and understand code structure
+- 🔒 **Obfuscation** - Code that's readable by AI but opaque to casual human inspection
+- 🎉 **Fun** - It's a fascinating experiment in language design!
 
 ---
 
