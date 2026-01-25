@@ -24,7 +24,7 @@ class CTranspiler:
         funcs = [s for s in program.statements if isinstance(s, FuncDef)]
         for f in funcs:
             params = ', '.join(f'int {p}' for p in f.params)
-            lines.append(T['funcDecl'].format(name=f.name, params=params))
+            lines.append(T['funcDecl'].replace('{name}', f.name).replace('{params}', params))
         if funcs:
             lines.append('')
 
@@ -52,22 +52,21 @@ class CTranspiler:
         if isinstance(node, PrintStmt):
             expr = node.expr
             if isinstance(expr, Literal) and isinstance(expr.value, str):
-                return self.ind() + T['printStr'].format(expr=self.expr(expr))
-            return self.ind() + T['printInt'].format(expr=self.expr(expr))
+                return self.ind() + T['printStr'].replace('{expr}', self.expr(expr))
+            return self.ind() + T['printInt'].replace('{expr}', self.expr(expr))
         elif isinstance(node, VarDecl):
-            return self.ind() + T['var'].format(name=node.name, value=self.expr(node.value))
+            return self.ind() + T['var'].replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
-                header = self.ind() + T['forRange'].format(
-                    var=node.var, start=self.expr(node.start), end=self.expr(node.end))
+                header = self.ind() + T['forRange'].replace('{var}', node.var).replace('{start}', self.expr(node.start)).replace('{end}', self.expr(node.end))
             else:
-                header = self.ind() + T['while'].format(condition=self.expr(node.condition))
+                header = self.ind() + T['while'].replace('{condition}', self.expr(node.condition))
             self.indent += 1
             body = '\n'.join(self.stmt(s) for s in node.body)
             self.indent -= 1
             return f"{header}\n{body}\n{self.ind()}{T['blockEnd']}"
         elif isinstance(node, IfStmt):
-            header = self.ind() + T['if'].format(condition=self.expr(node.condition))
+            header = self.ind() + T['if'].replace('{condition}', self.expr(node.condition))
             self.indent += 1
             then = '\n'.join(self.stmt(s) for s in node.then_body)
             self.indent -= 1
@@ -81,13 +80,13 @@ class CTranspiler:
             return result
         elif isinstance(node, FuncDef):
             params = ', '.join(f'int {p}' for p in node.params)
-            header = T['func'].format(name=node.name, params=params)
+            header = T['func'].replace('{name}', node.name).replace('{params}', params)
             self.indent = 1
             body = '\n'.join(self.stmt(s) for s in node.body)
             self.indent = 0
             return f"{header}\n{body}\n{T['blockEnd']}"
         elif isinstance(node, ReturnStmt):
-            return self.ind() + T['return'].format(value=self.expr(node.value))
+            return self.ind() + T['return'].replace('{value}', self.expr(node.value))
         return ""
 
     def expr(self, node: ASTNode) -> str:
@@ -106,5 +105,5 @@ class CTranspiler:
         elif isinstance(node, UnaryOp):
             return f"({node.op}{self.expr(node.operand)})"
         elif isinstance(node, FuncCall):
-            return T['call'].format(name=node.name, args=', '.join(self.expr(a) for a in node.args))
+            return T['call'].replace('{name}', node.name).replace('{args}', ', '.join(self.expr(a) for a in node.args))
         return ""

@@ -9,8 +9,9 @@ from ..ast import (
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
 )
 
-# Get target config
+# Get target config and operators
 T = JJ['targets']['py']
+OP = JJ['operators']
 
 
 class PythonTranspiler:
@@ -28,24 +29,22 @@ class PythonTranspiler:
 
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
-            return self.ind() + T['print'].format(expr=self.expr(node.expr))
+            return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
-            return self.ind() + T['var'].format(name=node.name, value=self.expr(node.value))
+            return self.ind() + T['var'].replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
-                header = self.ind() + T['forRange'].format(
-                    var=node.var, start=self.expr(node.start), end=self.expr(node.end))
+                header = self.ind() + T['forRange'].replace('{var}', node.var).replace('{start}', self.expr(node.start)).replace('{end}', self.expr(node.end))
             elif node.collection:
-                header = self.ind() + T['forIn'].format(
-                    var=node.var, collection=self.expr(node.collection))
+                header = self.ind() + T['forIn'].replace('{var}', node.var).replace('{collection}', self.expr(node.collection))
             else:
-                header = self.ind() + T['while'].format(condition=self.expr(node.condition))
+                header = self.ind() + T['while'].replace('{condition}', self.expr(node.condition))
             self.indent += 1
             body = '\n'.join(self.stmt(s) for s in node.body) or f"{self.ind()}pass"
             self.indent -= 1
             return f"{header}\n{body}"
         elif isinstance(node, IfStmt):
-            header = self.ind() + T['if'].format(condition=self.expr(node.condition))
+            header = self.ind() + T['if'].replace('{condition}', self.expr(node.condition))
             self.indent += 1
             then = '\n'.join(self.stmt(s) for s in node.then_body) or f"{self.ind()}pass"
             self.indent -= 1
@@ -57,13 +56,13 @@ class PythonTranspiler:
                 self.indent -= 1
             return result
         elif isinstance(node, FuncDef):
-            header = self.ind() + T['func'].format(name=node.name, params=', '.join(node.params))
+            header = self.ind() + T['func'].replace('{name}', node.name).replace('{params}', ', '.join(node.params))
             self.indent += 1
             body = '\n'.join(self.stmt(s) for s in node.body) or f"{self.ind()}pass"
             self.indent -= 1
             return f"{header}\n{body}"
         elif isinstance(node, ReturnStmt):
-            return self.ind() + T['return'].format(value=self.expr(node.value))
+            return self.ind() + T['return'].replace('{value}', self.expr(node.value))
         return ""
 
     def expr(self, node: ASTNode) -> str:
@@ -79,14 +78,14 @@ class PythonTranspiler:
             return node.name
         elif isinstance(node, BinaryOp):
             op = node.op
-            if op == '&&': op = T['and']
-            if op == '||': op = T['or']
+            if op == OP['and']['emit']: op = T['and']
+            if op == OP['or']['emit']: op = T['or']
             return f"({self.expr(node.left)} {op} {self.expr(node.right)})"
         elif isinstance(node, UnaryOp):
-            op = T['not'] if node.op == '!' else node.op
+            op = T['not'] if node.op == OP['not']['emit'] else node.op
             return f"({op}{self.expr(node.operand)})"
         elif isinstance(node, InputExpr):
             return f"input({self.expr(node.prompt)})"
         elif isinstance(node, FuncCall):
-            return T['call'].format(name=node.name, args=', '.join(self.expr(a) for a in node.args))
+            return T['call'].replace('{name}', node.name).replace('{args}', ', '.join(self.expr(a) for a in node.args))
         return ""
