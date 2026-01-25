@@ -1,5 +1,4 @@
 // Transpiled from JibJab
-
 function fib(n) {
     if ((n < 2)) {
         return n;

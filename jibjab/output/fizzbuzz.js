@@ -1,5 +1,4 @@
 // Transpiled from JibJab
-
 for (let n = 1; n < 101; n++) {
     if (((n % 15) === 0)) {
         console.log("FizzBuzz");

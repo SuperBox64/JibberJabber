@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Transpiled from JibJab
-
 def fib(n):
     if (n < 2):
         return n
