@@ -274,6 +274,74 @@ swiftc /tmp/fib.swift -o /tmp/fib
 
 ---
 
+## Creating Standalone Binaries
+
+You can create standalone executables from transpiled code. Here's the size comparison:
+
+| Target | Size | Tool |
+|--------|------|------|
+| C | ~33KB | gcc/clang |
+| ARM64 Assembly | ~49KB | as + ld |
+| JavaScript | ~722KB | QuickJS |
+| Python | ~3.4MB | PyInstaller |
+
+### C Binaries
+```bash
+# Transpile and compile
+swift run jjswift transpile ../examples/fibonacci.jj c > fib.c
+gcc -o fib_c fib.c
+./fib_c
+```
+
+### ARM64 Assembly Binaries (macOS)
+```bash
+# Transpile
+swift run jjswift transpile ../examples/fibonacci.jj asm > fib.s
+
+# Assemble and link
+as -o fib.o fib.s
+ld -o fib_asm fib.o -lSystem -syslibroot $(xcrun -sdk macosx --show-sdk-path) -e _main -arch arm64
+./fib_asm
+```
+
+### JavaScript Binaries (QuickJS)
+
+QuickJS produces small standalone JS executables (~722KB vs ~44MB for Node.js pkg).
+
+```bash
+# Install QuickJS
+brew install quickjs
+
+# Transpile and compile
+swift run jjswift transpile ../examples/fibonacci.jj js > fib.js
+qjsc -o fib_qjs fib.js
+./fib_qjs
+```
+
+### Python Binaries (PyInstaller)
+
+PyInstaller creates standalone Python executables (~3.4MB).
+
+```bash
+# Install PyInstaller
+pip3 install pyinstaller --user
+
+# Transpile
+swift run jjswift transpile ../examples/fibonacci.jj py > fib.py
+
+# Create standalone binary
+python3 -m PyInstaller --onefile --distpath . --workpath /tmp/pyinstaller --specpath /tmp/pyinstaller fib.py
+./fib
+```
+
+**PyInstaller options:**
+- `--onefile`: Bundle everything into a single executable
+- `--distpath .`: Output directory for the binary
+- `--workpath /tmp/pyinstaller`: Temp build directory (keeps your folder clean)
+- `--specpath /tmp/pyinstaller`: Spec file location
+
+---
+
 ## Language Reference
 
 ### Statements
