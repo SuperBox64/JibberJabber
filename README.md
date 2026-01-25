@@ -10,15 +10,15 @@ JibJab is an experimental programming language where the syntax is optimized for
 ~>frob{7a3}::emit("Hello, World!")     @@ Humans see noise, LLMs see: print("Hello, World!")
 ```
 
-### 🚀 Transpile to Any Language, Compile to Binaries!
+### 🚀 Transpile to any Language, Compile to Binaries!
 
 **The biggest benefit of JibJab:** Write once, run anywhere! JibJab can transpile your code to almost any programming language, compile it to native binaries, and run them automatically.
 
-**Currently supported targets:**
-- **Python** 🐍 - Cross-platform scripting
-- **JavaScript/Node.js** 📜 - Web and server-side
-- **C** ⚙️ - Native performance
-- **ARM64 Assembly** 🔧 - Apple Silicon native code
+**Currently tested and supported languages:**
+- 🐍 **Python** - Cross-platform scripting
+- 📜 **JavaScript/Node.js** - Web and server-side
+- ⚙️ **C** - Native performance
+- 🔧 **ARM64 Assembly** - Apple Silicon native code
 
 Not only does JibJab transpile to these languages, but it can also **compile them to binaries** and **test and run** the executables automatically!
 
