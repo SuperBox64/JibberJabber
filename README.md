@@ -1,4 +1,4 @@
-# JibberJabber aka JibJab (JJ) Programming Language
+# JibberJabber 1.0 JibJab (JJ) Programming Language
 
 A programming language designed for AI/LLM comprehension - syntax that appears as semantic noise to humans but follows patterns that LLMs naturally parse and understand.
 
