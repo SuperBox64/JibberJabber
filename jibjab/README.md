@@ -126,6 +126,8 @@ The `jj.json` file defines the entire JibJab language in a structured format tha
     "when": "<~when{",
     "else": "<~else>>",
     "morph": "<~morph{",
+    "try": "<~try>>",
+    "oops": "<~oops>>",
     "end": "<~>>"
   },
   "blockSuffix": "}>>"
@@ -152,24 +154,54 @@ The `jj.json` file defines the entire JibJab language in a structured format tha
 }
 ```
 
+### Structure & Syntax
+```json
+{
+  "structure": {
+    "action": "::",
+    "range": "..",
+    "colon": ":"
+  },
+  "syntax": {
+    "emit": "emit",
+    "grab": "grab",
+    "val": "val",
+    "with": "with"
+  },
+  "literals": {
+    "numberPrefix": "#",
+    "stringDelim": "\"",
+    "comment": "@@"
+  }
+}
+```
+
 ### Transpilation Targets
-Each target language has templates for code generation:
+Each target language (py, js, c, swift) has templates for code generation:
 ```json
 {
   "targets": {
     "py": {
+      "name": "Python",
+      "ext": ".py",
+      "header": "#!/usr/bin/env python3\n# Transpiled from JibJab\n",
       "print": "print({expr})",
       "var": "{name} = {value}",
       "forRange": "for {var} in range({start}, {end}):",
       "if": "if {condition}:",
-      "func": "def {name}({params}):"
-    },
-    "js": { ... },
-    "c": { ... },
-    "swift": { ... }
+      "else": "else:",
+      "func": "def {name}({params}):",
+      "return": "return {value}",
+      "call": "{name}({args})",
+      "indent": "    ",
+      "true": "True",
+      "false": "False",
+      "nil": "None"
+    }
   }
 }
 ```
+See `common/jj.json` for complete templates for all targets (py, js, c, swift).
 
 ---
 
@@ -234,43 +266,6 @@ All examples pass on both implementations across all targets:
 | variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-
----
-
-## Running Transpiled Code
-
-### Python
-```bash
-swift run jjswift transpile ../examples/fibonacci.jj py > /tmp/fib.py
-python3 /tmp/fib.py
-```
-
-### JavaScript
-```bash
-swift run jjswift transpile ../examples/fibonacci.jj js > /tmp/fib.js
-node /tmp/fib.js
-```
-
-### C
-```bash
-swift run jjswift transpile ../examples/fibonacci.jj c > /tmp/fib.c
-clang /tmp/fib.c -o /tmp/fib
-/tmp/fib
-```
-
-### ARM64 Assembly (macOS)
-```bash
-swift run jjswift transpile ../examples/fibonacci.jj asm > /tmp/fib.s
-clang /tmp/fib.s -o /tmp/fib
-/tmp/fib
-```
-
-### Swift
-```bash
-swift run jjswift transpile ../examples/fibonacci.jj swift > /tmp/fib.swift
-swiftc /tmp/fib.swift -o /tmp/fib
-/tmp/fib
-```
 
 ---
 
