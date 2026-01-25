@@ -1,160 +1,306 @@
-# JibJab (JJ) Programming Language
+# JibJab Implementation Details
 
-A programming language designed for AI/LLM comprehension - syntax that appears as semantic noise to humans but follows patterns that LLMs naturally parse and understand.
+This directory contains the complete JibJab language implementation with two interpreters (Swift and Python), a shared language definition, and example programs.
 
-## Language Features
+---
 
-| Human Sees | LLM Understands |
-|------------|-----------------|
-| `~>frob{7a3}::emit()` | print statement |
-| `~>snag{x}::val()` | variable assignment |
-| `~>slurp{9f2}::grab()` | input statement |
-| `<~loop{i:0..10}>>` | for loop |
-| `<~when{condition}>>` | if statement |
-| `<~else>>` | else branch |
-| `<~morph{fn(x)}>>` | function definition |
-| `~>invoke{fn}::with()` | function call |
-| `~>yeet{value}` | return |
-| `<+>` `<->` `<*>` `</>` `<%>` | math operators |
-| `<=>` `<!=>` `<lt>` `<gt>` | comparison operators |
-| `<&&>` `<\|\|>` `<!>` | logical operators |
-| `#42` `#3.14` | numbers |
-| `~yep` `~nope` `~nil` | true, false, null |
-| `@@` | comment |
+## Directory Structure
 
-## Installation
+```
+jibjab/
+├── common/
+│   └── jj.json              # Shared language definition (tokens, operators, transpiler templates)
+│
+├── jjswift/                 # Swift implementation
+│   ├── Package.swift        # Swift package manifest
+│   └── Sources/jjswift/
+│       ├── main.swift       # CLI entry point
+│       └── JJ/
+│           ├── Lexer.swift      # Tokenization
+│           ├── Token.swift      # Token types
+│           ├── AST.swift        # AST node definitions
+│           ├── Parser.swift     # Recursive descent parser
+│           ├── Interpreter.swift # Direct execution
+│           ├── JJConfig.swift   # Configuration loader
+│           └── Transpilers/
+│               ├── PythonTranspiler.swift
+│               ├── JavaScriptTranspiler.swift
+│               ├── CTranspiler.swift
+│               └── AssemblyTranspiler.swift
+│
+├── jjpy/                    # Python implementation
+│   ├── jj.py                # CLI entry point
+│   └── jj/
+│       ├── __init__.py      # Package exports
+│       ├── lexer.py         # Tokenization
+│       ├── ast.py           # AST node definitions
+│       ├── parser.py        # Recursive descent parser
+│       ├── interpreter.py   # Direct execution
+│       └── transpilers/
+│           ├── __init__.py
+│           ├── python.py
+│           ├── javascript.py
+│           ├── c.py
+│           └── asm.py       # ARM64 Assembly (macOS)
+│
+├── examples/                # Example JJ programs
+│   ├── hello.jj
+│   ├── variables.jj
+│   ├── fibonacci.jj
+│   └── fizzbuzz.jj
+│
+├── README.md                # This file
+└── SPEC.md                  # Complete language specification
+```
 
-No installation required - just Python 3.
+---
+
+## Quick Start
+
+### Using Swift (`jjswift`)
 
 ```bash
-git clone <repo>
-cd JibJab
+cd jjswift
+
+# Build
+swift build -c release
+
+# Run examples
+swift run jjswift run ../examples/hello.jj
+swift run jjswift run ../examples/fibonacci.jj
+
+# Transpile
+swift run jjswift transpile ../examples/fibonacci.jj py    # Python
+swift run jjswift transpile ../examples/fibonacci.jj js    # JavaScript
+swift run jjswift transpile ../examples/fibonacci.jj c     # C
+swift run jjswift transpile ../examples/fibonacci.jj asm   # ARM64 Assembly
 ```
 
-## Usage
+### Using Python (`jjpy`)
 
 ```bash
-# Run a JJ program directly
-python3 jj.py run program.jj
+cd jjpy
 
-# Transpile to Python
-python3 jj.py transpile program.jj py
+# Run examples
+python3 jj.py run ../examples/hello.jj
+python3 jj.py run ../examples/fibonacci.jj
 
-# Transpile to JavaScript
-python3 jj.py transpile program.jj js
-
-# Transpile to C
-python3 jj.py transpile program.jj c
-
-# Transpile to ARM64 Assembly (macOS)
-python3 jj.py transpile program.jj asm
+# Transpile
+python3 jj.py transpile ../examples/fibonacci.jj py    # Python
+python3 jj.py transpile ../examples/fibonacci.jj js    # JavaScript
+python3 jj.py transpile ../examples/fibonacci.jj c     # C
+python3 jj.py transpile ../examples/fibonacci.jj asm   # ARM64 Assembly
 ```
 
-### Compiling Assembly
+---
 
+## Common Language Definition (`common/jj.json`)
+
+The `jj.json` file defines the entire JibJab language in a structured format that both implementations read:
+
+### Keywords
+```json
+{
+  "keywords": {
+    "print": "~>frob{7a3}",
+    "input": "~>slurp{9f2}",
+    "yeet": "~>yeet",
+    "snag": "~>snag",
+    "invoke": "~>invoke",
+    "nil": "~nil",
+    "true": "~yep",
+    "false": "~nope"
+  }
+}
+```
+
+### Block Structures
+```json
+{
+  "blocks": {
+    "loop": "<~loop{",
+    "when": "<~when{",
+    "else": "<~else>>",
+    "morph": "<~morph{",
+    "end": "<~>>"
+  },
+  "blockSuffix": "}>>"
+}
+```
+
+### Operators
+```json
+{
+  "operators": {
+    "add": {"symbol": "<+>", "emit": "+"},
+    "sub": {"symbol": "<->", "emit": "-"},
+    "mul": {"symbol": "<*>", "emit": "*"},
+    "div": {"symbol": "</>", "emit": "/"},
+    "mod": {"symbol": "<%>", "emit": "%"},
+    "eq":  {"symbol": "<=>", "emit": "=="},
+    "neq": {"symbol": "<!=>", "emit": "!="},
+    "lt":  {"symbol": "<lt>", "emit": "<"},
+    "gt":  {"symbol": "<gt>", "emit": ">"},
+    "and": {"symbol": "<&&>", "emit": "&&"},
+    "or":  {"symbol": "<||>", "emit": "||"},
+    "not": {"symbol": "<!>", "emit": "!"}
+  }
+}
+```
+
+### Transpilation Targets
+Each target language has templates for code generation:
+```json
+{
+  "targets": {
+    "py": {
+      "print": "print({expr})",
+      "var": "{name} = {value}",
+      "forRange": "for {var} in range({start}, {end}):",
+      "if": "if {condition}:",
+      "func": "def {name}({params}):"
+    },
+    "js": { ... },
+    "c": { ... }
+  }
+}
+```
+
+---
+
+## How the Pipeline Works
+
+### 1. Lexer (Tokenization)
+
+Reads source code character by character and produces tokens:
+
+```
+Input:  "~>snag{x}::val(#42)"
+Output: [SNAG, LBRACE, IDENTIFIER("x"), RBRACE, ACTION, VAL, LPAREN, NUMBER(42), RPAREN]
+```
+
+**Files:** `jjswift/Sources/jjswift/JJ/Lexer.swift`, `jjpy/jj/lexer.py`
+
+### 2. Parser (AST Construction)
+
+Takes tokens and builds an Abstract Syntax Tree:
+
+```
+Tokens: [SNAG, LBRACE, IDENTIFIER("x"), RBRACE, ACTION, VAL, LPAREN, NUMBER(42), RPAREN]
+AST:    VarDecl(name="x", value=Literal(42))
+```
+
+**Files:** `jjswift/Sources/jjswift/JJ/Parser.swift`, `jjpy/jj/parser.py`
+
+### 3. Interpreter (Direct Execution)
+
+Walks the AST and executes each node:
+
+```
+VarDecl(name="x", value=Literal(42))
+  → Store 42 in variable "x"
+```
+
+**Files:** `jjswift/Sources/jjswift/JJ/Interpreter.swift`, `jjpy/jj/interpreter.py`
+
+### 4. Transpilers (Code Generation)
+
+Walks the AST and generates target language code:
+
+```
+VarDecl(name="x", value=Literal(42))
+  → Python: "x = 42"
+  → JavaScript: "let x = 42;"
+  → C: "int x = 42;"
+```
+
+**Files:** `jjswift/Sources/jjswift/JJ/Transpilers/*.swift`, `jjpy/jj/transpilers/*.py`
+
+---
+
+## Test Results
+
+All examples pass on both implementations across all targets:
+
+| Example | Swift Interp | Python Interp | Python | JavaScript | C | ARM64 ASM |
+|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---------:|
+| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## Running Transpiled Code
+
+### Python
 ```bash
-# Generate assembly
-python3 jj.py transpile program.jj asm > program.s
-
-# Assemble and link (macOS ARM64)
-as -o program.o program.s
-ld -o program program.o -lSystem -syslibroot $(xcrun -sdk macosx --show-sdk-path) -e _main -arch arm64
-
-# Run
-./program
+swift run jjswift transpile ../examples/fibonacci.jj py > /tmp/fib.py
+python3 /tmp/fib.py
 ```
 
-## Examples
-
-### Hello World
-
-```jj
-~>frob{7a3}::emit("Hello, JibJab World!")
+### JavaScript
+```bash
+swift run jjswift transpile ../examples/fibonacci.jj js > /tmp/fib.js
+node /tmp/fib.js
 ```
 
-### Variables and Math
-
-```jj
-~>snag{x}::val(#10)
-~>snag{y}::val(#5)
-
-~>frob{7a3}::emit(x <+> y)
-~>frob{7a3}::emit(x <*> y)
+### C
+```bash
+swift run jjswift transpile ../examples/fibonacci.jj c > /tmp/fib.c
+clang /tmp/fib.c -o /tmp/fib
+/tmp/fib
 ```
 
-### Conditionals
-
-```jj
-<~when{x <gt> y}>>
-  ~>frob{7a3}::emit("x is greater")
-<~else>>
-  ~>frob{7a3}::emit("y is greater or equal")
-<~>>
+### ARM64 Assembly (macOS)
+```bash
+swift run jjswift transpile ../examples/fibonacci.jj asm > /tmp/fib.s
+clang /tmp/fib.s -o /tmp/fib
+/tmp/fib
 ```
 
-### Loops
+---
 
-```jj
-@@ Range loop
-<~loop{i:0..10}>>
-  ~>frob{7a3}::emit(i)
-<~>>
-```
+## Language Reference
 
-### Functions
+### Statements
 
-```jj
-<~morph{fib(n)}>>
-  <~when{n <lt> #2}>>
-    ~>yeet{n}
-  <~>>
-  ~>yeet{(~>invoke{fib}::with(n <-> #1)) <+> (~>invoke{fib}::with(n <-> #2))}
-<~>>
+| JibJab | Meaning | Example |
+|--------|---------|---------|
+| `~>frob{7a3}::emit(expr)` | Print | `~>frob{7a3}::emit("Hello")` |
+| `~>snag{name}::val(expr)` | Variable | `~>snag{x}::val(#10)` |
+| `<~loop{var:start..end}>>` | For loop | `<~loop{i:0..10}>>` |
+| `<~when{cond}>>` | If | `<~when{x <gt> #5}>>` |
+| `<~else>>` | Else | `<~else>>` |
+| `<~>>` | End block | `<~>>` |
+| `<~morph{name(params)}>>` | Function | `<~morph{add(a,b)}>>` |
+| `~>invoke{name}::with(args)` | Call | `~>invoke{add}::with(#1, #2)` |
+| `~>yeet{expr}` | Return | `~>yeet{result}` |
 
-~>frob{7a3}::emit(~>invoke{fib}::with(#10))
-```
+### Operators
 
-### FizzBuzz
+| JibJab | Operation |
+|--------|-----------|
+| `<+>` `<->` `<*>` `</>` `<%>` | Math |
+| `<=>` `<!=>` `<lt>` `<gt>` | Comparison |
+| `<&&>` `<\|\|>` `<!>` | Logic |
 
-```jj
-<~loop{n:1..101}>>
-  <~when{(n <%> #15) <=> #0}>>
-    ~>frob{7a3}::emit("FizzBuzz")
-  <~else>>
-    <~when{(n <%> #3) <=> #0}>>
-      ~>frob{7a3}::emit("Fizz")
-    <~else>>
-      <~when{(n <%> #5) <=> #0}>>
-        ~>frob{7a3}::emit("Buzz")
-      <~else>>
-        ~>frob{7a3}::emit(n)
-      <~>>
-    <~>>
-  <~>>
-<~>>
-```
+### Literals
 
-## Files
+| JibJab | Type |
+|--------|------|
+| `#42` | Integer |
+| `#3.14` | Float |
+| `"text"` | String |
+| `~yep` | True |
+| `~nope` | False |
+| `~nil` | Null |
+| `@@` | Comment |
 
-| File | Description |
-|------|-------------|
-| `jj.py` | Interpreter and transpiler |
-| `SPEC.md` | Full language specification |
-| `examples/hello.jj` | Hello world |
-| `examples/variables.jj` | Variables and math |
-| `examples/fibonacci.jj` | Recursive functions |
-| `examples/fizzbuzz.jj` | Classic FizzBuzz |
+---
 
-## Why LLMs Understand This
+## See Also
 
-1. **Semantic Clustering** - Tokens like `frob`, `yeet`, `snag`, `slurp` cluster near their meanings in embedding space
-2. **Structural Patterns** - `<~...>>` blocks follow predictable open/close patterns
-3. **Type Prefixes** - `#` for numbers, `~` for special values create learnable patterns
-4. **Operator Encapsulation** - `<op>` format makes operators visually distinct tokens
-5. **Consistent Delimiters** - `::` chains actions predictably
-
-Humans see symbol soup. LLMs see structured, semantic code.
-
-## License
-
-MIT
+- [SPEC.md](SPEC.md) - Complete language specification
+- [common/jj.json](common/jj.json) - Language definition file
+- [examples/](examples/) - Example programs
