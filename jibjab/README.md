@@ -26,7 +26,8 @@ jibjab/
 │               ├── PythonTranspiler.swift
 │               ├── JavaScriptTranspiler.swift
 │               ├── CTranspiler.swift
-│               └── AssemblyTranspiler.swift
+│               ├── AssemblyTranspiler.swift
+│               └── SwiftTranspiler.swift
 │
 ├── jjpy/                    # Python implementation
 │   ├── jj.py                # CLI entry point
@@ -41,7 +42,8 @@ jibjab/
 │           ├── python.py
 │           ├── javascript.py
 │           ├── c.py
-│           └── asm.py       # ARM64 Assembly (macOS)
+│           ├── asm.py       # ARM64 Assembly (macOS)
+│           └── swift.py
 │
 ├── examples/                # Example JJ programs
 │   ├── hello.jj
@@ -74,6 +76,7 @@ swift run jjswift transpile ../examples/fibonacci.jj py    # Python
 swift run jjswift transpile ../examples/fibonacci.jj js    # JavaScript
 swift run jjswift transpile ../examples/fibonacci.jj c     # C
 swift run jjswift transpile ../examples/fibonacci.jj asm   # ARM64 Assembly
+swift run jjswift transpile ../examples/fibonacci.jj swift # Swift
 ```
 
 ### Using Python (`jjpy`)
@@ -90,6 +93,7 @@ python3 jj.py transpile ../examples/fibonacci.jj py    # Python
 python3 jj.py transpile ../examples/fibonacci.jj js    # JavaScript
 python3 jj.py transpile ../examples/fibonacci.jj c     # C
 python3 jj.py transpile ../examples/fibonacci.jj asm   # ARM64 Assembly
+python3 jj.py transpile ../examples/fibonacci.jj swift # Swift
 ```
 
 ---
@@ -161,7 +165,8 @@ Each target language has templates for code generation:
       "func": "def {name}({params}):"
     },
     "js": { ... },
-    "c": { ... }
+    "c": { ... },
+    "swift": { ... }
   }
 }
 ```
@@ -212,6 +217,7 @@ VarDecl(name="x", value=Literal(42))
   → Python: "x = 42"
   → JavaScript: "let x = 42;"
   → C: "int x = 42;"
+  → Swift: "var x = 42"
 ```
 
 **Files:** `jjswift/Sources/jjswift/JJ/Transpilers/*.swift`, `jjpy/jj/transpilers/*.py`
@@ -222,12 +228,12 @@ VarDecl(name="x", value=Literal(42))
 
 All examples pass on both implementations across all targets:
 
-| Example | Swift Interp | Python Interp | Python | JavaScript | C | ARM64 ASM |
-|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---------:|
-| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Example | Swift Interp | Python Interp | Python | JavaScript | C | ARM64 ASM | Swift |
+|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---------:|:-----:|
+| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -256,6 +262,13 @@ clang /tmp/fib.c -o /tmp/fib
 ```bash
 swift run jjswift transpile ../examples/fibonacci.jj asm > /tmp/fib.s
 clang /tmp/fib.s -o /tmp/fib
+/tmp/fib
+```
+
+### Swift
+```bash
+swift run jjswift transpile ../examples/fibonacci.jj swift > /tmp/fib.swift
+swiftc /tmp/fib.swift -o /tmp/fib
 /tmp/fib
 ```
 
