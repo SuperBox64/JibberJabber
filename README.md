@@ -365,16 +365,14 @@ flowchart TD
     G --> I[JavaScript 📜]
     G --> J[C ⚙️]
     G --> K[ARM64 ASM 🔧]
-    G --> L[FUTURE 🚀]
 
     H --> M[🔨 CREATE BIN]
     I --> M
     J --> M
     K --> M
-    M --> N[▶️ RUN BIN]
+    M --> N[🚀 RUN BIN]
     N --> O[🖥️ Program Output]
 
-    style L fill:#1a1a2e,stroke:#666,color:#888,stroke-dasharray: 5 5
     style M fill:#16213e,stroke:#ffa500,color:#fff
     style N fill:#16213e,stroke:#ffa500,color:#fff
     style O fill:#00ff88,stroke:#00ff88,color:#000
