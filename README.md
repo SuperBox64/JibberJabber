@@ -373,7 +373,7 @@ flowchart TD
     M --> N[🚀 LAUNCH BIN]
     N --> O[🖥️ Program Output]
 
-    style M fill:#16213e,stroke:#ffa500,color:#fff
+    style M fill:#2a4a6e,stroke:#ffa500,color:#fff
     style N fill:#16213e,stroke:#ffa500,color:#fff
     style O fill:#00ff88,stroke:#00ff88,color:#000
 
