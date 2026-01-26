@@ -41,7 +41,7 @@ Write once, run anywhere. JibJab transpiles to multiple languages, compiles to n
 | **jjswift** | Swift | `jibjab/jjswift/` | Native macOS |
 | **jjpy** | Python | `jibjab/jjpy/` | Cross-platform |
 
-Both support interpretation and transpilation to all 9 targets.
+Both support interpretation and transpilation to: Python, JavaScript, C, C++, ARM64 Assembly, Swift, AppleScript, Objective-C, and Objective-C++.
 
 ---
 
