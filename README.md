@@ -115,7 +115,7 @@ swift run jjswift transpile ../examples/fibonacci.jj c           # C
 swift run jjswift transpile ../examples/fibonacci.jj cpp         # C++
 swift run jjswift transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
 swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
-swift run jjswift transpile ../examples/fibonacci.jj applescript # AppleScript
+swift run jjswift transpile ../examples/fibonacci.jj applescript fib.scpt  # AppleScript (compiled)
 swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
 swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 ```
@@ -125,28 +125,57 @@ swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 ```bash
 swift run jjswift transpile ../examples/fibonacci.jj py > /tmp/fib.py && python3 /tmp/fib.py
 swift run jjswift transpile ../examples/fibonacci.jj c > /tmp/fib.c && clang /tmp/fib.c -o /tmp/fib && /tmp/fib
-swift run jjswift transpile ../examples/fibonacci.jj swift > /tmp/fib.swift && swiftc /tmp/fib.swift -o /tmp/fib && /tmp/fib
+swift run jjswift transpile ../examples/fibonacci.jj applescript /tmp/fib.scpt && osascript /tmp/fib.scpt
 ```
 
 ---
 
 ## Using the Python Interpreter (`jjpy`)
 
+### Running Programs
+
 ```bash
 cd jibjab/jjpy
 
-# Run JJ programs
+# Run via interpreter
 python3 jj.py run ../examples/hello.jj
-python3 jj.py run ../examples/fibonacci.jj
+```
 
-# Native compilation (two methods)
-python3 jj.py compile ../examples/fibonacci.jj fib      # True native compiler
-python3 jj.py asm ../examples/fibonacci.jj fib_asm      # Via assembly transpiler
-./fib      # Run the binary
+### Compiling to Native Binary
 
-# Transpile to any target (py, js, c, cpp, asm, swift, applescript, objc, objcpp)
-python3 jj.py transpile ../examples/fibonacci.jj py
-python3 jj.py transpile ../examples/fibonacci.jj c
+```bash
+# True native compilation (no external tools)
+python3 jj.py compile ../examples/fibonacci.jj fib
+codesign -s - fib  # Sign for Apple Silicon
+./fib
+
+# Alternative: via assembly transpiler
+python3 jj.py asm ../examples/fibonacci.jj fib_asm
+./fib_asm
+```
+
+The `compile` command generates ARM64 machine code directly from JJ source, producing a standalone Mach-O executable without needing `as` or `ld`.
+
+### Transpiling
+
+```bash
+python3 jj.py transpile ../examples/fibonacci.jj py          # Python
+python3 jj.py transpile ../examples/fibonacci.jj js          # JavaScript
+python3 jj.py transpile ../examples/fibonacci.jj c           # C
+python3 jj.py transpile ../examples/fibonacci.jj cpp         # C++
+python3 jj.py transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
+python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
+python3 jj.py transpile ../examples/fibonacci.jj applescript fib.scpt  # AppleScript (compiled)
+python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
+python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+```
+
+### Transpile and Execute
+
+```bash
+python3 jj.py transpile ../examples/fibonacci.jj py > /tmp/fib.py && python3 /tmp/fib.py
+python3 jj.py transpile ../examples/fibonacci.jj c > /tmp/fib.c && clang /tmp/fib.c -o /tmp/fib && /tmp/fib
+python3 jj.py transpile ../examples/fibonacci.jj applescript /tmp/fib.scpt && osascript /tmp/fib.scpt
 ```
 
 ---
