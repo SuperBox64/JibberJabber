@@ -306,6 +306,12 @@ python3 jj.py transpile ../examples/fibonacci.jj applescript /tmp/fib.scpt && os
 | variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| arrays.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
+| dictionaries.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
+| tuples.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
+| enums.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
+| comparisons.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| numbers.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
 
 ---
 
