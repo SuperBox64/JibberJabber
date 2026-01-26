@@ -363,14 +363,14 @@ flowchart TD
     G --> P[AppleScript]
     G --> Q[ObjC/C++]
 
-    H --> M[Create Bin]
+    H --> M[Create Binary]
     I --> M
     J --> M
     K --> M
     L --> M
     P --> M
     Q --> M
-    M --> N[Launch Bin]
+    M --> N[Run Binary]
     N --> F
 
     style M fill:#2a4a6e,stroke:#ffa500,color:#fff
