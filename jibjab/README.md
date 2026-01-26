@@ -1,6 +1,6 @@
 # JibJab Implementation Details
 
-Two interpreters (Swift and Python), shared language definition, and examples.
+Two interpreters (Swift and Python), a native ARM64 compiler, shared language definition, and examples.
 
 ---
 
@@ -21,6 +21,7 @@ jibjab/
 │           ├── AST.swift        # AST node definitions
 │           ├── Parser.swift     # Recursive descent parser
 │           ├── Interpreter.swift # Direct execution
+│           ├── NativeCompiler.swift # ARM64 Mach-O generator
 │           ├── JJConfig.swift   # Configuration loader
 │           └── Transpilers/
 │               ├── PythonTranspiler.swift
@@ -100,6 +101,11 @@ swift build -c release
 # Run examples
 swift run jjswift run ../examples/hello.jj
 swift run jjswift run ../examples/fibonacci.jj
+
+# Native compilation (two methods)
+swift run jjswift compile ../examples/fibonacci.jj fib      # True native compiler
+swift run jjswift asm ../examples/fibonacci.jj fib_asm      # Via assembly transpiler
+./fib      # Run the binary
 
 # Transpile
 swift run jjswift transpile ../examples/fibonacci.jj py          # Python
@@ -224,7 +230,8 @@ Each target has code generation templates. See `common/jj.json` for details.
 
 ```
 Source → Lexer → Tokens → Parser → AST → Interpreter (run)
-                                       → Transpiler (transpile)
+                                       → NativeCompiler (compile)
+                                       → Transpiler (transpile/asm)
 ```
 
 | Stage | Input | Output |
@@ -238,12 +245,12 @@ Source → Lexer → Tokens → Parser → AST → Interpreter (run)
 
 ## Test Results
 
-| Example | Swift Interp | Python Interp | Python | JavaScript | C | C++ | ARM64 ASM | Swift | AppleScript | Obj-C | Obj-C++ |
-|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---:|:---------:|:-----:|:-----------:|:-----:|:-------:|
-| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Example | Swift Interp | Python Interp | Native | Python | JavaScript | C | C++ | ARM64 ASM | Swift | AppleScript | Obj-C | Obj-C++ |
+|---------|:------------:|:-------------:|:------:|:------:|:----------:|:-:|:---:|:---------:|:-----:|:-----------:|:-----:|:-------:|
+| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -253,14 +260,27 @@ Binary sizes by target:
 
 | Target | Size | Tool |
 |--------|------|------|
+| **Native (compile)** | ~48KB | None (built-in) |
+| Native (asm) | ~49KB | as + ld |
 | C | ~33KB | gcc/clang |
 | C++ | ~33KB | g++/clang++ |
 | Objective-C | ~33KB | clang |
 | Objective-C++ | ~33KB | clang++ |
-| ARM64 Assembly | ~49KB | as + ld |
 | Swift | ~100KB | swiftc |
 | JavaScript | ~722KB | QuickJS |
 | Python | ~3.4MB | PyInstaller |
+
+### Native Compilation (No External Tools)
+
+The `compile` command uses the built-in native compiler to generate ARM64 Mach-O binaries directly:
+
+```bash
+swift run jjswift compile ../examples/fibonacci.jj fib
+codesign -s - fib  # Sign for Apple Silicon
+./fib
+```
+
+This generates machine code directly from the AST without any external assembler or linker.
 
 ### Prerequisites (macOS)
 

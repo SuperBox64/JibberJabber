@@ -6,9 +6,9 @@
 ~>frob{7a3}::emit("Hello, World!")     @@ Humans see noise, LLMs see: print("Hello, World!")
 ```
 
-### Native Compiler + 9 Transpiler Targets
+### True Native Compiler + 9 Transpiler Targets
 
-Write once, run anywhere. JibJab compiles directly to native ARM64 binaries, or transpiles to 9 languages.
+Write once, run anywhere. JibJab includes a **true native compiler** that generates ARM64 machine code directly (no assembler or linker required), plus transpilers to 9 languages.
 
 **Supported targets:**
 - 🐍 **Python** - Cross-platform
@@ -38,8 +38,10 @@ Write once, run anywhere. JibJab compiles directly to native ARM64 binaries, or 
 
 | Implementation | Language | Location | Best For |
 |----------------|----------|----------|----------|
-| **jjswift** | Swift | `jibjab/jjswift/` | Native macOS |
+| **jjswift** | Swift | `jibjab/jjswift/` | Native macOS, ARM64 compilation |
 | **jjpy** | Python | `jibjab/jjpy/` | Cross-platform |
+
+**jjswift** includes a true native compiler (`compile`) that generates ARM64 Mach-O binaries directly without external tools.
 
 Both support interpretation and transpilation to: Python, JavaScript, C, C++, ARM64 Assembly, Swift, AppleScript, Objective-C, and Objective-C++.
 
@@ -84,10 +86,17 @@ swift run jjswift run ../examples/hello.jj
 ### Compiling to Native Binary
 
 ```bash
-# Compile JJ directly to ARM64 executable
+# True native compilation (no external tools)
 swift run jjswift compile ../examples/fibonacci.jj fib
-./fib  # Run native binary
+codesign -s - fib  # Sign for Apple Silicon
+./fib
+
+# Alternative: via assembly transpiler
+swift run jjswift asm ../examples/fibonacci.jj fib_asm
+./fib_asm
 ```
+
+The `compile` command generates ARM64 machine code directly from JJ source, producing a standalone Mach-O executable without needing `as` or `ld`.
 
 ### Transpiling
 
@@ -241,12 +250,12 @@ python3 jj.py transpile ../examples/fibonacci.jj c
 
 ## Test Results
 
-| Example | Swift Interp | Python Interp | Python | JavaScript | C | C++ | ARM64 ASM | Swift | AppleScript | Obj-C | Obj-C++ |
-|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---:|:---------:|:-----:|:-----------:|:-----:|:-------:|
-| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Example | Swift Interp | Python Interp | Native | Python | JavaScript | C | C++ | ARM64 ASM | Swift | AppleScript | Obj-C | Obj-C++ |
+|---------|:------------:|:-------------:|:------:|:------:|:----------:|:-:|:---:|:---------:|:-----:|:-----------:|:-----:|:-------:|
+| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -268,6 +277,7 @@ JibberJabber/
 │   │           ├── AST.swift
 │   │           ├── Parser.swift
 │   │           ├── Interpreter.swift
+│   │           ├── NativeCompiler.swift  # ARM64 Mach-O generator
 │   │           ├── JJConfig.swift
 │   │           └── Transpilers/
 │   │               ├── PythonTranspiler.swift
@@ -338,6 +348,11 @@ flowchart TD
 
     D --> E[⚡ Interpreter]
     E --> F[🖥️ Program Output]
+
+    D --> N1[🔧 Native Compiler]
+    N1 --> N2[ARM64 Mach-O]
+    N2 --> N3[🚀 Run Binary]
+    N3 --> F
 
     D --> G[🛠️ Transpiler]
     G --> H[Python 🐍]

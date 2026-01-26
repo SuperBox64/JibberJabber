@@ -140,7 +140,18 @@ Semantic hashes that LLMs recognize:
 ~>frob{7a3}::emit(~>invoke{fib}::with(#10))
 ```
 
-## Transpilation Targets
+## Compilation & Transpilation Targets
+
+### Native Compilation
+
+JibJab can be compiled directly to native ARM64 Mach-O binaries:
+
+| Command | Method | External Tools | Notes |
+|---------|--------|----------------|-------|
+| `compile` | True native compiler | None | Generates machine code directly |
+| `asm` | Assembly transpiler | `as` + `ld` | Via ARM64 assembly |
+
+### Transpilation Targets
 
 JibJab can be transpiled to the following languages:
 
