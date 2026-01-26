@@ -283,6 +283,36 @@ class Parser {
             return try parsePostfix(ArrayLiteral(elements: elements))
         }
 
+        // Dictionary literal: {key: value, ...}
+        if peek().type == .lbrace {
+            // Look ahead to see if this is a dict literal (has colon after first expr)
+            let startPos = pos
+            _ = advance() // consume {
+            if peek().type == .rbrace {
+                _ = advance() // empty dict {}
+                return try parsePostfix(DictLiteral(pairs: []))
+            }
+            // Parse first key
+            let firstKey = try parseExpression()
+            if peek().type == .colon {
+                // This is a dictionary literal
+                _ = advance() // consume :
+                let firstValue = try parseExpression()
+                var pairs: [(key: ASTNode, value: ASTNode)] = [(firstKey, firstValue)]
+                while match(.comma) != nil {
+                    let key = try parseExpression()
+                    _ = try expect(.colon)
+                    let value = try parseExpression()
+                    pairs.append((key, value))
+                }
+                _ = try expect(.rbrace)
+                return try parsePostfix(DictLiteral(pairs: pairs))
+            } else {
+                // Not a dict literal, restore position (shouldn't happen in well-formed code)
+                pos = startPos
+            }
+        }
+
         if let token = match(.number) {
             return Literal(value: token.value)
         }

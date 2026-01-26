@@ -96,6 +96,11 @@ class ArrayLiteral(ASTNode):
 
 
 @dataclass
+class DictLiteral(ASTNode):
+    pairs: List[tuple]  # List of (key: ASTNode, value: ASTNode) tuples
+
+
+@dataclass
 class IndexAccess(ASTNode):
     array: ASTNode
     index: ASTNode

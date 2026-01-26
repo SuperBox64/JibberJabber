@@ -1,0 +1,29 @@
+@@ JibJab Dictionaries Example
+@@ Tests dictionary literals and key access
+
+@@ Create a dictionary
+~>snag{person}::val({"name": "Alice", "age": #30, "active": ~yep})
+
+@@ Access dictionary values
+~>frob{7a3}::emit("Name:")
+~>frob{7a3}::emit(person["name"])
+
+~>frob{7a3}::emit("Age:")
+~>frob{7a3}::emit(person["age"])
+
+~>frob{7a3}::emit("Active:")
+~>frob{7a3}::emit(person["active"])
+
+@@ Empty dictionary
+~>snag{empty}::val({})
+~>frob{7a3}::emit("Empty dict:")
+~>frob{7a3}::emit(empty)
+
+@@ Nested structures
+~>snag{data}::val({"items": [#1, #2, #3], "count": #3})
+~>frob{7a3}::emit("Items first:")
+~>frob{7a3}::emit(data["items"][#0])
+~>frob{7a3}::emit("Count:")
+~>frob{7a3}::emit(data["count"])
+
+~>frob{7a3}::emit("Done!")

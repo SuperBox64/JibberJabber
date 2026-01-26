@@ -72,6 +72,10 @@ struct ArrayLiteral: ASTNode {
     let elements: [ASTNode]
 }
 
+struct DictLiteral: ASTNode {
+    let pairs: [(key: ASTNode, value: ASTNode)]
+}
+
 struct IndexAccess: ASTNode {
     let array: ASTNode
     let index: ASTNode

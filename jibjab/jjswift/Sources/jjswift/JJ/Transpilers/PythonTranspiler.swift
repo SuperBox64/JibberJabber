@@ -91,6 +91,9 @@ class PythonTranspiler {
         } else if let arrayLit = node as? ArrayLiteral {
             let elements = arrayLit.elements.map { expr($0) }.joined(separator: ", ")
             return "[\(elements)]"
+        } else if let dictLit = node as? DictLiteral {
+            let pairs = dictLit.pairs.map { "\(expr($0.key)): \(expr($0.value))" }.joined(separator: ", ")
+            return "{\(pairs)}"
         } else if let indexAccess = node as? IndexAccess {
             return "\(expr(indexAccess.array))[\(expr(indexAccess.index))]"
         } else if let binaryOp = node as? BinaryOp {

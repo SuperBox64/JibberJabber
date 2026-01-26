@@ -82,16 +82,32 @@ class Interpreter {
             return literal.value
         } else if let arrayLit = node as? ArrayLiteral {
             return arrayLit.elements.map { evaluate($0) }
+        } else if let dictLit = node as? DictLiteral {
+            var dict: [String: Any?] = [:]
+            for pair in dictLit.pairs {
+                let key = stringify(evaluate(pair.key))
+                let value = evaluate(pair.value)
+                dict[key] = value
+            }
+            return dict
         } else if let indexAccess = node as? IndexAccess {
-            let arr = evaluate(indexAccess.array)
-            let idx = toInt(evaluate(indexAccess.index))
-            if let array = arr as? [Any?] {
+            let container = evaluate(indexAccess.array)
+            let key = evaluate(indexAccess.index)
+            if let array = container as? [Any?] {
+                let idx = toInt(key)
                 if idx >= 0 && idx < array.count {
                     return array[idx]
                 }
                 fatalError("Array index out of bounds: \(idx)")
             }
-            fatalError("Cannot index non-array value")
+            if let dict = container as? [String: Any?] {
+                let keyStr = stringify(key)
+                if let value = dict[keyStr] {
+                    return value
+                }
+                fatalError("Dictionary key not found: \(keyStr)")
+            }
+            fatalError("Cannot index non-array/non-dictionary value")
         } else if let varRef = node as? VarRef {
             for scope in locals.reversed() {
                 if let value = scope[varRef.name] {
@@ -184,6 +200,10 @@ class Interpreter {
         if let arr = value as? [Any?] {
             let items = arr.map { stringify($0) }
             return "[" + items.joined(separator: ", ") + "]"
+        }
+        if let dict = value as? [String: Any?] {
+            let items = dict.map { "\"\($0.key)\": \(stringify($0.value))" }
+            return "{" + items.joined(separator: ", ") + "}"
         }
         return String(describing: value)
     }

@@ -10,7 +10,7 @@ from .lexer import Lexer, Token, TokenType, JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, IndexAccess
+    ArrayLiteral, DictLiteral, IndexAccess
 )
 
 # Get operator emit values from config
@@ -234,6 +234,31 @@ class Parser:
                     elements.append(self.parse_expression())
             self.expect(TokenType.RBRACKET)
             return self.parse_postfix(ArrayLiteral(elements))
+
+        # Dictionary literal: {key: value, ...}
+        if self.peek().type == TokenType.LBRACE:
+            start_pos = self.pos
+            self.advance()  # consume {
+            if self.peek().type == TokenType.RBRACE:
+                self.advance()  # empty dict {}
+                return self.parse_postfix(DictLiteral([]))
+            # Parse first key
+            first_key = self.parse_expression()
+            if self.peek().type == TokenType.COLON:
+                # This is a dictionary literal
+                self.advance()  # consume :
+                first_value = self.parse_expression()
+                pairs = [(first_key, first_value)]
+                while self.match(TokenType.COMMA):
+                    key = self.parse_expression()
+                    self.expect(TokenType.COLON)
+                    value = self.parse_expression()
+                    pairs.append((key, value))
+                self.expect(TokenType.RBRACE)
+                return self.parse_postfix(DictLiteral(pairs))
+            else:
+                # Not a dict literal, restore position
+                self.pos = start_pos
 
         if token := self.match(TokenType.NUMBER):
             return Literal(token.value)
