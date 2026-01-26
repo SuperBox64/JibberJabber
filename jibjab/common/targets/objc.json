@@ -2,7 +2,7 @@
   "name": "Objective-C",
   "ext": ".m",
   "header": "// Transpiled from JibJab\n#import <Foundation/Foundation.h>\n",
-  "printInt": "NSLog(@\"%d\", {expr});",
+  "printInt": "NSLog(@\"%ld\", (long){expr});",
   "printStr": "NSLog(@\"%@\", {expr});",
   "printFloat": "NSLog(@\"%f\", {expr});",
   "printDouble": "NSLog(@\"%lf\", {expr});",

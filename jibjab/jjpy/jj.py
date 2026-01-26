@@ -23,14 +23,13 @@ def main():
         print("  python3 jj.py run <file.jj>              - Run JJ program")
         print("  python3 jj.py compile <file.jj> <output> - Compile to ARM64 Mach-O")
         print("  python3 jj.py asm <file.jj> <output>     - Compile via assembly")
-        print("  python3 jj.py osa <file.jj> <output>     - Compile to AppleScript (.scpt or .app)")
         print("  python3 jj.py transpile <file.jj> py     - Transpile to Python")
         print("  python3 jj.py transpile <file.jj> js     - Transpile to JavaScript")
         print("  python3 jj.py transpile <file.jj> c      - Transpile to C")
         print("  python3 jj.py transpile <file.jj> cpp    - Transpile to C++")
         print("  python3 jj.py transpile <file.jj> asm    - Transpile to ARM64 Assembly")
         print("  python3 jj.py transpile <file.jj> swift  - Transpile to Swift")
-        print("  python3 jj.py transpile <file.jj> applescript - Transpile to AppleScript")
+        print("  python3 jj.py transpile <file.jj> applescript [output] - Compile to AppleScript")
         print("  python3 jj.py transpile <file.jj> objc   - Transpile to Objective-C")
         print("  python3 jj.py transpile <file.jj> objcpp - Transpile to Objective-C++")
         sys.exit(1)
@@ -68,16 +67,6 @@ def main():
         sdk_path = subprocess.check_output(['xcrun', '-sdk', 'macosx', '--show-sdk-path']).decode().strip()
         subprocess.run(['ld', '-o', output, obj_file, '-lSystem', '-syslibroot', sdk_path, '-e', '_main', '-arch', 'arm64'], check=True)
         print(f"Compiled to {output}")
-    elif command == 'osa':
-        output = sys.argv[3] if len(sys.argv) > 3 else 'a.scpt'
-        transpiler = AppleScriptTranspiler()
-        applescript_code = transpiler.transpile(program)
-        basename = os.path.basename(output)
-        applescript_file = f'/tmp/{basename}.applescript'
-        with open(applescript_file, 'w') as f:
-            f.write(applescript_code)
-        subprocess.run(['osacompile', '-o', output, applescript_file], check=True)
-        print(f"Compiled to {output}")
     elif command == 'transpile':
         target = sys.argv[3] if len(sys.argv) > 3 else 'py'
         transpilers = {
@@ -96,7 +85,19 @@ def main():
             print("Valid targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp")
             sys.exit(1)
         transpiler = transpilers[target]()
-        print(transpiler.transpile(program))
+        code = transpiler.transpile(program)
+
+        # AppleScript: compile with osacompile
+        if target == 'applescript':
+            output = sys.argv[4] if len(sys.argv) > 4 else 'a.scpt'
+            temp_file = f'/tmp/jj_temp.applescript'
+            with open(temp_file, 'w') as f:
+                f.write(code)
+            subprocess.run(['osacompile', '-o', output, temp_file], check=True)
+            os.remove(temp_file)
+            print(f"Compiled to {output}")
+        else:
+            print(code)
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)
