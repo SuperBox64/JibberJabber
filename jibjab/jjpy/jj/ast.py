@@ -93,3 +93,9 @@ class ReturnStmt(ASTNode):
 @dataclass
 class ArrayLiteral(ASTNode):
     elements: List[ASTNode]
+
+
+@dataclass
+class IndexAccess(ASTNode):
+    array: ASTNode
+    index: ASTNode

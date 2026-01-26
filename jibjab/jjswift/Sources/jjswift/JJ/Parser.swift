@@ -263,7 +263,20 @@ class Parser {
         if match(.lparen) != nil {
             let expr = try parseExpression()
             _ = try expect(.rparen)
-            return expr
+            return try parsePostfix(expr)
+        }
+
+        // Array literal
+        if match(.lbracket) != nil {
+            var elements: [ASTNode] = []
+            if peek().type != .rbracket {
+                elements.append(try parseExpression())
+                while match(.comma) != nil {
+                    elements.append(try parseExpression())
+                }
+            }
+            _ = try expect(.rbracket)
+            return try parsePostfix(ArrayLiteral(elements: elements))
         }
 
         if let token = match(.number) {
@@ -311,10 +324,22 @@ class Parser {
         }
 
         if let token = match(.identifier) {
-            return VarRef(name: token.value as! String)
+            let varRef = VarRef(name: token.value as! String)
+            return try parsePostfix(varRef)
         }
 
         throw ParserError.unexpectedToken(expected: .identifier, got: peek().type, line: peek().line)
+    }
+
+    private func parsePostfix(_ expr: ASTNode) throws -> ASTNode {
+        var result = expr
+        // Handle array indexing: arr[index]
+        while match(.lbracket) != nil {
+            let index = try parseExpression()
+            _ = try expect(.rbracket)
+            result = IndexAccess(array: result, index: index)
+        }
+        return result
     }
 
     private func parseInlineExpr(_ text: String) throws -> ASTNode {

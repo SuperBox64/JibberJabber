@@ -6,7 +6,8 @@ Uses shared config from common/jj.json
 from ..lexer import JJ
 from ..ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
+    ArrayLiteral, IndexAccess
 )
 
 # Get target config and operators
@@ -76,6 +77,11 @@ class PythonTranspiler:
             return str(node.value)
         elif isinstance(node, VarRef):
             return node.name
+        elif isinstance(node, ArrayLiteral):
+            elements = ', '.join(self.expr(e) for e in node.elements)
+            return f"[{elements}]"
+        elif isinstance(node, IndexAccess):
+            return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
             op = node.op
             if op == OP['and']['emit']: op = T['and']

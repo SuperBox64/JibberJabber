@@ -9,7 +9,8 @@ from typing import List, Optional
 from .lexer import Lexer, Token, TokenType, JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
+    ArrayLiteral, IndexAccess
 )
 
 # Get operator emit values from config
@@ -218,7 +219,17 @@ class Parser:
         if self.match(TokenType.LPAREN):
             expr = self.parse_expression()
             self.expect(TokenType.RPAREN)
-            return expr
+            return self.parse_postfix(expr)
+
+        # Array literal
+        if self.match(TokenType.LBRACKET):
+            elements = []
+            if self.peek().type != TokenType.RBRACKET:
+                elements.append(self.parse_expression())
+                while self.match(TokenType.COMMA):
+                    elements.append(self.parse_expression())
+            self.expect(TokenType.RBRACKET)
+            return self.parse_postfix(ArrayLiteral(elements))
 
         if token := self.match(TokenType.NUMBER):
             return Literal(token.value)
@@ -255,9 +266,18 @@ class Parser:
             return FuncCall(name, args)
 
         if token := self.match(TokenType.IDENTIFIER):
-            return VarRef(token.value)
+            return self.parse_postfix(VarRef(token.value))
 
         raise SyntaxError(f"Unexpected token: {self.peek().type}")
+
+    def parse_postfix(self, expr: ASTNode) -> ASTNode:
+        """Parse postfix operations like array indexing"""
+        result = expr
+        while self.match(TokenType.LBRACKET):
+            index = self.parse_expression()
+            self.expect(TokenType.RBRACKET)
+            result = IndexAccess(result, index)
+        return result
 
     def parse_inline_expr(self, text: str) -> ASTNode:
         """Parse an inline expression from WHEN/LOOP conditions"""

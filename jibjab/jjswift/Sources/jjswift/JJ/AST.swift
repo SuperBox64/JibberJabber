@@ -71,3 +71,8 @@ struct ReturnStmt: ASTNode {
 struct ArrayLiteral: ASTNode {
     let elements: [ASTNode]
 }
+
+struct IndexAccess: ASTNode {
+    let array: ASTNode
+    let index: ASTNode
+}

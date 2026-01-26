@@ -8,7 +8,8 @@ from typing import Any, Dict, List
 from .lexer import JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
+    ArrayLiteral, IndexAccess
 )
 
 OP = JJ['operators']
@@ -74,6 +75,16 @@ class Interpreter:
     def evaluate(self, node: ASTNode) -> Any:
         if isinstance(node, Literal):
             return node.value
+        elif isinstance(node, ArrayLiteral):
+            return [self.evaluate(elem) for elem in node.elements]
+        elif isinstance(node, IndexAccess):
+            arr = self.evaluate(node.array)
+            idx = int(self.evaluate(node.index))
+            if not isinstance(arr, list):
+                raise TypeError("Cannot index non-array value")
+            if idx < 0 or idx >= len(arr):
+                raise IndexError(f"Array index out of bounds: {idx}")
+            return arr[idx]
         elif isinstance(node, VarRef):
             for scope in reversed(self.locals):
                 if node.name in scope:

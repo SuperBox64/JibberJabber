@@ -80,6 +80,18 @@ class Interpreter {
     private func evaluate(_ node: ASTNode) -> Any? {
         if let literal = node as? Literal {
             return literal.value
+        } else if let arrayLit = node as? ArrayLiteral {
+            return arrayLit.elements.map { evaluate($0) }
+        } else if let indexAccess = node as? IndexAccess {
+            let arr = evaluate(indexAccess.array)
+            let idx = toInt(evaluate(indexAccess.index))
+            if let array = arr as? [Any?] {
+                if idx >= 0 && idx < array.count {
+                    return array[idx]
+                }
+                fatalError("Array index out of bounds: \(idx)")
+            }
+            fatalError("Cannot index non-array value")
         } else if let varRef = node as? VarRef {
             for scope in locals.reversed() {
                 if let value = scope[varRef.name] {
@@ -164,6 +176,10 @@ class Interpreter {
                 return String(Int(double))
             }
             return String(double)
+        }
+        if let arr = value as? [Any?] {
+            let items = arr.map { stringify($0) }
+            return "[" + items.joined(separator: ", ") + "]"
         }
         return String(describing: value)
     }

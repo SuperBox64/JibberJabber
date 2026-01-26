@@ -1,0 +1,37 @@
+@@ Arrays example - demonstrates array literals and indexing
+
+@@ Create an array
+~>snag{numbers}::val([#1, #2, #3, #4, #5])
+
+@@ Print the whole array
+~>frob{7a3}::emit("Array:")
+~>frob{7a3}::emit(numbers)
+
+@@ Access individual elements
+~>frob{7a3}::emit("First element:")
+~>frob{7a3}::emit(numbers[#0])
+
+~>frob{7a3}::emit("Third element:")
+~>frob{7a3}::emit(numbers[#2])
+
+~>frob{7a3}::emit("Last element:")
+~>frob{7a3}::emit(numbers[#4])
+
+@@ Array of strings
+~>snag{fruits}::val(["apple", "banana", "cherry"])
+~>frob{7a3}::emit("Fruits:")
+~>frob{7a3}::emit(fruits)
+~>frob{7a3}::emit(fruits[#1])
+
+@@ Nested array access
+~>snag{matrix}::val([[#1, #2], [#3, #4]])
+~>frob{7a3}::emit("Matrix:")
+~>frob{7a3}::emit(matrix)
+~>frob{7a3}::emit("matrix[0][1]:")
+~>frob{7a3}::emit(matrix[#0][#1])
+
+@@ Loop over array using index
+~>frob{7a3}::emit("Loop with index:")
+<~loop{i:0..5}>>
+    ~>frob{7a3}::emit(numbers[i])
+<~>>

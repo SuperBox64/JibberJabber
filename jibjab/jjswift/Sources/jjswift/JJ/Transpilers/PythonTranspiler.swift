@@ -88,6 +88,11 @@ class PythonTranspiler {
             return String(describing: literal.value ?? T.nil)
         } else if let varRef = node as? VarRef {
             return varRef.name
+        } else if let arrayLit = node as? ArrayLiteral {
+            let elements = arrayLit.elements.map { expr($0) }.joined(separator: ", ")
+            return "[\(elements)]"
+        } else if let indexAccess = node as? IndexAccess {
+            return "\(expr(indexAccess.array))[\(expr(indexAccess.index))]"
         } else if let binaryOp = node as? BinaryOp {
             var op = binaryOp.op
             if op == "&&" { op = T.and }
