@@ -364,11 +364,10 @@ flowchart TD
 
     D --> G[🛠️ Transpiler]
     G --> H[Python]
-    G --> I[JavaScript]
+    G --> I[JS]
     G --> J[C/C++]
     G --> K[ASM]
     G --> L[Swift]
-    G --> P[AppleScript]
     G --> Q[ObjC/C++]
 
     H --> M[🔨 Create Binary]
@@ -376,7 +375,6 @@ flowchart TD
     J --> M
     K --> M
     L --> M
-    P --> M
     Q --> M
     M --> N[🚀 Run Binary]
     N --> F
