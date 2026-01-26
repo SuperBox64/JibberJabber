@@ -6,7 +6,8 @@ Uses shared config from common/jj.json
 from ..lexer import load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef
 )
 
 # Get target config
@@ -121,6 +122,17 @@ class CppTranspiler:
             return str(int(node.value))
         elif isinstance(node, VarRef):
             return node.name
+        elif isinstance(node, ArrayLiteral):
+            elements = ', '.join(self.expr(e) for e in node.elements)
+            return f"{{{elements}}}"
+        elif isinstance(node, DictLiteral):
+            pairs = ', '.join(f"{{{self.expr(k)}, {self.expr(v)}}}" for k, v in node.pairs)
+            return f"{{{pairs}}}"
+        elif isinstance(node, TupleLiteral):
+            elements = ', '.join(self.expr(e) for e in node.elements)
+            return f"std::make_tuple({elements})"
+        elif isinstance(node, IndexAccess):
+            return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
             return f"({self.expr(node.left)} {node.op} {self.expr(node.right)})"
         elif isinstance(node, UnaryOp):

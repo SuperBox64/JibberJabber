@@ -6,7 +6,8 @@ Uses shared config from common/jj.json
 from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef
 )
 
 # Get target config and operators
@@ -77,6 +78,18 @@ class AppleScriptTranspiler:
             return str(node.value)
         elif isinstance(node, VarRef):
             return node.name
+        elif isinstance(node, ArrayLiteral):
+            elements = ', '.join(self.expr(e) for e in node.elements)
+            return f"{{{elements}}}"
+        elif isinstance(node, DictLiteral):
+            pairs = ', '.join(f"{self.expr(k)}:{self.expr(v)}" for k, v in node.pairs)
+            return f"{{{pairs}}}"
+        elif isinstance(node, TupleLiteral):
+            elements = ', '.join(self.expr(e) for e in node.elements)
+            return f"{{{elements}}}"
+        elif isinstance(node, IndexAccess):
+            # AppleScript uses 1-based indexing
+            return f"item ({self.expr(node.index)} + 1) of {self.expr(node.array)}"
         elif isinstance(node, BinaryOp):
             op = node.op
             # Map operators to AppleScript equivalents

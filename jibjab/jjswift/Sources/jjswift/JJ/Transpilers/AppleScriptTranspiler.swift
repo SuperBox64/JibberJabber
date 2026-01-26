@@ -87,6 +87,17 @@ class AppleScriptTranspiler {
             return String(describing: literal.value ?? T.nil)
         } else if let varRef = node as? VarRef {
             return varRef.name
+        } else if let arr = node as? ArrayLiteral {
+            let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+            return "{\(elements)}"
+        } else if let dict = node as? DictLiteral {
+            let pairs = dict.pairs.map { "\(expr($0.0)):\(expr($0.1))" }.joined(separator: ", ")
+            return "{\(pairs)}"
+        } else if let tuple = node as? TupleLiteral {
+            let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
+            return "{\(elements)}"
+        } else if let idx = node as? IndexAccess {
+            return "item (\(expr(idx.index)) + 1) of \(expr(idx.array))"
         } else if let binaryOp = node as? BinaryOp {
             var op = binaryOp.op
             // Map operators to AppleScript equivalents

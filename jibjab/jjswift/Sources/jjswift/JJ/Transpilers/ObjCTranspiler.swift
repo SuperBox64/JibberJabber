@@ -145,6 +145,17 @@ class ObjCTranspiler {
             return "0"
         } else if let varRef = node as? VarRef {
             return varRef.name
+        } else if let arr = node as? ArrayLiteral {
+            let elements = arr.elements.map { "@(\(expr($0)))" }.joined(separator: ", ")
+            return "@[\(elements)]"
+        } else if let dict = node as? DictLiteral {
+            let pairs = dict.pairs.map { "@\(expr($0.0)): @(\(expr($0.1)))" }.joined(separator: ", ")
+            return "@{\(pairs)}"
+        } else if let tuple = node as? TupleLiteral {
+            let elements = tuple.elements.map { "@(\(expr($0)))" }.joined(separator: ", ")
+            return "@[\(elements)]"
+        } else if let idx = node as? IndexAccess {
+            return "\(expr(idx.array))[\(expr(idx.index))]"
         } else if let binaryOp = node as? BinaryOp {
             return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"
         } else if let unaryOp = node as? UnaryOp {
