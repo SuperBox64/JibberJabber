@@ -128,86 +128,17 @@ func main() {
         print("Compiled: \(outputPath)")
 
     } else if command == "compile" {
-        // Native compilation via assembly transpiler + system tools
+        // True native compilation: JJ -> AST -> Machine Code -> Mach-O (no external tools)
         let outputPath = args.count > 3 ? args[3] : "a.out"
 
-        // Generate assembly from AST
-        let transpiler = AssemblyTranspiler()
-        let asmCode = transpiler.transpile(program)
-
-        // Write to temp file
-        let tempAsm = "/tmp/jj_\(ProcessInfo.processInfo.processIdentifier).s"
-        let tempObj = "/tmp/jj_\(ProcessInfo.processInfo.processIdentifier).o"
-
+        let compiler = NativeCompiler()
         do {
-            try asmCode.write(toFile: tempAsm, atomically: true, encoding: .utf8)
+            try compiler.compile(program, outputPath: outputPath)
+            print("Compiled: \(outputPath)")
         } catch {
-            print("Error writing assembly: \(error)")
+            print("Compilation error: \(error)")
             exit(1)
         }
-
-        // Assemble
-        let asProcess = Process()
-        asProcess.executableURL = URL(fileURLWithPath: "/usr/bin/as")
-        asProcess.arguments = ["-o", tempObj, tempAsm]
-
-        do {
-            try asProcess.run()
-            asProcess.waitUntilExit()
-            if asProcess.terminationStatus != 0 {
-                print("Assembly failed")
-                exit(1)
-            }
-        } catch {
-            print("Error running assembler: \(error)")
-            exit(1)
-        }
-
-        // Link
-        let sdkPath = Process()
-        sdkPath.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
-        sdkPath.arguments = ["-sdk", "macosx", "--show-sdk-path"]
-        let sdkPipe = Pipe()
-        sdkPath.standardOutput = sdkPipe
-
-        var sdkRoot = "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        do {
-            try sdkPath.run()
-            sdkPath.waitUntilExit()
-            let data = sdkPipe.fileHandleForReading.readDataToEndOfFile()
-            if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) {
-                sdkRoot = path
-            }
-        } catch {}
-
-        let ldProcess = Process()
-        ldProcess.executableURL = URL(fileURLWithPath: "/usr/bin/ld")
-        ldProcess.arguments = [
-            "-o", outputPath,
-            tempObj,
-            "-lSystem",
-            "-syslibroot", sdkRoot,
-            "-e", "_main",
-            "-arch", "arm64"
-        ]
-
-        do {
-            try ldProcess.run()
-            ldProcess.waitUntilExit()
-            if ldProcess.terminationStatus != 0 {
-                print("Linking failed")
-                exit(1)
-            }
-        } catch {
-            print("Error running linker: \(error)")
-            exit(1)
-        }
-
-        // Clean up temp files
-        try? FileManager.default.removeItem(atPath: tempAsm)
-        try? FileManager.default.removeItem(atPath: tempObj)
-
-        print("Compiled: \(outputPath)")
 
     } else if command == "transpile" {
         let target = args.count > 3 ? args[3] : "py"

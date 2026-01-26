@@ -85,15 +85,15 @@ class NativeCompiler {
 
         emit(0xA9BF7BFD)  // stp x29, x30, [sp, #-16]!
         emit(0x910003FD)  // mov x29, sp
-        emit(0xD1008FFF)  // sub sp, sp, #35 (buffer space)
+        emit(0xD100C3FF)  // sub sp, sp, #48 (buffer space, 16-byte aligned)
 
         // Check if negative
         emit(0x7100001F)  // cmp w0, #0
-        emit(0x5400014A)  // b.ge skip_neg (if >= 0, skip)
+        emit(0x540000CA)  // b.ge skip_neg (6 instructions forward)
 
         // Negate for processing
         emit(0x4B0003E8)  // neg w8, w0
-        emit(0x52800569)  // mov w9, #'-' (45)
+        emit(0x528005A9)  // mov w9, #'-' (45 = 0x2D)
         emit(0x390003E9)  // strb w9, [sp]
         emit(0x52800029)  // mov w9, #1 (wrote minus sign)
         emit(0x14000003)  // b continue
@@ -116,14 +116,10 @@ class NativeCompiler {
         code[code.count-2] = 0xCB
         code[code.count-1] = 0x1A
 
-        emit(0x1B0B8D8C)  // msub w12, w12, w11, w3 -> msub w12, w12, w11, w8
-        code[code.count-4] = 0x0C
-        code[code.count-3] = 0x21
-        code[code.count-2] = 0x0B
-        code[code.count-1] = 0x1B
+        emit(0x1B0BA18C)  // msub w12, w12, w11, w8 (remainder = w8 - w12*w11)
 
         emit(0x1100C18C)  // add w12, w12, #'0' (48)
-        emit(0x381FF14C)  // strb w12, [x10, #-1]!
+        emit(0x381FFD4C)  // strb w12, [x10, #-1]! (pre-index, decrement x10)
         emit(0x1ACB0908)  // udiv w8, w8, w11
         emit(0x7100011F)  // cmp w8, #0
         let branchBack = code.count
@@ -139,10 +135,10 @@ class NativeCompiler {
 
         // Copy minus sign if needed
         emit(0x7100013F)  // cmp w9, #0
-        emit(0x540000A0)  // b.eq skip_copy
-        emit(0x390003ED)  // ldrb w13, [sp] (minus sign)
-        emit(0x381FF14D)  // strb w13, [x10, #-1]!
-        // skip_copy:
+        emit(0x54000060)  // b.eq skip_copy (3 instructions forward, skip ldrb+strb)
+        emit(0x394003ED)  // ldrb w13, [sp] (load minus sign)
+        emit(0x381FFD4D)  // strb w13, [x10, #-1]! (pre-index, store before digits)
+        // skip_copy: (length calculation for BOTH paths)
 
         // Calculate length: 32+sp - x10 + newline
         emit(0xD10083EE)  // sub x14, sp, #32 -> add x14, sp, #32
@@ -185,7 +181,7 @@ class NativeCompiler {
         emit(0xD4001001)  // svc #0x80
 
         // Epilogue
-        emit(0x91008FFF)  // add sp, sp, #35
+        emit(0x9100C3FF)  // add sp, sp, #48
         emit(0xA8C17BFD)  // ldp x29, x30, [sp], #16
         emit(0xD65F03C0)  // ret
     }
@@ -479,10 +475,15 @@ class NativeCompiler {
         let segmentCmdSize = 72
         let sectionSize = 80
         let dylinkerCmdSize = 44  // 12 bytes header + 32 bytes path
+        let buildVersionCmdSize = 24  // LC_BUILD_VERSION without tools
+        let symtabCmdSize = 24  // LC_SYMTAB
+        let chainedFixupsCmdSize = 16  // LC_DYLD_CHAINED_FIXUPS
+        let exportTrieCmdSize = 16  // LC_DYLD_EXPORTS_TRIE
+        let mainCmdSize = 24  // LC_MAIN
 
-        // Load commands: __PAGEZERO, __TEXT, __LINKEDIT, LC_LOAD_DYLINKER, LC_MAIN
-        let ncmds = 5
-        let sizeofcmds = segmentCmdSize + (segmentCmdSize + 2*sectionSize) + segmentCmdSize + dylinkerCmdSize + 24
+        // Load commands: __PAGEZERO, __TEXT, __LINKEDIT, LC_LOAD_DYLINKER, LC_BUILD_VERSION, LC_SYMTAB, LC_DYLD_CHAINED_FIXUPS, LC_DYLD_EXPORTS_TRIE, LC_MAIN
+        let ncmds = 9
+        let sizeofcmds = segmentCmdSize + (segmentCmdSize + 2*sectionSize) + segmentCmdSize + dylinkerCmdSize + buildVersionCmdSize + symtabCmdSize + chainedFixupsCmdSize + exportTrieCmdSize + mainCmdSize
 
         let pageSize: UInt64 = 0x4000
         let textStart: UInt64 = 0x100000000
@@ -500,11 +501,11 @@ class NativeCompiler {
         let textFileSize = ((textEndOffset + Int(pageSize) - 1) / Int(pageSize)) * Int(pageSize)
         let textVMSize = UInt64(textFileSize)
 
-        // LINKEDIT segment (empty, at end)
+        // LINKEDIT segment (minimal, at end - needed for codesign)
         let linkeditFileOff = textFileSize
-        let linkeditFileSize = 0
+        let linkeditFileSize = Int(pageSize)  // One page for codesign data
         let linkeditVMAddr = textStart + UInt64(linkeditFileOff)
-        let linkeditVMSize: UInt64 = 0
+        let linkeditVMSize: UInt64 = pageSize
 
         // Fix up ADRP/ADD for data references
         let dataPageOffset = UInt32(dataVMAddr & 0xFFF)
@@ -545,7 +546,7 @@ class NativeCompiler {
         binary.append(contentsOf: u32(0x00000002))
         binary.append(contentsOf: u32(UInt32(ncmds)))
         binary.append(contentsOf: u32(UInt32(sizeofcmds)))
-        binary.append(contentsOf: u32(0x00000085))  // MH_NOUNDEFS|MH_DYLDLINK|MH_TWOLEVEL (no PIE)
+        binary.append(contentsOf: u32(0x00200085))  // MH_NOUNDEFS|MH_DYLDLINK|MH_TWOLEVEL|MH_PIE
         binary.append(contentsOf: u32(0x00000000))
 
         // LC_SEGMENT_64 __PAGEZERO
@@ -621,9 +622,41 @@ class NativeCompiler {
         binary.append(contentsOf: u32(12))  // name offset
         binary.append(contentsOf: padString("/usr/lib/dyld", to: 32))
 
+        // LC_BUILD_VERSION (macOS 11.0)
+        binary.append(contentsOf: u32(0x32))  // LC_BUILD_VERSION
+        binary.append(contentsOf: u32(UInt32(buildVersionCmdSize)))
+        binary.append(contentsOf: u32(1))  // platform = MACOS
+        binary.append(contentsOf: u32(0x000B0000))  // minos = 11.0.0
+        binary.append(contentsOf: u32(0x000E0000))  // sdk = 14.0.0
+        binary.append(contentsOf: u32(0))  // ntools = 0
+
+        // LC_SYMTAB (required by dyld, can be empty)
+        binary.append(contentsOf: u32(0x02))  // LC_SYMTAB
+        binary.append(contentsOf: u32(UInt32(symtabCmdSize)))
+        binary.append(contentsOf: u32(0))  // symoff
+        binary.append(contentsOf: u32(0))  // nsyms
+        binary.append(contentsOf: u32(0))  // stroff
+        binary.append(contentsOf: u32(0))  // strsize
+
+        // LC_DYLD_CHAINED_FIXUPS - points to fixup data in LINKEDIT
+        let chainedFixupsOffset = linkeditFileOff  // Start of LINKEDIT
+        let chainedFixupsSize = 48  // Minimal header
+        binary.append(contentsOf: u32(0x80000034))  // LC_DYLD_CHAINED_FIXUPS
+        binary.append(contentsOf: u32(UInt32(chainedFixupsCmdSize)))
+        binary.append(contentsOf: u32(UInt32(chainedFixupsOffset)))
+        binary.append(contentsOf: u32(UInt32(chainedFixupsSize)))
+
+        // LC_DYLD_EXPORTS_TRIE - points to export trie in LINKEDIT
+        let exportTrieOffset = chainedFixupsOffset + chainedFixupsSize
+        let exportTrieSize = 8  // Minimal empty trie
+        binary.append(contentsOf: u32(0x80000033))  // LC_DYLD_EXPORTS_TRIE
+        binary.append(contentsOf: u32(UInt32(exportTrieCmdSize)))
+        binary.append(contentsOf: u32(UInt32(exportTrieOffset)))
+        binary.append(contentsOf: u32(UInt32(exportTrieSize)))
+
         // LC_MAIN
         binary.append(contentsOf: u32(0x80000028))
-        binary.append(contentsOf: u32(24))
+        binary.append(contentsOf: u32(UInt32(mainCmdSize)))
         binary.append(contentsOf: u64(UInt64(codeFileOffset + mainOffset)))
         binary.append(contentsOf: u64(0))
 
@@ -643,6 +676,41 @@ class NativeCompiler {
 
         // Pad to page boundary for __TEXT segment
         while binary.count < textFileSize {
+            binary.append(0)
+        }
+
+        // __LINKEDIT data: chained fixups
+        // dyld_chained_fixups_header (28 bytes)
+        binary.append(contentsOf: u32(0))   // fixups_version
+        binary.append(contentsOf: u32(28))  // starts_offset -> points to starts_in_image
+        binary.append(contentsOf: u32(44))  // imports_offset (after starts - 28 + 16)
+        binary.append(contentsOf: u32(44))  // symbols_offset (same - empty)
+        binary.append(contentsOf: u32(0))   // imports_count = 0
+        binary.append(contentsOf: u32(1))   // imports_format (DYLD_CHAINED_IMPORT)
+        binary.append(contentsOf: u32(0))   // symbols_format
+
+        // dyld_chained_starts_in_image at offset 28 (16 bytes for 3 segments)
+        // We have 3 segments: __PAGEZERO, __TEXT, __LINKEDIT
+        binary.append(contentsOf: u32(3))   // seg_count = 3
+        binary.append(contentsOf: u32(0))   // seg_info_offset[0] = 0 (__PAGEZERO, no fixups)
+        binary.append(contentsOf: u32(0))   // seg_info_offset[1] = 0 (__TEXT, no fixups)
+        binary.append(contentsOf: u32(0))   // seg_info_offset[2] = 0 (__LINKEDIT, no fixups)
+
+        // Pad to 48 bytes total for chained fixups section
+        while binary.count < textFileSize + 48 {
+            binary.append(0)
+        }
+
+        // Export trie (minimal valid trie - 8 bytes)
+        binary.append(0x00)  // terminal size = 0 (no export info at root)
+        binary.append(0x00)  // child count = 0 (no children)
+        // Pad to 8 bytes
+        while binary.count < textFileSize + 48 + 8 {
+            binary.append(0)
+        }
+
+        // Pad rest of __LINKEDIT segment (needed for codesign)
+        while binary.count < textFileSize + linkeditFileSize {
             binary.append(0)
         }
 
