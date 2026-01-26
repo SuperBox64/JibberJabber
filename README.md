@@ -340,7 +340,7 @@ Both implementations read from `jibjab/common/jj.json`, which defines keywords, 
 flowchart TD
     A[📄 JJ Source Code] --> B[🔤 Lexer<br>Tokenizer]
     B --> C[🌳 Parser<br>Builds AST]
-    C --> D{🎯<br>Interpret<br>Or<br>Transpile}
+    C --> D{Interpret<br>Compile<br>Transpile}
 
     A1[".jj file with<br>JibJab syntax"] -.- A
     B1["Breaks code into<br>tokens"] -.- B
@@ -355,13 +355,13 @@ flowchart TD
     N3 --> F
 
     D --> G[🛠️ Transpiler]
-    G --> H[Python 🐍]
-    G --> I[JavaScript 📜]
-    G --> J[C / C++ ⚙️]
-    G --> K[ARM64 Asm 🔧]
-    G --> L[Swift 🍎]
-    G --> P[AppleScript 📝]
-    G --> Q[Obj-C / Obj-C++ 🔶]
+    G --> H[Python]
+    G --> I[JavaScript]
+    G --> J[C / C++]
+    G --> K[ASM]
+    G --> L[Swift]
+    G --> P[AppleScript]
+    G --> Q[Obj-C / Obj-C++]
 
     H --> M[🔨 Create Bin]
     I --> M
