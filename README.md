@@ -338,23 +338,23 @@ Both implementations read from `jibjab/common/jj.json`, which defines keywords, 
 
 ```mermaid
 flowchart TD
-    A[📄 JJ Source Code] --> B[🔤 Lexer<br>Tokenizer]
-    B --> C[🌳 Parser<br>Builds AST]
+    A[JJ Source Code] --> B[Lexer<br>Tokenizer]
+    B --> C[Parser<br>Builds AST]
     C --> D{Interpret<br>Compile<br>Transpile}
 
     A1[".jj file with<br>JibJab syntax"] -.- A
     B1["Breaks code into<br>tokens"] -.- B
     C1["Builds Abstract<br>Syntax Tree"] -.- C
 
-    D --> E[⚡ Interpreter]
-    E --> F[🖥️ Program Output]
+    D --> E[Interpreter]
+    E --> F[Program Output]
 
-    D --> N1[🔧 Native Compiler]
+    D --> N1[Native Compiler]
     N1 --> N2[ARM64 Mach-O]
-    N2 --> N3[🚀 Run Binary]
+    N2 --> N3[Run Binary]
     N3 --> F
 
-    D --> G[🛠️ Transpiler]
+    D --> G[Transpiler]
     G --> H[Python]
     G --> I[JavaScript]
     G --> J[C/C++]
@@ -363,19 +363,18 @@ flowchart TD
     G --> P[AppleScript]
     G --> Q[ObjC/C++]
 
-    H --> M[🔨 Create Bin]
+    H --> M[Create Bin]
     I --> M
     J --> M
     K --> M
     L --> M
     P --> M
     Q --> M
-    M --> N[🚀 Launch Bin]
-    N --> O[🖥️ Program Output]
+    M --> N[Launch Bin]
+    N --> F
 
     style M fill:#2a4a6e,stroke:#ffa500,color:#fff
     style N fill:#16213e,stroke:#ffa500,color:#fff
-    style O fill:#00ff88,stroke:#00ff88,color:#000
 
     style A fill:#1a1a2e,stroke:#00d4ff,color:#fff
     style B fill:#16213e,stroke:#00d4ff,color:#fff
