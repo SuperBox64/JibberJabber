@@ -358,7 +358,7 @@ flowchart TD
     E --> F[🖥️  Program Output]
 
     D --> N1[🔧 Native Compiler]
-    N1 --> N2[ARM64 Mach-O]
+    N1 --> N2[🍎 ARM64 Mach-O]
     N2 --> N3[🚀 Run Binary]
     N3 --> F
 
@@ -380,6 +380,10 @@ flowchart TD
     Q --> M
     M --> N[🚀 Run Binary]
     N --> F
+
+    style N1 fill:#4a1a6e,stroke:#bf5fff,color:#fff
+    style N2 fill:#3d1a5e,stroke:#bf5fff,color:#fff
+    style N3 fill:#2d1a4e,stroke:#bf5fff,color:#fff
 
     style M fill:#2a4a6e,stroke:#ffa500,color:#fff
     style N fill:#16213e,stroke:#ffa500,color:#fff
