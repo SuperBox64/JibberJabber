@@ -356,7 +356,8 @@ class Parser {
         }
 
         if let token = match(.number) {
-            return Literal(value: token.value)
+            let numType = token.numericType.flatMap { NumericType(rawValue: $0) }
+            return Literal(value: token.value, numericType: numType)
         }
         if let token = match(.string) {
             return Literal(value: token.value)

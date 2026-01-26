@@ -3,7 +3,7 @@ JibJab Python Transpiler - Converts JJ to Python
 Uses shared config from common/jj.json
 """
 
-from ..lexer import JJ
+from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
@@ -11,7 +11,7 @@ from ..ast import (
 )
 
 # Get target config and operators
-T = JJ['targets']['py']
+T = load_target_config('py')
 OP = JJ['operators']
 
 

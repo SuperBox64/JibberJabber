@@ -3,14 +3,33 @@ JibJab Objective-C Transpiler - Converts JJ to Objective-C
 Uses shared config from common/jj.json
 """
 
-from ..lexer import JJ
+from ..lexer import load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
 )
 
 # Get target config
-T = JJ['targets']['objc']
+T = load_target_config('objc')
+
+
+def infer_type(node) -> str:
+    """Infer JJ type from AST node"""
+    if isinstance(node, Literal):
+        if isinstance(node.value, bool):
+            return 'Int'  # ObjC uses int for bool
+        elif isinstance(node.value, int):
+            return 'Int'
+        elif isinstance(node.value, float):
+            return 'Double'
+        elif isinstance(node.value, str):
+            return 'String'
+    return 'Int'  # default
+
+def get_target_type(jj_type: str) -> str:
+    """Get target language type from JJ type"""
+    types = T.get('types', {})
+    return types.get(jj_type, 'int')
 
 
 class ObjCTranspiler:
@@ -23,8 +42,10 @@ class ObjCTranspiler:
         # Forward declarations
         funcs = [s for s in program.statements if isinstance(s, FuncDef)]
         for f in funcs:
-            params = ', '.join(f'int {p}' for p in f.params)
-            lines.append(T['funcDecl'].replace('{name}', f.name).replace('{params}', params))
+            param_type = get_target_type('Int')
+            params = ', '.join(f'{param_type} {p}' for p in f.params)
+            return_type = get_target_type('Int')
+            lines.append(T['funcDecl'].replace('{type}', return_type).replace('{name}', f.name).replace('{params}', params))
         if funcs:
             lines.append('')
 
@@ -58,7 +79,8 @@ class ObjCTranspiler:
                 return self.ind() + f'NSLog(@"%@", @{self.expr(expr)});'
             return self.ind() + T['printInt'].replace('{expr}', self.expr(expr))
         elif isinstance(node, VarDecl):
-            return self.ind() + T['var'].replace('{name}', node.name).replace('{value}', self.expr(node.value))
+            var_type = get_target_type(infer_type(node.value))
+            return self.ind() + T['var'].replace('{type}', var_type).replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
                 header = self.ind() + T['forRange'].replace('{var}', node.var).replace('{start}', self.expr(node.start)).replace('{end}', self.expr(node.end))
@@ -82,8 +104,10 @@ class ObjCTranspiler:
                 result += f"\n{self.ind()}{T['blockEnd']}"
             return result
         elif isinstance(node, FuncDef):
-            params = ', '.join(f'int {p}' for p in node.params)
-            header = T['func'].replace('{name}', node.name).replace('{params}', params)
+            param_type = get_target_type('Int')
+            params = ', '.join(f'{param_type} {p}' for p in node.params)
+            return_type = get_target_type('Int')
+            header = T['func'].replace('{type}', return_type).replace('{name}', node.name).replace('{params}', params)
             self.indent = 1
             body = '\n'.join(self.stmt(s) for s in node.body)
             self.indent = 0

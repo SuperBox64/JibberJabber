@@ -58,8 +58,8 @@ class Lexer {
         return advance(count: matchLength)
     }
 
-    private func addToken(_ type: TokenType, value: Any? = nil) {
-        tokens.append(Token(type: type, value: value, line: line, col: col))
+    private func addToken(_ type: TokenType, value: Any? = nil, numericType: String? = nil) {
+        tokens.append(Token(type: type, value: value, line: line, col: col, numericType: numericType))
     }
 
     func tokenize() -> [Token] {
@@ -287,10 +287,13 @@ class Lexer {
         if peek() == Character(JJ.literals.numberPrefix) {
             _ = advance()
             if let num = matchRegex("-?\\d+\\.?\\d*") {
+                // Check for type suffix
+                let suffix = matchRegex("(i8|i16|i32|i64|u8|u16|u32|u64|u|f|d)")
+                let numericType = parseNumericType(suffix, hasDecimal: num.contains("."))
                 if num.contains(".") {
-                    addToken(.number, value: Double(num)!)
+                    addToken(.number, value: Double(num)!, numericType: numericType)
                 } else {
-                    addToken(.number, value: Int(num)!)
+                    addToken(.number, value: Int(num)!, numericType: numericType)
                 }
                 return
             }
@@ -299,10 +302,13 @@ class Lexer {
         // Plain numbers (for inline expressions)
         if let ch = peek(), ch.isNumber || (ch == "-" && (peek(offset: 1)?.isNumber ?? false)) {
             if let num = matchRegex("-?\\d+\\.?\\d*") {
+                // Check for type suffix
+                let suffix = matchRegex("(i8|i16|i32|i64|u8|u16|u32|u64|u|f|d)")
+                let numericType = parseNumericType(suffix, hasDecimal: num.contains("."))
                 if num.contains(".") {
-                    addToken(.number, value: Double(num)!)
+                    addToken(.number, value: Double(num)!, numericType: numericType)
                 } else {
-                    addToken(.number, value: Int(num)!)
+                    addToken(.number, value: Int(num)!, numericType: numericType)
                 }
                 return
             }
@@ -359,5 +365,25 @@ class Lexer {
 
         // Unknown - skip
         _ = advance()
+    }
+
+    private func parseNumericType(_ suffix: String?, hasDecimal: Bool) -> String? {
+        guard let suffix = suffix else {
+            return hasDecimal ? "Double" : "Int"
+        }
+        switch suffix {
+        case "i8": return "Int8"
+        case "i16": return "Int16"
+        case "i32": return "Int32"
+        case "i64": return "Int64"
+        case "u": return "UInt"
+        case "u8": return "UInt8"
+        case "u16": return "UInt16"
+        case "u32": return "UInt32"
+        case "u64": return "UInt64"
+        case "f": return "Float"
+        case "d": return "Double"
+        default: return hasDecimal ? "Double" : "Int"
+        }
     }
 }

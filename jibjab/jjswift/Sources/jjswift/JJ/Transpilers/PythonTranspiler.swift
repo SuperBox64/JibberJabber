@@ -3,7 +3,7 @@
 
 class PythonTranspiler {
     private var indentLevel = 0
-    private let T = JJ.targets.py
+    private let T = loadTarget("py")
 
     func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]

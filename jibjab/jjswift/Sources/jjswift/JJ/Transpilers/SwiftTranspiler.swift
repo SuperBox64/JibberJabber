@@ -3,7 +3,7 @@
 
 class SwiftTranspiler {
     private var indentLevel = 0
-    private let T = JJ.targets.swift
+    private let T = loadTarget("swift")
 
     func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]

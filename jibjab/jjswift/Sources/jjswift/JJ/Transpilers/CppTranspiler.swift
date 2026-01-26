@@ -3,7 +3,26 @@
 
 class CppTranspiler {
     private var indentLevel = 0
-    private let T = JJ.targets.cpp
+    private let T = loadTarget("cpp")
+
+    private func inferType(_ node: ASTNode) -> String {
+        if let literal = node as? Literal {
+            if literal.value is Bool {
+                return "Int"
+            } else if literal.value is Int {
+                return "Int"
+            } else if literal.value is Double {
+                return "Double"
+            } else if literal.value is String {
+                return "String"
+            }
+        }
+        return "Int"
+    }
+
+    private func getTargetType(_ jjType: String) -> String {
+        return T.types?[jjType] ?? "int"
+    }
 
     func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines), ""]
@@ -11,8 +30,11 @@ class CppTranspiler {
         // Forward declarations
         let funcs = program.statements.compactMap { $0 as? FuncDef }
         for f in funcs {
-            let params = f.params.map { "int \($0)" }.joined(separator: ", ")
+            let paramType = getTargetType("Int")
+            let params = f.params.map { "\(paramType) \($0)" }.joined(separator: ", ")
+            let returnType = getTargetType("Int")
             lines.append(T.funcDecl
+                .replacingOccurrences(of: "{type}", with: returnType)
                 .replacingOccurrences(of: "{name}", with: f.name)
                 .replacingOccurrences(of: "{params}", with: params))
         }
@@ -49,7 +71,9 @@ class CppTranspiler {
         if let printStmt = node as? PrintStmt {
             return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
         } else if let varDecl = node as? VarDecl {
+            let varType = getTargetType(inferType(varDecl.value))
             return ind() + T.var
+                .replacingOccurrences(of: "{type}", with: varType)
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
         } else if let loopStmt = node as? LoopStmt {
@@ -81,8 +105,11 @@ class CppTranspiler {
             }
             return result
         } else if let funcDef = node as? FuncDef {
-            let params = funcDef.params.map { "int \($0)" }.joined(separator: ", ")
+            let paramType = getTargetType("Int")
+            let params = funcDef.params.map { "\(paramType) \($0)" }.joined(separator: ", ")
+            let returnType = getTargetType("Int")
             let header = T.func
+                .replacingOccurrences(of: "{type}", with: returnType)
                 .replacingOccurrences(of: "{name}", with: funcDef.name)
                 .replacingOccurrences(of: "{params}", with: params)
             indentLevel = 1

@@ -3,7 +3,7 @@
 
 class JavaScriptTranspiler {
     private var indentLevel = 0
-    private let T = JJ.targets.js
+    private let T = loadTarget("js")
 
     func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]

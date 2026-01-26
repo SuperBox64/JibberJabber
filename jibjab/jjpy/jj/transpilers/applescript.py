@@ -3,14 +3,14 @@ JibJab AppleScript Transpiler - Converts JJ to AppleScript
 Uses shared config from common/jj.json
 """
 
-from ..lexer import JJ
+from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
 )
 
 # Get target config and operators
-T = JJ['targets']['applescript']
+T = load_target_config('applescript')
 OP = JJ['operators']
 
 

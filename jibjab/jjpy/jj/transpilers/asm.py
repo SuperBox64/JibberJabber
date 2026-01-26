@@ -3,12 +3,13 @@ JibJab ARM64 Assembly Transpiler - Converts JJ to ARM64 Assembly (macOS)
 Uses emit values from common/jj.json
 """
 
-from ..lexer import JJ
+from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
 )
 
+T = load_target_config('asm')
 OP = JJ['operators']
 
 

@@ -101,6 +101,19 @@ def load_jj_config():
 JJ = load_jj_config()
 
 
+def load_target_config(target: str):
+    """Load target config from common/targets/{target}.json"""
+    target_paths = [
+        os.path.join(os.path.dirname(__file__), '..', '..', 'common', 'targets', f'{target}.json'),
+        os.path.join(os.path.dirname(__file__), '..', '..', '..', 'common', 'targets', f'{target}.json'),
+    ]
+    for path in target_paths:
+        if os.path.exists(path):
+            with open(path) as f:
+                return json.load(f)
+    raise FileNotFoundError(f"Could not find common/targets/{target}.json")
+
+
 class Lexer:
     def __init__(self, source: str):
         self.source = source

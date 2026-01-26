@@ -3,14 +3,14 @@ JibJab Swift Transpiler - Converts JJ to Swift
 Uses shared config from common/jj.json
 """
 
-from ..lexer import JJ
+from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
 )
 
 # Get target config and operators
-T = JJ['targets']['swift']
+T = load_target_config('swift')
 OP = JJ['operators']
 
 

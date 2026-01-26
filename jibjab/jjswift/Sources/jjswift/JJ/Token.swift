@@ -70,4 +70,13 @@ struct Token {
     let value: Any?
     let line: Int
     let col: Int
+    let numericType: String?
+
+    init(type: TokenType, value: Any?, line: Int, col: Int, numericType: String? = nil) {
+        self.type = type
+        self.value = value
+        self.line = line
+        self.col = col
+        self.numericType = numericType
+    }
 }

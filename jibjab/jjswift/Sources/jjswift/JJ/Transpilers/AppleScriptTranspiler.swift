@@ -3,7 +3,7 @@
 
 class AppleScriptTranspiler {
     private var indentLevel = 0
-    private let T = JJ.targets.applescript
+    private let T = loadTarget("applescript")
     private let OP = JJ.operators
 
     func transpile(_ program: Program) -> String {

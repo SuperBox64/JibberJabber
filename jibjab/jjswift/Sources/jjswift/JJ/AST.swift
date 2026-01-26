@@ -25,6 +25,27 @@ struct VarRef: ASTNode {
 
 struct Literal: ASTNode {
     let value: Any?
+    let numericType: NumericType?
+
+    init(value: Any?, numericType: NumericType? = nil) {
+        self.value = value
+        self.numericType = numericType
+    }
+}
+
+enum NumericType: String {
+    case int = "Int"
+    case int8 = "Int8"
+    case int16 = "Int16"
+    case int32 = "Int32"
+    case int64 = "Int64"
+    case uint = "UInt"
+    case uint8 = "UInt8"
+    case uint16 = "UInt16"
+    case uint32 = "UInt32"
+    case uint64 = "UInt64"
+    case float = "Float"
+    case double = "Double"
 }
 
 struct BinaryOp: ASTNode {
