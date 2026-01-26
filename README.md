@@ -139,6 +139,11 @@ cd jibjab/jjpy
 python3 jj.py run ../examples/hello.jj
 python3 jj.py run ../examples/fibonacci.jj
 
+# Native compilation (two methods)
+python3 jj.py compile ../examples/fibonacci.jj fib      # True native compiler
+python3 jj.py asm ../examples/fibonacci.jj fib_asm      # Via assembly transpiler
+./fib      # Run the binary
+
 # Transpile to any target (py, js, c, cpp, asm, swift, applescript, objc, objcpp)
 python3 jj.py transpile ../examples/fibonacci.jj py
 python3 jj.py transpile ../examples/fibonacci.jj c
@@ -273,7 +278,8 @@ python3 jj.py transpile ../examples/fibonacci.jj c
 JibberJabber/
 ├── jibjab/
 │   ├── common/
-│   │   └── jj.json              # Shared language definition
+│   │   ├── jj.json              # Shared language definition
+│   │   └── arm64.json           # Shared ARM64/Mach-O constants
 │   │
 │   ├── jjswift/                 # Swift implementation
 │   │   ├── Package.swift
@@ -306,6 +312,7 @@ JibberJabber/
 │   │       ├── ast.py
 │   │       ├── parser.py
 │   │       ├── interpreter.py
+│   │       ├── native_compiler.py  # ARM64 Mach-O generator
 │   │       └── transpilers/
 │   │           ├── __init__.py
 │   │           ├── python.py

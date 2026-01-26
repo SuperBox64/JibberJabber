@@ -9,7 +9,8 @@ Two interpreters (Swift and Python), a native ARM64 compiler, shared language de
 ```
 jibjab/
 ├── common/
-│   └── jj.json              # Shared language definition (tokens, operators, transpiler templates)
+│   ├── jj.json              # Shared language definition (tokens, operators, transpiler templates)
+│   └── arm64.json           # Shared ARM64/Mach-O constants for native compiler
 │
 ├── jjswift/                 # Swift implementation
 │   ├── Package.swift        # Swift package manifest
@@ -42,6 +43,7 @@ jibjab/
 │       ├── ast.py           # AST node definitions
 │       ├── parser.py        # Recursive descent parser
 │       ├── interpreter.py   # Direct execution
+│       ├── native_compiler.py # ARM64 Mach-O generator
 │       └── transpilers/
 │           ├── __init__.py
 │           ├── python.py
@@ -127,6 +129,11 @@ cd jjpy
 # Run examples
 python3 jj.py run ../examples/hello.jj
 python3 jj.py run ../examples/fibonacci.jj
+
+# Native compilation (two methods)
+python3 jj.py compile ../examples/fibonacci.jj fib      # True native compiler
+python3 jj.py asm ../examples/fibonacci.jj fib_asm      # Via assembly transpiler
+./fib      # Run the binary
 
 # Transpile
 python3 jj.py transpile ../examples/fibonacci.jj py          # Python
