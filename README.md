@@ -338,7 +338,7 @@ Both implementations read from `jibjab/common/jj.json`, which defines keywords, 
 
 ```mermaid
 flowchart TD
-    A[📄 JJ Source Code] --> B[✂️ Lexer<br>Tokenizer]
+    A[📄 JJ Source Code] --> B[✂️  Lexer]
     B --> C[🌳 Parser<br>Builds AST]
     C --> D{Interpret<br>Compile<br>Transpile}
 
