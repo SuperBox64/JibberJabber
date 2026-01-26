@@ -400,30 +400,30 @@ This ensures both Swift and Python implementations produce identical output.
 
 ```mermaid
 flowchart TD
-    A[📄 JJ Source Code] --> B[🔤 LEXER<br>Tokenizer]
-    B --> C[🌳 PARSER<br>Builds AST]
-    C --> D{🎯<br>INTERPRET<br>OR<br>TRANSPILE}
+    A[📄 JJ Source Code] --> B[🔤 Lexer<br>Tokenizer]
+    B --> C[🌳 Parser<br>Builds AST]
+    C --> D{🎯<br>Interpret<br>Or<br>Transpile}
 
     A1[".jj file with<br>JibJab syntax"] -.- A
     B1["Breaks code into<br>tokens"] -.- B
     C1["Builds Abstract<br>Syntax Tree"] -.- C
 
-    D --> E[⚡ INTERPRETER]
+    D --> E[⚡ Interpreter]
     E --> F[🖥️ Program Output]
 
-    D --> G[🛠️ TRANSPILER]
+    D --> G[🛠️ Transpiler]
     G --> H[Python 🐍]
     G --> I[JavaScript 📜]
     G --> J[C ⚙️]
-    G --> K[ARM64 ASM 🔧]
+    G --> K[ARM64 Asm 🔧]
     G --> L[Swift 🍎]
 
-    H --> M[🔨 CREATE BIN]
+    H --> M[🔨 Create Bin]
     I --> M
     J --> M
     K --> M
     L --> M
-    M --> N[🚀 LAUNCH BIN]
+    M --> N[🚀 Launch Bin]
     N --> O[🖥️ Program Output]
 
     style M fill:#2a4a6e,stroke:#ffa500,color:#fff
