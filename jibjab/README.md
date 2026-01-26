@@ -245,7 +245,7 @@ Source → Lexer → Tokens → Parser → AST → Interpreter (run)
 
 ## Test Results
 
-| Example | Interpreter | Native | Python | JS | C/C++ | ASM | Swift | AS | ObjC/C++ |
+| Example | Interpreter | Mach-O | Python | JS | C/C++ | ASM | Swift | AS | ObjC/C++ |
 |---------|:-----------:|:------:|:------:|:--:|:-----:|:---:|:-----:|:--:|:--------:|
 | hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |

@@ -45,7 +45,12 @@
       "Bash(/tmp/vars4)",
       "Bash(/tmp/vars6)",
       "Bash(/tmp/vars7)",
-      "Bash(/tmp/fib2)"
+      "Bash(/tmp/fib2)",
+      "Bash(python3:*)",
+      "Bash(/tmp/hello_py)",
+      "Bash(/tmp/fib_py:*)",
+      "Bash(/tmp/vars_py)",
+      "Bash(/tmp/fizz_py)"
     ]
   }
 }

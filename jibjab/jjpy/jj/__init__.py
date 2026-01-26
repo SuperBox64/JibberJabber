@@ -22,6 +22,7 @@ from .transpilers import (
     ObjCTranspiler,
     ObjCppTranspiler
 )
+from .native_compiler import NativeCompiler
 
 __version__ = '1.0.0'
 
@@ -30,6 +31,7 @@ __all__ = [
     'Lexer', 'Token', 'TokenType',
     'Parser',
     'Interpreter',
+    'NativeCompiler',
 
     # AST
     'ASTNode', 'Program', 'PrintStmt', 'InputExpr', 'VarDecl', 'VarRef',

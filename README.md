@@ -250,7 +250,7 @@ python3 jj.py transpile ../examples/fibonacci.jj c
 
 ## Test Results
 
-| Example | Interpreter | Native | Python | JS | C/C++ | ASM | Swift | AS | ObjC/C++ |
+| Example | Interpreter | Mach-O | Python | JS | C/C++ | ASM | Swift | AS | ObjC/C++ |
 |---------|:-----------:|:------:|:------:|:--:|:-----:|:---:|:-----:|:--:|:--------:|
 | hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |

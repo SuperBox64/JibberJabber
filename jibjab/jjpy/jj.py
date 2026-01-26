@@ -7,8 +7,9 @@ This is the CLI entry point. The implementation is in the jj/ package.
 """
 
 import sys
+import subprocess
 from jj import (
-    Lexer, Parser, Interpreter,
+    Lexer, Parser, Interpreter, NativeCompiler,
     PythonTranspiler, JavaScriptTranspiler, CTranspiler, AssemblyTranspiler, SwiftTranspiler,
     AppleScriptTranspiler, CppTranspiler, ObjCTranspiler, ObjCppTranspiler
 )
@@ -18,15 +19,17 @@ def main():
     if len(sys.argv) < 3:
         print("JibJab Language v1.0")
         print("Usage:")
-        print("  python3 jj.py run <file.jj>            - Run JJ program")
-        print("  python3 jj.py transpile <file.jj> py   - Transpile to Python")
-        print("  python3 jj.py transpile <file.jj> js   - Transpile to JavaScript")
-        print("  python3 jj.py transpile <file.jj> c    - Transpile to C")
-        print("  python3 jj.py transpile <file.jj> asm  - Transpile to ARM64 Assembly")
-        print("  python3 jj.py transpile <file.jj> swift - Transpile to Swift")
+        print("  python3 jj.py run <file.jj>              - Run JJ program")
+        print("  python3 jj.py compile <file.jj> <output> - Compile to ARM64 Mach-O")
+        print("  python3 jj.py asm <file.jj> <output>     - Compile via assembly")
+        print("  python3 jj.py transpile <file.jj> py     - Transpile to Python")
+        print("  python3 jj.py transpile <file.jj> js     - Transpile to JavaScript")
+        print("  python3 jj.py transpile <file.jj> c      - Transpile to C")
+        print("  python3 jj.py transpile <file.jj> cpp    - Transpile to C++")
+        print("  python3 jj.py transpile <file.jj> asm    - Transpile to ARM64 Assembly")
+        print("  python3 jj.py transpile <file.jj> swift  - Transpile to Swift")
         print("  python3 jj.py transpile <file.jj> applescript - Transpile to AppleScript")
-        print("  python3 jj.py transpile <file.jj> cpp - Transpile to C++")
-        print("  python3 jj.py transpile <file.jj> objc - Transpile to Objective-C")
+        print("  python3 jj.py transpile <file.jj> objc   - Transpile to Objective-C")
         print("  python3 jj.py transpile <file.jj> objcpp - Transpile to Objective-C++")
         sys.exit(1)
 
@@ -44,6 +47,24 @@ def main():
     if command == 'run':
         interpreter = Interpreter()
         interpreter.run(program)
+    elif command == 'compile':
+        output = sys.argv[3] if len(sys.argv) > 3 else 'a.out'
+        compiler = NativeCompiler()
+        compiler.compile(program, output)
+        subprocess.run(['codesign', '-s', '-', output], check=True)
+        print(f"Compiled to {output}")
+    elif command == 'asm':
+        output = sys.argv[3] if len(sys.argv) > 3 else 'a.out'
+        transpiler = AssemblyTranspiler()
+        asm_code = transpiler.transpile(program)
+        asm_file = f'/tmp/{output}.s'
+        obj_file = f'/tmp/{output}.o'
+        with open(asm_file, 'w') as f:
+            f.write(asm_code)
+        subprocess.run(['as', '-o', obj_file, asm_file], check=True)
+        sdk_path = subprocess.check_output(['xcrun', '-sdk', 'macosx', '--show-sdk-path']).decode().strip()
+        subprocess.run(['ld', '-o', output, obj_file, '-lSystem', '-syslibroot', sdk_path, '-e', '_main', '-arch', 'arm64'], check=True)
+        print(f"Compiled to {output}")
     elif command == 'transpile':
         target = sys.argv[3] if len(sys.argv) > 3 else 'py'
         transpilers = {
@@ -59,7 +80,7 @@ def main():
         }
         if target not in transpilers:
             print(f"Unknown target: {target}")
-            print("Valid targets: py, js, c, asm, swift")
+            print("Valid targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp")
             sys.exit(1)
         transpiler = transpilers[target]()
         print(transpiler.transpile(program))

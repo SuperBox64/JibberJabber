@@ -1,0 +1,139 @@
+{
+  "macho": {
+    "magic": "0xFEEDFACF",
+    "cputype": "0x0100000C",
+    "cpusubtype": "0x00000000",
+    "filetype": "0x00000002",
+    "flags": "0x00200085",
+    "pageSize": 16384,
+    "textStart": "0x100000000",
+    "loadCommands": {
+      "LC_SEGMENT_64": "0x19",
+      "LC_LOAD_DYLINKER": "0x0E",
+      "LC_SYMTAB": "0x02",
+      "LC_DYSYMTAB": "0x0B",
+      "LC_BUILD_VERSION": "0x32",
+      "LC_MAIN": "0x80000028",
+      "LC_DYLD_CHAINED_FIXUPS": "0x80000034",
+      "LC_DYLD_EXPORTS_TRIE": "0x80000033"
+    },
+    "cmdSizes": {
+      "segment": 72,
+      "section": 80,
+      "dylinker": 44,
+      "buildVersion": 24,
+      "symtab": 24,
+      "chainedFixups": 16,
+      "exportTrie": 16,
+      "main": 24
+    },
+    "vmProt": {
+      "read": 1,
+      "write": 2,
+      "execute": 4
+    },
+    "sectionTypes": {
+      "code": "0x80000400",
+      "cstring": "0x00000002"
+    },
+    "dylinkerPath": "/usr/lib/dyld",
+    "minOS": "0x000B0000",
+    "sdk": "0x000E0000"
+  },
+  "syscalls": {
+    "exit": "0x2000001",
+    "write": "0x2000004"
+  },
+  "instructions": {
+    "prologue": {
+      "stp_fp_lr": "0xA9BF7BFD",
+      "stp_x19_x20": "0xA9BF53F3",
+      "mov_fp_sp": "0x910003FD",
+      "sub_sp_64": "0xD10103FF",
+      "sub_sp_48": "0xD100C3FF"
+    },
+    "epilogue": {
+      "add_sp_64": "0x910103FF",
+      "add_sp_48": "0x9100C3FF",
+      "ldp_x19_x20": "0xA8C153F3",
+      "ldp_fp_lr": "0xA8C17BFD",
+      "ret": "0xD65F03C0"
+    },
+    "syscall": {
+      "svc": "0xD4001001",
+      "movz_x16_1": "0xD2800030",
+      "movz_x16_4": "0xD2800090",
+      "movk_x16_0x200_lsl16": "0xF2A04010"
+    },
+    "moves": {
+      "mov_w0_0": "0x52800000",
+      "mov_w9_w0": "0x2A0003E9",
+      "mov_w1_w0": "0x2A0003E1",
+      "mov_x0_1": "0xD2800020",
+      "mov_x1_sp": "0x910003E1",
+      "mov_x1_x10": "0xAA0A03E1",
+      "mov_x2_1": "0xD2800022",
+      "mov_w8_w0": "0x2A0003E8",
+      "neg_w8_w0": "0x4B0003E8",
+      "mov_w9_minus": "0x528005A9",
+      "mov_w9_0": "0x52800009",
+      "mov_w9_1": "0x52800029",
+      "mov_w11_10": "0x5280014B",
+      "mov_w13_newline": "0x5280014D"
+    },
+    "arithmetic": {
+      "add": "0x0B010000",
+      "sub": "0x4B010000",
+      "mul": "0x1B017C00",
+      "sdiv": "0x1AC10C00",
+      "udiv_w12_w8_w11": "0x1ACB090C",
+      "udiv_w8_w8_w11": "0x1ACB0908",
+      "msub_w12": "0x1B0BA18C",
+      "add_w12_48": "0x1100C18C",
+      "add_w0_1": "0x11000400"
+    },
+    "compare": {
+      "cmp_w0_0": "0x7100001F",
+      "cmp_w0_w1": "0x6B01001F",
+      "cmp_w9_w0": "0x6B00013F",
+      "cmp_w8_0": "0x7100011F",
+      "cmp_w9_0": "0x7100013F"
+    },
+    "cset": {
+      "eq": "0x1A9F17E0",
+      "ne": "0x1A9F07E0",
+      "lt": "0x1A9FB7E0",
+      "gt": "0x1A9FC7E0"
+    },
+    "branch": {
+      "b": "0x14000000",
+      "bl": "0x94000000",
+      "bcond_base": "0x54000000"
+    },
+    "branchCond": {
+      "eq": 0,
+      "ne": 1,
+      "ge": 10,
+      "le": 13
+    },
+    "memory": {
+      "str_x0_push": "0xF81F0FE0",
+      "ldr_x0_pop": "0xF84107E0",
+      "strb_w9_sp": "0x390003E9",
+      "strb_w13_sp": "0x390003ED",
+      "strb_w12_predec": "0x381FFD4C",
+      "strb_w13_predec": "0x381FFD4D",
+      "ldrb_w13_sp": "0x394003ED",
+      "add_x10_sp_32": "0x910083EA",
+      "add_x14_sp_32": "0x910083EE",
+      "sub_x2_x14_x10": "0xCB0A01C2"
+    },
+    "adrp": "0x90000000",
+    "add_imm_base": "0x91000000"
+  },
+  "printInt": {
+    "bge_skip_neg_offset": "0x540000CA",
+    "b_continue_offset": "0x14000003",
+    "beq_skip_copy_offset": "0x54000060"
+  }
+}
