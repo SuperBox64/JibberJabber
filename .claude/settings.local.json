@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(swift run jjswift run ../examples/variables.jj)",
+      "Bash(swift run jjswift run ../examples/fibonacci.jj)",
+      "Bash(swift run jjswift run ../examples/fizzbuzz.jj)"
+    ]
+  }
+}

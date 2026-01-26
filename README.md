@@ -393,6 +393,7 @@ flowchart TD
 ## Contributing
 
 Contributions welcome:
+- **Native compiler** - Direct AST → machine code compilation (bypass transpilation)
 - New transpiler targets (Go, Rust, Linux ARM64)
 - Language features (arrays, objects, imports)
 - IDE syntax highlighting
