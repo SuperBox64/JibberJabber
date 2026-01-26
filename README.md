@@ -306,12 +306,12 @@ python3 jj.py transpile ../examples/fibonacci.jj swift > /tmp/fib.swift && swift
 
 All examples have been tested across both implementations and all execution modes:
 
-| Example | Swift Interp | Python Interp | Python | JavaScript | C | ARM64 ASM | Swift |
-|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---------:|:-----:|
-| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Example | Swift Interp | Python Interp | Python | JavaScript | C | C++ | ARM64 ASM | Swift | AppleScript | Obj-C | Obj-C++ |
+|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---:|:---------:|:-----:|:-----------:|:-----:|:-------:|
+| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -338,7 +338,12 @@ JibberJabber/
 │   │               ├── PythonTranspiler.swift
 │   │               ├── JavaScriptTranspiler.swift
 │   │               ├── CTranspiler.swift
-│   │               └── AssemblyTranspiler.swift
+│   │               ├── CppTranspiler.swift
+│   │               ├── AssemblyTranspiler.swift
+│   │               ├── SwiftTranspiler.swift
+│   │               ├── AppleScriptTranspiler.swift
+│   │               ├── ObjCTranspiler.swift
+│   │               └── ObjCppTranspiler.swift
 │   │
 │   ├── jjpy/                    # Python implementation
 │   │   ├── jj.py                # CLI entry point
@@ -353,7 +358,12 @@ JibberJabber/
 │   │           ├── python.py
 │   │           ├── javascript.py
 │   │           ├── c.py
-│   │           └── asm.py
+│   │           ├── cpp.py
+│   │           ├── asm.py
+│   │           ├── swift.py
+│   │           ├── applescript.py
+│   │           ├── objc.py
+│   │           └── objcpp.py
 │   │
 │   ├── examples/                # Example JJ programs
 │   │   ├── hello.jj
@@ -467,7 +477,7 @@ flowchart TD
 ## Contributing
 
 This is an experimental language - contributions welcome! Areas of interest:
-- Additional transpiler targets (Go, Rust, C++, AppleScript, Arm64 ELF Assembly)
+- Additional transpiler targets (Go, Rust, ARM64 ELF Assembly for Linux)
 - Language features (arrays, objects, imports)
 - Optimization passes
 - IDE/editor syntax highlighting

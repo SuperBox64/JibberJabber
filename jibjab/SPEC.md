@@ -142,6 +142,22 @@ JJ uses "semantic hashes" - tokens that encode meaning through patterns LLMs rec
 ~>frob{7a3}::emit(~>invoke{fib}::with(#10))
 ```
 
+## Transpilation Targets
+
+JibJab can be transpiled to the following languages:
+
+| Target | Extension | Command | Notes |
+|--------|-----------|---------|-------|
+| Python | `.py` | `py` | Cross-platform scripting |
+| JavaScript | `.js` | `js` | Web and Node.js |
+| C | `.c` | `c` | Native performance |
+| C++ | `.cpp` | `cpp` | Object-oriented native code |
+| ARM64 Assembly | `.s` | `asm` | Apple Silicon native (macOS) |
+| Swift | `.swift` | `swift` | Apple ecosystem |
+| AppleScript | `.applescript` | `applescript` | macOS automation |
+| Objective-C | `.m` | `objc` | Apple legacy development |
+| Objective-C++ | `.mm` | `objcpp` | Mixed C++/Objective-C |
+
 ## Why LLMs Understand This
 
 1. **Semantic Clustering**: Tokens like `frob`, `slurp`, `yeet`, `snag` cluster near their actual meanings in embedding space

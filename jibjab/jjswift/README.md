@@ -26,11 +26,15 @@ swift run jjswift run ../examples/fibonacci.jj
 swift run jjswift run ../examples/fizzbuzz.jj
 
 # Transpile to other languages
-swift run jjswift transpile ../examples/fibonacci.jj py      # Python
-swift run jjswift transpile ../examples/fibonacci.jj js      # JavaScript
-swift run jjswift transpile ../examples/fibonacci.jj c       # C
-swift run jjswift transpile ../examples/fibonacci.jj asm     # ARM64 Assembly
-swift run jjswift transpile ../examples/fibonacci.jj swift   # Swift
+swift run jjswift transpile ../examples/fibonacci.jj py          # Python
+swift run jjswift transpile ../examples/fibonacci.jj js          # JavaScript
+swift run jjswift transpile ../examples/fibonacci.jj c           # C
+swift run jjswift transpile ../examples/fibonacci.jj cpp         # C++
+swift run jjswift transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
+swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
+swift run jjswift transpile ../examples/fibonacci.jj applescript # AppleScript
+swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
+swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 
 # Using release binary
 .build/release/jjswift run ../examples/hello.jj
@@ -54,8 +58,12 @@ jjswift/
             ├── PythonTranspiler.swift
             ├── JavaScriptTranspiler.swift
             ├── CTranspiler.swift
+            ├── CppTranspiler.swift
             ├── AssemblyTranspiler.swift
-            └── SwiftTranspiler.swift
+            ├── SwiftTranspiler.swift
+            ├── AppleScriptTranspiler.swift
+            ├── ObjCTranspiler.swift
+            └── ObjCppTranspiler.swift
 ```
 
 ## Pipeline

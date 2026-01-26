@@ -17,11 +17,15 @@ python3 jj.py run ../examples/fibonacci.jj
 python3 jj.py run ../examples/fizzbuzz.jj
 
 # Transpile to other languages
-python3 jj.py transpile ../examples/fibonacci.jj py      # Python
-python3 jj.py transpile ../examples/fibonacci.jj js      # JavaScript
-python3 jj.py transpile ../examples/fibonacci.jj c       # C
-python3 jj.py transpile ../examples/fibonacci.jj asm     # ARM64 Assembly
-python3 jj.py transpile ../examples/fibonacci.jj swift   # Swift
+python3 jj.py transpile ../examples/fibonacci.jj py          # Python
+python3 jj.py transpile ../examples/fibonacci.jj js          # JavaScript
+python3 jj.py transpile ../examples/fibonacci.jj c           # C
+python3 jj.py transpile ../examples/fibonacci.jj cpp         # C++
+python3 jj.py transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
+python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
+python3 jj.py transpile ../examples/fibonacci.jj applescript # AppleScript
+python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
+python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 ```
 
 ## Structure
@@ -39,8 +43,12 @@ jjpy/
         ├── python.py
         ├── javascript.py
         ├── c.py
-        ├── asm.py     # ARM64 Assembly (macOS)
-        └── swift.py
+        ├── cpp.py
+        ├── asm.py         # ARM64 Assembly (macOS)
+        ├── swift.py
+        ├── applescript.py
+        ├── objc.py
+        └── objcpp.py
 ```
 
 ## Pipeline

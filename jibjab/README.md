@@ -26,8 +26,12 @@ jibjab/
 │               ├── PythonTranspiler.swift
 │               ├── JavaScriptTranspiler.swift
 │               ├── CTranspiler.swift
+│               ├── CppTranspiler.swift
 │               ├── AssemblyTranspiler.swift
-│               └── SwiftTranspiler.swift
+│               ├── SwiftTranspiler.swift
+│               ├── AppleScriptTranspiler.swift
+│               ├── ObjCTranspiler.swift
+│               └── ObjCppTranspiler.swift
 │
 ├── jjpy/                    # Python implementation
 │   ├── jj.py                # CLI entry point
@@ -42,8 +46,12 @@ jibjab/
 │           ├── python.py
 │           ├── javascript.py
 │           ├── c.py
+│           ├── cpp.py
 │           ├── asm.py       # ARM64 Assembly (macOS)
-│           └── swift.py
+│           ├── swift.py
+│           ├── applescript.py
+│           ├── objc.py
+│           └── objcpp.py
 │
 ├── examples/                # Example JJ programs
 │   ├── hello.jj
@@ -53,17 +61,23 @@ jibjab/
 │
 ├── output/                  # Pre-built transpiled code and binaries
 │   ├── jjpy/                # Output from Python implementation (jjpy)
-│   │   ├── *.c, *.js, *.py, *.s, *.swift  # Transpiled source files
+│   │   ├── *.c, *.cpp, *.js, *.py, *.s, *.swift, *.applescript, *.m, *.mm
 │   │   ├── *_c              # C binaries (~33KB)
+│   │   ├── *_cpp            # C++ binaries (~33KB)
 │   │   ├── *_asm            # ARM64 Assembly binaries (~49KB)
 │   │   ├── *_swift          # Swift binaries (~50KB)
+│   │   ├── *_objc           # Objective-C binaries (~33KB)
+│   │   ├── *_objcpp         # Objective-C++ binaries (~33KB)
 │   │   ├── *_qjs            # QuickJS JavaScript binaries (~722KB)
 │   │   └── *_py             # PyInstaller Python binaries (~3.4MB)
 │   └── jjswift/             # Output from Swift implementation (jjswift)
-│       ├── *.c, *.js, *.py, *.s, *.swift  # Transpiled source files
+│       ├── *.c, *.cpp, *.js, *.py, *.s, *.swift, *.applescript, *.m, *.mm
 │       ├── *_c              # C binaries (~33KB)
+│       ├── *_cpp            # C++ binaries (~33KB)
 │       ├── *_asm            # ARM64 Assembly binaries (~49KB)
 │       ├── *_swift          # Swift binaries (~50KB)
+│       ├── *_objc           # Objective-C binaries (~33KB)
+│       ├── *_objcpp         # Objective-C++ binaries (~33KB)
 │       ├── *_qjs            # QuickJS JavaScript binaries (~722KB)
 │       └── *_py             # PyInstaller Python binaries (~3.4MB)
 │
@@ -88,11 +102,15 @@ swift run jjswift run ../examples/hello.jj
 swift run jjswift run ../examples/fibonacci.jj
 
 # Transpile
-swift run jjswift transpile ../examples/fibonacci.jj py    # Python
-swift run jjswift transpile ../examples/fibonacci.jj js    # JavaScript
-swift run jjswift transpile ../examples/fibonacci.jj c     # C
-swift run jjswift transpile ../examples/fibonacci.jj asm   # ARM64 Assembly
-swift run jjswift transpile ../examples/fibonacci.jj swift # Swift
+swift run jjswift transpile ../examples/fibonacci.jj py          # Python
+swift run jjswift transpile ../examples/fibonacci.jj js          # JavaScript
+swift run jjswift transpile ../examples/fibonacci.jj c           # C
+swift run jjswift transpile ../examples/fibonacci.jj cpp         # C++
+swift run jjswift transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
+swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
+swift run jjswift transpile ../examples/fibonacci.jj applescript # AppleScript
+swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
+swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 ```
 
 ### Using Python (`jjpy`)
@@ -105,11 +123,15 @@ python3 jj.py run ../examples/hello.jj
 python3 jj.py run ../examples/fibonacci.jj
 
 # Transpile
-python3 jj.py transpile ../examples/fibonacci.jj py    # Python
-python3 jj.py transpile ../examples/fibonacci.jj js    # JavaScript
-python3 jj.py transpile ../examples/fibonacci.jj c     # C
-python3 jj.py transpile ../examples/fibonacci.jj asm   # ARM64 Assembly
-python3 jj.py transpile ../examples/fibonacci.jj swift # Swift
+python3 jj.py transpile ../examples/fibonacci.jj py          # Python
+python3 jj.py transpile ../examples/fibonacci.jj js          # JavaScript
+python3 jj.py transpile ../examples/fibonacci.jj c           # C
+python3 jj.py transpile ../examples/fibonacci.jj cpp         # C++
+python3 jj.py transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
+python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
+python3 jj.py transpile ../examples/fibonacci.jj applescript # AppleScript
+python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
+python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 ```
 
 ---
@@ -276,12 +298,12 @@ VarDecl(name="x", value=Literal(42))
 
 All examples pass on both implementations across all targets:
 
-| Example | Swift Interp | Python Interp | Python | JavaScript | C | ARM64 ASM | Swift |
-|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---------:|:-----:|
-| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Example | Swift Interp | Python Interp | Python | JavaScript | C | C++ | ARM64 ASM | Swift | AppleScript | Obj-C | Obj-C++ |
+|---------|:------------:|:-------------:|:------:|:----------:|:-:|:---:|:---------:|:-----:|:-----------:|:-----:|:-------:|
+| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -292,6 +314,9 @@ You can create standalone executables from transpiled code. Here's the size comp
 | Target | Size | Tool |
 |--------|------|------|
 | C | ~33KB | gcc/clang |
+| C++ | ~33KB | g++/clang++ |
+| Objective-C | ~33KB | clang |
+| Objective-C++ | ~33KB | clang++ |
 | ARM64 Assembly | ~49KB | as + ld |
 | Swift | ~100KB | swiftc |
 | JavaScript | ~722KB | QuickJS |
@@ -317,6 +342,45 @@ gcc -o fib_c fib.c
 
 # Step 3: Run the binary
 ./fib_c
+```
+
+### C++ Binaries
+
+```bash
+# Step 1: Transpile JJ to C++
+swift run jjswift transpile ../examples/fibonacci.jj cpp > fib.cpp
+
+# Step 2: Compile C++ to binary
+g++ -o fib_cpp fib.cpp
+
+# Step 3: Run the binary
+./fib_cpp
+```
+
+### Objective-C Binaries
+
+```bash
+# Step 1: Transpile JJ to Objective-C
+swift run jjswift transpile ../examples/fibonacci.jj objc > fib.m
+
+# Step 2: Compile Objective-C to binary
+clang -framework Foundation -o fib_objc fib.m
+
+# Step 3: Run the binary
+./fib_objc
+```
+
+### Objective-C++ Binaries
+
+```bash
+# Step 1: Transpile JJ to Objective-C++
+swift run jjswift transpile ../examples/fibonacci.jj objcpp > fib.mm
+
+# Step 2: Compile Objective-C++ to binary
+clang++ -framework Foundation -o fib_objcpp fib.mm
+
+# Step 3: Run the binary
+./fib_objcpp
 ```
 
 ### ARM64 Assembly Binaries (macOS)
