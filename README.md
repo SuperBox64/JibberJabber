@@ -410,7 +410,7 @@ flowchart TD
     style D fill:#0f3460,stroke:#e94560,color:#fff
     style E fill:#1a1a2e,stroke:#00ff88,color:#fff
     style F fill:#00ff88,stroke:#00ff88,color:#000
-    style G fill:#1a1a2e,stroke:#ff6b6b,color:#fff
+    style G fill:#2a4a6e,stroke:#ffa500,color:#fff
 ```
 
 </div>
