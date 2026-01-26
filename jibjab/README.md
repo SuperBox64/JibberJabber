@@ -188,21 +188,21 @@ Both produce ~48-50KB signed Mach-O binaries.
 
 ---
 
-## 3. Transpiling (Source-to-Source)
+## 3. Transpiling (To Source or Binary)
 
-Convert JJ to other languages:
+Convert JJ to other languages - outputs source code or compiled binaries:
 
-| Target | Output | Run With |
-|--------|--------|----------|
-| `py` | Python source | `python3` |
-| `js` | JavaScript source | `node` / `qjs` |
-| `c` | C source | `clang` → binary |
-| `cpp` | C++ source | `clang++` → binary |
-| `swift` | Swift source | `swiftc` → binary |
-| `objc` | Objective-C source | `clang` → binary |
-| `objcpp` | Objective-C++ source | `clang++` → binary |
-| `asm` | ARM64 Assembly | `as` + `ld` → binary |
-| `applescript` | Compiled AppleScript | `osascript` |
+| Target | Output | Compile | Run |
+|--------|--------|---------|-----|
+| `py` | Source | - | `python3 fib.py` |
+| `js` | Source | - | `node fib.js` |
+| `c` | Source | `clang fib.c -o fib` | `./fib` |
+| `cpp` | Source | `clang++ fib.cpp -o fib` | `./fib` |
+| `swift` | Source | `swiftc fib.swift -o fib` | `./fib` |
+| `objc` | Source | `clang -framework Foundation fib.m -o fib` | `./fib` |
+| `objcpp` | Source | `clang++ -framework Foundation fib.mm -o fib` | `./fib` |
+| `asm` | Source | `as fib.s -o fib.o && ld ...` | `./fib` |
+| `applescript` | **Binary** | (automatic via osacompile) | `osascript fib.scpt` |
 
 ```bash
 # Interpreted languages (prints source code)
@@ -213,7 +213,7 @@ jjswift transpile examples/fibonacci.jj js
 jjswift transpile examples/fibonacci.jj c > fib.c
 clang fib.c -o fib && ./fib
 
-# AppleScript (compiles automatically via osacompile)
+# AppleScript (compiles directly to binary via osacompile)
 jjswift transpile examples/fibonacci.jj applescript fib.scpt
 osascript fib.scpt
 ```
