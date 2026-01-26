@@ -29,7 +29,9 @@
     "eq":  {"symbol": "<=>", "emit": "=="},
     "neq": {"symbol": "<!=>", "emit": "!="},
     "lt":  {"symbol": "<lt>", "emit": "<"},
+    "lte": {"symbol": "<lte>", "emit": "<="},
     "gt":  {"symbol": "<gt>", "emit": ">"},
+    "gte": {"symbol": "<gte>", "emit": ">="},
     "and": {"symbol": "<&&>", "emit": "&&"},
     "or":  {"symbol": "<||>", "emit": "||"},
     "not": {"symbol": "<!>", "emit": "!"}

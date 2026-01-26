@@ -48,7 +48,9 @@ struct JJConfig: Codable {
         let eq: Operator
         let neq: Operator
         let lt: Operator
+        let lte: Operator
         let gt: Operator
+        let gte: Operator
         let and: Operator
         let or: Operator
         let not: Operator

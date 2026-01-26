@@ -102,7 +102,9 @@ class Interpreter:
                 OP['eq']['emit']: lambda a, b: a == b,
                 OP['neq']['emit']: lambda a, b: a != b,
                 OP['lt']['emit']: lambda a, b: a < b,
+                OP['lte']['emit']: lambda a, b: a <= b,
                 OP['gt']['emit']: lambda a, b: a > b,
+                OP['gte']['emit']: lambda a, b: a >= b,
                 OP['and']['emit']: lambda a, b: a and b,
                 OP['or']['emit']: lambda a, b: a or b,
             }

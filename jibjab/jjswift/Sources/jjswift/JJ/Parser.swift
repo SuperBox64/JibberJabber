@@ -211,8 +211,12 @@ class Parser {
     private func parseComparison() throws -> ASTNode {
         var left = try parseAdditive()
         while true {
-            if match(.lt) != nil {
+            if match(.lte) != nil {
+                left = BinaryOp(left: left, op: JJ.operators.lte.emit, right: try parseAdditive())
+            } else if match(.lt) != nil {
                 left = BinaryOp(left: left, op: JJ.operators.lt.emit, right: try parseAdditive())
+            } else if match(.gte) != nil {
+                left = BinaryOp(left: left, op: JJ.operators.gte.emit, right: try parseAdditive())
             } else if match(.gt) != nil {
                 left = BinaryOp(left: left, op: JJ.operators.gt.emit, right: try parseAdditive())
             } else {

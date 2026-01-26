@@ -178,8 +178,12 @@ class Parser:
     def parse_comparison(self) -> ASTNode:
         left = self.parse_additive()
         while True:
-            if self.match(TokenType.LT):
+            if self.match(TokenType.LTE):
+                left = BinaryOp(left, OP['lte']['emit'], self.parse_additive())
+            elif self.match(TokenType.LT):
                 left = BinaryOp(left, OP['lt']['emit'], self.parse_additive())
+            elif self.match(TokenType.GTE):
+                left = BinaryOp(left, OP['gte']['emit'], self.parse_additive())
             elif self.match(TokenType.GT):
                 left = BinaryOp(left, OP['gt']['emit'], self.parse_additive())
             else:

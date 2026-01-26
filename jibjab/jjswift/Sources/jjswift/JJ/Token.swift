@@ -24,7 +24,9 @@ enum TokenType {
     case eq         // <=>
     case neq        // <!=>
     case lt         // <lt>
+    case lte        // <lte>
     case gt         // <gt>
+    case gte        // <gte>
     case and        // <&&>
     case or         // <||>
     case not        // <!>

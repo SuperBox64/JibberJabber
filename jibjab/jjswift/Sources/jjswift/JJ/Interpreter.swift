@@ -125,8 +125,12 @@ class Interpreter {
                 return !isEqual(left, right)
             case let op where op == OP.lt.emit:
                 return toDouble(left) < toDouble(right)
+            case let op where op == OP.lte.emit:
+                return toDouble(left) <= toDouble(right)
             case let op where op == OP.gt.emit:
                 return toDouble(left) > toDouble(right)
+            case let op where op == OP.gte.emit:
+                return toDouble(left) >= toDouble(right)
             case let op where op == OP.and.emit:
                 return toBool(left) && toBool(right)
             case let op where op == OP.or.emit:

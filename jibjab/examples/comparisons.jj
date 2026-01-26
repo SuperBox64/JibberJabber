@@ -1,0 +1,61 @@
+@@ JibJab Comparison Operators Example
+@@ Tests <lt>, <lte>, <gt>, <gte>, <=>, <!=>, <&&>, <||>
+
+@@ Test values
+~>snag{x}::val(#5)
+~>snag{y}::val(#10)
+~>snag{z}::val(#5)
+
+@@ Less than
+~>frob{7a3}::emit("5 < 10:")
+<~when{x <lt> y}>>
+    ~>frob{7a3}::emit("true")
+<~>>
+
+@@ Less than or equal
+~>frob{7a3}::emit("5 <= 5:")
+<~when{x <lte> z}>>
+    ~>frob{7a3}::emit("true")
+<~>>
+
+~>frob{7a3}::emit("5 <= 10:")
+<~when{x <lte> y}>>
+    ~>frob{7a3}::emit("true")
+<~>>
+
+@@ Greater than
+~>frob{7a3}::emit("10 > 5:")
+<~when{y <gt> x}>>
+    ~>frob{7a3}::emit("true")
+<~>>
+
+@@ Greater than or equal
+~>frob{7a3}::emit("5 >= 5:")
+<~when{x <gte> z}>>
+    ~>frob{7a3}::emit("true")
+<~>>
+
+~>frob{7a3}::emit("10 >= 5:")
+<~when{y <gte> x}>>
+    ~>frob{7a3}::emit("true")
+<~>>
+
+@@ Equality
+~>frob{7a3}::emit("5 == 5:")
+<~when{x <=> z}>>
+    ~>frob{7a3}::emit("true")
+<~>>
+
+@@ Not equal
+~>frob{7a3}::emit("5 != 10:")
+<~when{x <!=> y}>>
+    ~>frob{7a3}::emit("true")
+<~>>
+
+@@ Combined with logical operators
+~>frob{7a3}::emit("5 <= 10 && 10 >= 5:")
+<~when{(x <lte> y) <&&> (y <gte> x)}>>
+    ~>frob{7a3}::emit("true")
+<~>>
+
+~>frob{7a3}::emit("Done!")

@@ -200,8 +200,16 @@ class Lexer {
             addToken(.eq)
             return
         }
+        if match(JJ.operators.lte.symbol) != nil {
+            addToken(.lte)
+            return
+        }
         if match(JJ.operators.lt.symbol) != nil {
             addToken(.lt)
+            return
+        }
+        if match(JJ.operators.gte.symbol) != nil {
+            addToken(.gte)
             return
         }
         if match(JJ.operators.gt.symbol) != nil {

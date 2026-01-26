@@ -35,7 +35,9 @@ class TokenType(Enum):
     EQ = auto()
     NEQ = auto()
     LT = auto()
+    LTE = auto()
     GT = auto()
+    GTE = auto()
     AND = auto()
     OR = auto()
     NOT = auto()
@@ -239,8 +241,14 @@ class Lexer:
         if self.match(JJ['operators']['eq']['symbol']):
             self.add_token(TokenType.EQ)
             return
+        if self.match(JJ['operators']['lte']['symbol']):
+            self.add_token(TokenType.LTE)
+            return
         if self.match(JJ['operators']['lt']['symbol']):
             self.add_token(TokenType.LT)
+            return
+        if self.match(JJ['operators']['gte']['symbol']):
+            self.add_token(TokenType.GTE)
             return
         if self.match(JJ['operators']['gt']['symbol']):
             self.add_token(TokenType.GT)
