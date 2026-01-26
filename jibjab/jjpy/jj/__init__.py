@@ -16,7 +16,11 @@ from .transpilers import (
     JavaScriptTranspiler,
     CTranspiler,
     AssemblyTranspiler,
-    SwiftTranspiler
+    SwiftTranspiler,
+    AppleScriptTranspiler,
+    CppTranspiler,
+    ObjCTranspiler,
+    ObjCppTranspiler
 )
 
 __version__ = '1.0.0'
@@ -38,4 +42,8 @@ __all__ = [
     'CTranspiler',
     'AssemblyTranspiler',
     'SwiftTranspiler',
+    'AppleScriptTranspiler',
+    'CppTranspiler',
+    'ObjCTranspiler',
+    'ObjCppTranspiler',
 ]

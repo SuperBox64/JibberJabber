@@ -78,6 +78,10 @@ struct JJConfig: Codable {
         let js: TargetJS
         let c: TargetC
         let swift: TargetSwift
+        let applescript: TargetAppleScript
+        let cpp: TargetCpp
+        let objc: TargetObjC
+        let objcpp: TargetObjCpp
     }
 
     struct TargetPy: Codable {
@@ -168,6 +172,105 @@ struct JJConfig: Codable {
         let `true`: String
         let `false`: String
         let `nil`: String
+    }
+
+    struct TargetAppleScript: Codable {
+        let name: String
+        let ext: String
+        let header: String
+        let print: String
+        let `var`: String
+        let forRange: String
+        let forIn: String
+        let `while`: String
+        let `if`: String
+        let `else`: String
+        let `func`: String
+        let `return`: String
+        let call: String
+        let blockEnd: String
+        let blockEndRepeat: String
+        let blockEndIf: String
+        let blockEndFunc: String
+        let indent: String
+        let `true`: String
+        let `false`: String
+        let `nil`: String
+        let and: String
+        let or: String
+        let not: String
+        let eq: String
+        let neq: String
+        let mod: String
+    }
+
+    struct TargetCpp: Codable {
+        let name: String
+        let ext: String
+        let header: String
+        let printInt: String
+        let printStr: String
+        let `var`: String
+        let forRange: String
+        let `while`: String
+        let `if`: String
+        let `else`: String
+        let `func`: String
+        let funcDecl: String
+        let `return`: String
+        let call: String
+        let blockEnd: String
+        let indent: String
+        let `true`: String
+        let `false`: String
+        let `nil`: String
+        let main: String
+    }
+
+    struct TargetObjC: Codable {
+        let name: String
+        let ext: String
+        let header: String
+        let printInt: String
+        let printStr: String
+        let `var`: String
+        let forRange: String
+        let `while`: String
+        let `if`: String
+        let `else`: String
+        let `func`: String
+        let funcDecl: String
+        let `return`: String
+        let call: String
+        let blockEnd: String
+        let indent: String
+        let `true`: String
+        let `false`: String
+        let `nil`: String
+        let main: String
+    }
+
+    struct TargetObjCpp: Codable {
+        let name: String
+        let ext: String
+        let header: String
+        let printInt: String
+        let printStr: String
+        let `var`: String
+        let forRange: String
+        let `while`: String
+        let `if`: String
+        let `else`: String
+        let `func`: String
+        let funcDecl: String
+        let `return`: String
+        let call: String
+        let blockEnd: String
+        let indent: String
+        let `true`: String
+        let `false`: String
+        let `nil`: String
+        let main: String
     }
 }
 

@@ -7,6 +7,10 @@ from .javascript import JavaScriptTranspiler
 from .c import CTranspiler
 from .asm import AssemblyTranspiler
 from .swift import SwiftTranspiler
+from .applescript import AppleScriptTranspiler
+from .cpp import CppTranspiler
+from .objc import ObjCTranspiler
+from .objcpp import ObjCppTranspiler
 
 __all__ = [
     'PythonTranspiler',
@@ -14,4 +18,8 @@ __all__ = [
     'CTranspiler',
     'AssemblyTranspiler',
     'SwiftTranspiler',
+    'AppleScriptTranspiler',
+    'CppTranspiler',
+    'ObjCTranspiler',
+    'ObjCppTranspiler',
 ]
