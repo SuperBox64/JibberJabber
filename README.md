@@ -113,14 +113,13 @@ swift run jjswift transpile ../examples/fibonacci.jj swift > /tmp/fib.swift && s
 ```bash
 cd jibjab/jjpy
 
-# Run
+# Run JJ programs
 python3 jj.py run ../examples/hello.jj
 python3 jj.py run ../examples/fibonacci.jj
 
-# Transpile (same targets as jjswift)
+# Transpile to any target (py, js, c, cpp, asm, swift, applescript, objc, objcpp)
 python3 jj.py transpile ../examples/fibonacci.jj py
 python3 jj.py transpile ../examples/fibonacci.jj c
-# ... etc
 ```
 
 ---
@@ -338,15 +337,19 @@ flowchart TD
     D --> G[🛠️ Transpiler]
     G --> H[Python 🐍]
     G --> I[JavaScript 📜]
-    G --> J[C ⚙️]
+    G --> J[C / C++ ⚙️]
     G --> K[ARM64 Asm 🔧]
     G --> L[Swift 🍎]
+    G --> P[AppleScript 📝]
+    G --> Q[Obj-C / Obj-C++ 🔶]
 
     H --> M[🔨 Create Bin]
     I --> M
     J --> M
     K --> M
     L --> M
+    P --> M
+    Q --> M
     M --> N[🚀 Launch Bin]
     N --> O[🖥️ Program Output]
 
