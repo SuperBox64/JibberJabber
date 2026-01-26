@@ -347,7 +347,7 @@ flowchart TD
     C1["Builds Abstract<br>Syntax Tree"] -.- C
 
     D --> E[⚡ Interpreter]
-    E --> F[🖥️ Program Output]
+    E --> F[🖥️  Program Output]
 
     D --> N1[🔧 Native Compiler]
     N1 --> N2[ARM64 Mach-O]
