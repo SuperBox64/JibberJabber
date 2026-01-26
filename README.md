@@ -194,8 +194,14 @@ python3 jj.py transpile ../examples/fibonacci.jj applescript /tmp/fib.scpt && os
 | `<~morph{add(a,b)}>>` | Define function | `def add(a, b):` |
 | `~>invoke{add}::with(1,2)` | Call function | `add(1, 2)` |
 | `~>yeet{value}` | Return | `return value` |
+| `~>enum{Color}::cases(R,G,B)` | Define enum | `class Color(Enum):` |
 | `#42` | Number literal | `42` |
 | `"text"` | String literal | `"text"` |
+| `[#1, #2, #3]` | Array literal | `[1, 2, 3]` |
+| `{"a": #1}` | Dictionary literal | `{"a": 1}` |
+| `(#1, #2)` | Tuple literal | `(1, 2)` |
+| `arr[#0]` | Index access | `arr[0]` |
+| `dict["key"]` | Key access | `dict["key"]` |
 | `~yep` / `~nope` | Boolean | `True` / `False` |
 | `~nil` | Null value | `None` |
 | `@@` | Comment | `#` |
@@ -212,7 +218,9 @@ python3 jj.py transpile ../examples/fibonacci.jj applescript /tmp/fib.scpt && os
 | `<=>` | Equals | `==` |
 | `<!=>` | Not equals | `!=` |
 | `<lt>` | Less than | `<` |
+| `<lte>` | Less than or equal | `<=` |
 | `<gt>` | Greater than | `>` |
+| `<gte>` | Greater than or equal | `>=` |
 | `<&&>` | And | `and` |
 | `<\|\|>` | Or | `or` |
 | `<!>` | Not | `not` |
