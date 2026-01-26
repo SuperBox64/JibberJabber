@@ -376,7 +376,7 @@ This ensures both Swift and Python implementations produce identical output.
 flowchart TD
     A[📄 JJ Source Code] --> B[🔤 LEXER<br>Tokenizer]
     B --> C[🌳 PARSER<br>Builds AST]
-    C --> D{run or transpile?}
+    C --> D{INTERPRET<br>OR<br>TRANSPILE}
 
     A1[".jj file with<br>JibJab syntax"] -.- A
     B1["Breaks code into<br>tokens"] -.- B
