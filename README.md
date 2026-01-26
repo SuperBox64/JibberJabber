@@ -357,11 +357,11 @@ flowchart TD
     D --> G[🛠️ Transpiler]
     G --> H[Python]
     G --> I[JavaScript]
-    G --> J[C / C++]
+    G --> J[C/C++]
     G --> K[ASM]
     G --> L[Swift]
     G --> P[AppleScript]
-    G --> Q[Obj-C / Obj-C++]
+    G --> Q[ObjC/C++]
 
     H --> M[🔨 Create Bin]
     I --> M
