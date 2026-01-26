@@ -20,10 +20,14 @@ JibJab is an experimental programming language where the syntax is optimized for
 - ⚙️ **C** - Native performance
 - 🔧 **ARM64 Assembly** - Apple Silicon native code
 - 🍎 **Swift** - Apple ecosystem development
+- 📝 **AppleScript** - macOS automation
+- ➕ **C++** - Object-oriented native code
+- 🔶 **Objective-C** - Apple legacy development
+- 🔷 **Objective-C++** - Mixed C++/Objective-C
 
 Not only does JibJab transpile to these languages, but it can also **compile them to binaries** and **test and run**!
 
-**More languages coming soon:** Go, AppleScript, Rust, and more!
+**More languages coming soon:** Go, Rust, and more!
 
 ---
 
@@ -47,7 +51,7 @@ JibJab has **two complete implementations** that share a common language definit
 
 Both implementations support:
 - Direct interpretation (run JJ programs)
-- Transpilation to Python, JavaScript, C, ARM64 Assembly, and Swift
+- Transpilation to Python, JavaScript, C, C++, ARM64 Assembly, Swift, AppleScript, Objective-C, and Objective-C++
 
 ---
 
@@ -102,11 +106,23 @@ swift run jjswift transpile ../examples/fibonacci.jj js
 # Transpile to C
 swift run jjswift transpile ../examples/fibonacci.jj c
 
+# Transpile to C++
+swift run jjswift transpile ../examples/fibonacci.jj cpp
+
 # Transpile to ARM64 Assembly
 swift run jjswift transpile ../examples/fibonacci.jj asm
 
 # Transpile to Swift
 swift run jjswift transpile ../examples/fibonacci.jj swift
+
+# Transpile to AppleScript
+swift run jjswift transpile ../examples/fibonacci.jj applescript
+
+# Transpile to Objective-C
+swift run jjswift transpile ../examples/fibonacci.jj objc
+
+# Transpile to Objective-C++
+swift run jjswift transpile ../examples/fibonacci.jj objcpp
 ```
 
 ### Swift Usage Examples
