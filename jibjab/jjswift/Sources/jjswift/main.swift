@@ -11,16 +11,12 @@ func main() {
     if args.count < 3 {
         print("JibJab Language v1.0 (Swift)")
         print("Usage:")
-        print("  jjswift run <file.jj>            - Run JJ program")
-        print("  jjswift transpile <file.jj> py   - Transpile to Python")
-        print("  jjswift transpile <file.jj> js   - Transpile to JavaScript")
-        print("  jjswift transpile <file.jj> c    - Transpile to C")
-        print("  jjswift transpile <file.jj> asm  - Transpile to ARM64 Assembly")
-        print("  jjswift transpile <file.jj> swift - Transpile to Swift")
-        print("  jjswift transpile <file.jj> applescript - Transpile to AppleScript")
-        print("  jjswift transpile <file.jj> cpp - Transpile to C++")
-        print("  jjswift transpile <file.jj> objc - Transpile to Objective-C")
-        print("  jjswift transpile <file.jj> objcpp - Transpile to Objective-C++")
+        print("  jjswift run <file.jj>                - Run JJ program (interpreter)")
+        print("  jjswift compile <file.jj> [output]   - Compile direct to native binary")
+        print("  jjswift asm <file.jj> [output]       - Compile via asm transpiler + as/ld")
+        print("  jjswift transpile <file.jj> <target> - Transpile to target language")
+        print("")
+        print("Transpile targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp")
         exit(1)
     }
 
@@ -49,6 +45,170 @@ func main() {
     if command == "run" {
         let interpreter = Interpreter()
         interpreter.run(program)
+    } else if command == "asm" {
+        // Compile via assembly transpiler + system as/ld
+        let outputPath = args.count > 3 ? args[3] : "a.out"
+
+        // Generate assembly from AST
+        let transpiler = AssemblyTranspiler()
+        let asmCode = transpiler.transpile(program)
+
+        // Write to temp file
+        let tempAsm = "/tmp/jj_\(ProcessInfo.processInfo.processIdentifier).s"
+        let tempObj = "/tmp/jj_\(ProcessInfo.processInfo.processIdentifier).o"
+
+        do {
+            try asmCode.write(toFile: tempAsm, atomically: true, encoding: .utf8)
+        } catch {
+            print("Error writing assembly: \(error)")
+            exit(1)
+        }
+
+        // Assemble
+        let asProcess = Process()
+        asProcess.executableURL = URL(fileURLWithPath: "/usr/bin/as")
+        asProcess.arguments = ["-o", tempObj, tempAsm]
+
+        do {
+            try asProcess.run()
+            asProcess.waitUntilExit()
+            if asProcess.terminationStatus != 0 {
+                print("Assembly failed")
+                exit(1)
+            }
+        } catch {
+            print("Error running assembler: \(error)")
+            exit(1)
+        }
+
+        // Link
+        let sdkPath = Process()
+        sdkPath.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        sdkPath.arguments = ["-sdk", "macosx", "--show-sdk-path"]
+        let sdkPipe = Pipe()
+        sdkPath.standardOutput = sdkPipe
+
+        var sdkRoot = "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        do {
+            try sdkPath.run()
+            sdkPath.waitUntilExit()
+            let data = sdkPipe.fileHandleForReading.readDataToEndOfFile()
+            if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) {
+                sdkRoot = path
+            }
+        } catch {}
+
+        let ldProcess = Process()
+        ldProcess.executableURL = URL(fileURLWithPath: "/usr/bin/ld")
+        ldProcess.arguments = [
+            "-o", outputPath,
+            tempObj,
+            "-lSystem",
+            "-syslibroot", sdkRoot,
+            "-e", "_main",
+            "-arch", "arm64"
+        ]
+
+        do {
+            try ldProcess.run()
+            ldProcess.waitUntilExit()
+            if ldProcess.terminationStatus != 0 {
+                print("Linking failed")
+                exit(1)
+            }
+        } catch {
+            print("Error running linker: \(error)")
+            exit(1)
+        }
+
+        // Clean up temp files
+        try? FileManager.default.removeItem(atPath: tempAsm)
+        try? FileManager.default.removeItem(atPath: tempObj)
+
+        print("Compiled: \(outputPath)")
+
+    } else if command == "compile" {
+        // Native compilation via assembly transpiler + system tools
+        let outputPath = args.count > 3 ? args[3] : "a.out"
+
+        // Generate assembly from AST
+        let transpiler = AssemblyTranspiler()
+        let asmCode = transpiler.transpile(program)
+
+        // Write to temp file
+        let tempAsm = "/tmp/jj_\(ProcessInfo.processInfo.processIdentifier).s"
+        let tempObj = "/tmp/jj_\(ProcessInfo.processInfo.processIdentifier).o"
+
+        do {
+            try asmCode.write(toFile: tempAsm, atomically: true, encoding: .utf8)
+        } catch {
+            print("Error writing assembly: \(error)")
+            exit(1)
+        }
+
+        // Assemble
+        let asProcess = Process()
+        asProcess.executableURL = URL(fileURLWithPath: "/usr/bin/as")
+        asProcess.arguments = ["-o", tempObj, tempAsm]
+
+        do {
+            try asProcess.run()
+            asProcess.waitUntilExit()
+            if asProcess.terminationStatus != 0 {
+                print("Assembly failed")
+                exit(1)
+            }
+        } catch {
+            print("Error running assembler: \(error)")
+            exit(1)
+        }
+
+        // Link
+        let sdkPath = Process()
+        sdkPath.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        sdkPath.arguments = ["-sdk", "macosx", "--show-sdk-path"]
+        let sdkPipe = Pipe()
+        sdkPath.standardOutput = sdkPipe
+
+        var sdkRoot = "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        do {
+            try sdkPath.run()
+            sdkPath.waitUntilExit()
+            let data = sdkPipe.fileHandleForReading.readDataToEndOfFile()
+            if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) {
+                sdkRoot = path
+            }
+        } catch {}
+
+        let ldProcess = Process()
+        ldProcess.executableURL = URL(fileURLWithPath: "/usr/bin/ld")
+        ldProcess.arguments = [
+            "-o", outputPath,
+            tempObj,
+            "-lSystem",
+            "-syslibroot", sdkRoot,
+            "-e", "_main",
+            "-arch", "arm64"
+        ]
+
+        do {
+            try ldProcess.run()
+            ldProcess.waitUntilExit()
+            if ldProcess.terminationStatus != 0 {
+                print("Linking failed")
+                exit(1)
+            }
+        } catch {
+            print("Error running linker: \(error)")
+            exit(1)
+        }
+
+        // Clean up temp files
+        try? FileManager.default.removeItem(atPath: tempAsm)
+        try? FileManager.default.removeItem(atPath: tempObj)
+
+        print("Compiled: \(outputPath)")
+
     } else if command == "transpile" {
         let target = args.count > 3 ? args[3] : "py"
 

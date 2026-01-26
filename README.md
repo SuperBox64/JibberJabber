@@ -6,9 +6,9 @@
 ~>frob{7a3}::emit("Hello, World!")     @@ Humans see noise, LLMs see: print("Hello, World!")
 ```
 
-### Transpile to 9 Languages, Compile to Binaries
+### Native Compiler + 9 Transpiler Targets
 
-Write once, run anywhere. JibJab transpiles to multiple languages, compiles to native binaries, and runs automatically.
+Write once, run anywhere. JibJab compiles directly to native ARM64 binaries, or transpiles to 9 languages.
 
 **Supported targets:**
 - 🐍 **Python** - Cross-platform
@@ -77,11 +77,16 @@ The executable will be at `.build/release/jjswift`
 ### Running Programs
 
 ```bash
-# Run a JJ program directly
-.build/release/jjswift run ../examples/hello.jj
-
-# Or use swift run during development
+# Run via interpreter
 swift run jjswift run ../examples/hello.jj
+```
+
+### Compiling to Native Binary
+
+```bash
+# Compile JJ directly to ARM64 executable
+swift run jjswift compile ../examples/fibonacci.jj fib
+./fib  # Run native binary
 ```
 
 ### Transpiling
@@ -393,7 +398,6 @@ flowchart TD
 ## Contributing
 
 Contributions welcome:
-- **Native compiler** - Direct AST → machine code compilation (bypass transpilation)
 - New transpiler targets (Go, Rust, Linux ARM64)
 - Language features (arrays, objects, imports)
 - IDE syntax highlighting

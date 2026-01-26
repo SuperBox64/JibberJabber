@@ -20,10 +20,13 @@ The executable will be at `.build/release/jjswift`
 ## Usage
 
 ```bash
-# Using swift run (development)
+# Run via interpreter
 swift run jjswift run ../examples/hello.jj
 swift run jjswift run ../examples/fibonacci.jj
-swift run jjswift run ../examples/fizzbuzz.jj
+
+# Compile to native ARM64 binary
+swift run jjswift compile ../examples/fibonacci.jj fib
+./fib
 
 # Transpile to other languages
 swift run jjswift transpile ../examples/fibonacci.jj py          # Python
