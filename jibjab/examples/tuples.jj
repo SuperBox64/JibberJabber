@@ -1,0 +1,37 @@
+@@ JibJab Tuples Example
+@@ Tests tuple literals and index access
+
+@@ Create a tuple
+~>snag{point}::val((#10, #20))
+
+@@ Access tuple elements
+~>frob{7a3}::emit("Point X:")
+~>frob{7a3}::emit(point[#0])
+
+~>frob{7a3}::emit("Point Y:")
+~>frob{7a3}::emit(point[#1])
+
+@@ Print whole tuple
+~>frob{7a3}::emit("Full point:")
+~>frob{7a3}::emit(point)
+
+@@ Mixed type tuple
+~>snag{person}::val(("Alice", #30, ~yep))
+~>frob{7a3}::emit("Person name:")
+~>frob{7a3}::emit(person[#0])
+~>frob{7a3}::emit("Person age:")
+~>frob{7a3}::emit(person[#1])
+~>frob{7a3}::emit("Person active:")
+~>frob{7a3}::emit(person[#2])
+
+@@ Empty tuple
+~>snag{empty}::val(())
+~>frob{7a3}::emit("Empty tuple:")
+~>frob{7a3}::emit(empty)
+
+@@ Single element (trailing comma syntax)
+~>snag{single}::val((#42,))
+~>frob{7a3}::emit("Single element tuple:")
+~>frob{7a3}::emit(single)
+
+~>frob{7a3}::emit("Done!")

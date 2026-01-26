@@ -94,6 +94,13 @@ class PythonTranspiler {
         } else if let dictLit = node as? DictLiteral {
             let pairs = dictLit.pairs.map { "\(expr($0.key)): \(expr($0.value))" }.joined(separator: ", ")
             return "{\(pairs)}"
+        } else if let tupleLit = node as? TupleLiteral {
+            let elements = tupleLit.elements.map { expr($0) }.joined(separator: ", ")
+            // Single element tuple needs trailing comma in Python
+            if tupleLit.elements.count == 1 {
+                return "(\(elements),)"
+            }
+            return "(\(elements))"
         } else if let indexAccess = node as? IndexAccess {
             return "\(expr(indexAccess.array))[\(expr(indexAccess.index))]"
         } else if let binaryOp = node as? BinaryOp {

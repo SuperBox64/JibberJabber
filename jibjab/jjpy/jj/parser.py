@@ -10,7 +10,7 @@ from .lexer import Lexer, Token, TokenType, JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, IndexAccess
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess
 )
 
 # Get operator emit values from config
@@ -220,10 +220,24 @@ class Parser:
         return self.parse_primary()
 
     def parse_primary(self) -> ASTNode:
+        # Parentheses: either grouped expression or tuple
         if self.match(TokenType.LPAREN):
-            expr = self.parse_expression()
+            # Empty tuple ()
+            if self.peek().type == TokenType.RPAREN:
+                self.advance()
+                return self.parse_postfix(TupleLiteral([]))
+            first_expr = self.parse_expression()
+            # Check if this is a tuple (has comma) or just grouped expression
+            if self.match(TokenType.COMMA):
+                elements = [first_expr]
+                if self.peek().type != TokenType.RPAREN:
+                    elements.append(self.parse_expression())
+                    while self.match(TokenType.COMMA):
+                        elements.append(self.parse_expression())
+                self.expect(TokenType.RPAREN)
+                return self.parse_postfix(TupleLiteral(elements))
             self.expect(TokenType.RPAREN)
-            return self.parse_postfix(expr)
+            return self.parse_postfix(first_expr)
 
         # Array literal
         if self.match(TokenType.LBRACKET):

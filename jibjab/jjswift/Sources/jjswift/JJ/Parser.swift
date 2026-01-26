@@ -264,10 +264,28 @@ class Parser {
     }
 
     private func parsePrimary() throws -> ASTNode {
+        // Parentheses: either grouped expression or tuple
         if match(.lparen) != nil {
-            let expr = try parseExpression()
+            // Empty tuple ()
+            if peek().type == .rparen {
+                _ = advance()
+                return try parsePostfix(TupleLiteral(elements: []))
+            }
+            let firstExpr = try parseExpression()
+            // Check if this is a tuple (has comma) or just grouped expression
+            if match(.comma) != nil {
+                var elements: [ASTNode] = [firstExpr]
+                if peek().type != .rparen {
+                    elements.append(try parseExpression())
+                    while match(.comma) != nil {
+                        elements.append(try parseExpression())
+                    }
+                }
+                _ = try expect(.rparen)
+                return try parsePostfix(TupleLiteral(elements: elements))
+            }
             _ = try expect(.rparen)
-            return try parsePostfix(expr)
+            return try parsePostfix(firstExpr)
         }
 
         // Array literal

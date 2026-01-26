@@ -101,6 +101,11 @@ class DictLiteral(ASTNode):
 
 
 @dataclass
+class TupleLiteral(ASTNode):
+    elements: List[ASTNode]
+
+
+@dataclass
 class IndexAccess(ASTNode):
     array: ASTNode
     index: ASTNode

@@ -90,6 +90,9 @@ class Interpreter {
                 dict[key] = value
             }
             return dict
+        } else if let tupleLit = node as? TupleLiteral {
+            // Return tuple as a special wrapper to distinguish from arrays
+            return ("tuple", tupleLit.elements.map { evaluate($0) })
         } else if let indexAccess = node as? IndexAccess {
             let container = evaluate(indexAccess.array)
             let key = evaluate(indexAccess.index)
@@ -100,6 +103,13 @@ class Interpreter {
                 }
                 fatalError("Array index out of bounds: \(idx)")
             }
+            if let tuple = container as? (String, [Any?]), tuple.0 == "tuple" {
+                let idx = toInt(key)
+                if idx >= 0 && idx < tuple.1.count {
+                    return tuple.1[idx]
+                }
+                fatalError("Tuple index out of bounds: \(idx)")
+            }
             if let dict = container as? [String: Any?] {
                 let keyStr = stringify(key)
                 if let value = dict[keyStr] {
@@ -107,7 +117,7 @@ class Interpreter {
                 }
                 fatalError("Dictionary key not found: \(keyStr)")
             }
-            fatalError("Cannot index non-array/non-dictionary value")
+            fatalError("Cannot index non-array/non-tuple/non-dictionary value")
         } else if let varRef = node as? VarRef {
             for scope in locals.reversed() {
                 if let value = scope[varRef.name] {
@@ -200,6 +210,10 @@ class Interpreter {
         if let arr = value as? [Any?] {
             let items = arr.map { stringify($0) }
             return "[" + items.joined(separator: ", ") + "]"
+        }
+        if let tuple = value as? (String, [Any?]), tuple.0 == "tuple" {
+            let items = tuple.1.map { stringify($0) }
+            return "(" + items.joined(separator: ", ") + ")"
         }
         if let dict = value as? [String: Any?] {
             let items = dict.map { "\"\($0.key)\": \(stringify($0.value))" }

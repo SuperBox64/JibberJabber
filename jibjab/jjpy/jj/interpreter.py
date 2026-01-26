@@ -9,7 +9,7 @@ from .lexer import JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, IndexAccess
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess
 )
 
 OP = JJ['operators']
@@ -79,20 +79,22 @@ class Interpreter:
             return [self.evaluate(elem) for elem in node.elements]
         elif isinstance(node, DictLiteral):
             return {str(self.evaluate(k)): self.evaluate(v) for k, v in node.pairs}
+        elif isinstance(node, TupleLiteral):
+            return tuple(self.evaluate(elem) for elem in node.elements)
         elif isinstance(node, IndexAccess):
             container = self.evaluate(node.array)
             key = self.evaluate(node.index)
-            if isinstance(container, list):
+            if isinstance(container, (list, tuple)):
                 idx = int(key)
                 if idx < 0 or idx >= len(container):
-                    raise IndexError(f"Array index out of bounds: {idx}")
+                    raise IndexError(f"Index out of bounds: {idx}")
                 return container[idx]
             elif isinstance(container, dict):
                 key_str = str(key)
                 if key_str not in container:
                     raise KeyError(f"Dictionary key not found: {key_str}")
                 return container[key_str]
-            raise TypeError("Cannot index non-array/non-dictionary value")
+            raise TypeError("Cannot index non-array/non-tuple/non-dictionary value")
         elif isinstance(node, VarRef):
             for scope in reversed(self.locals):
                 if node.name in scope:

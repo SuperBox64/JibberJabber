@@ -7,7 +7,7 @@ from ..lexer import JJ
 from ..ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, IndexAccess
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess
 )
 
 # Get target config and operators
@@ -83,6 +83,12 @@ class PythonTranspiler:
         elif isinstance(node, DictLiteral):
             pairs = ', '.join(f"{self.expr(k)}: {self.expr(v)}" for k, v in node.pairs)
             return "{" + pairs + "}"
+        elif isinstance(node, TupleLiteral):
+            elements = ', '.join(self.expr(e) for e in node.elements)
+            # Single element tuple needs trailing comma
+            if len(node.elements) == 1:
+                return f"({elements},)"
+            return f"({elements})"
         elif isinstance(node, IndexAccess):
             return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
