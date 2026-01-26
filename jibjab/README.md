@@ -149,6 +149,77 @@ python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 
 ---
 
+## 1. Interpreting (Run)
+
+Execute JJ programs directly without compilation:
+
+```bash
+# Swift
+jjswift run examples/fibonacci.jj
+
+# Python
+python3 jj.py run examples/fibonacci.jj
+```
+
+The interpreter executes the AST directly - no intermediate files or binaries.
+
+---
+
+## 2. Compiling (Native Binaries)
+
+Generate standalone ARM64 Mach-O executables:
+
+| Method | Command | Description |
+|--------|---------|-------------|
+| Native | `compile` | Direct AST to machine code (no external tools) |
+| Assembly | `asm` | AST to ARM64 assembly, then `as` + `ld` |
+
+```bash
+# Native compiler (built-in, no external tools)
+jjswift compile examples/fibonacci.jj fib
+./fib
+
+# Via assembly transpiler
+jjswift asm examples/fibonacci.jj fib_asm
+./fib_asm
+```
+
+Both produce ~48-50KB signed Mach-O binaries.
+
+---
+
+## 3. Transpiling (Source-to-Source)
+
+Convert JJ to other languages:
+
+| Target | Output | Run With |
+|--------|--------|----------|
+| `py` | Python source | `python3` |
+| `js` | JavaScript source | `node` / `qjs` |
+| `c` | C source | `clang` → binary |
+| `cpp` | C++ source | `clang++` → binary |
+| `swift` | Swift source | `swiftc` → binary |
+| `objc` | Objective-C source | `clang` → binary |
+| `objcpp` | Objective-C++ source | `clang++` → binary |
+| `asm` | ARM64 Assembly | `as` + `ld` → binary |
+| `applescript` | Compiled AppleScript | `osascript` |
+
+```bash
+# Interpreted languages (prints source code)
+jjswift transpile examples/fibonacci.jj py
+jjswift transpile examples/fibonacci.jj js
+
+# Compiled languages (prints source code, compile separately)
+jjswift transpile examples/fibonacci.jj c > fib.c
+clang fib.c -o fib && ./fib
+
+# AppleScript (compiles automatically via osacompile)
+jjswift transpile examples/fibonacci.jj applescript fib.scpt
+osascript fib.scpt
+```
+
+---
+
 ## Language Definition (`common/jj.json`)
 
 Both implementations read from this shared definition:
