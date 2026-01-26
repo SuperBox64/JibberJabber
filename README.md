@@ -41,9 +41,17 @@ Write once, run anywhere. JibJab includes a **true native compiler** that genera
 | **jjswift** | Swift | `jibjab/jjswift/` | Native macOS, ARM64 compilation |
 | **jjpy** | Python | `jibjab/jjpy/` | Cross-platform |
 
-**jjswift** includes a true native compiler (`compile`) that generates ARM64 Mach-O binaries directly without external tools.
+### Capabilities
 
-Both support interpretation and transpilation to: Python, JavaScript, C, C++, ARM64 Assembly, Swift, AppleScript, Objective-C, and Objective-C++.
+| Implementation | `run` | `compile` | `asm` | `transpile` |
+|----------------|:-----:|:---------:|:-----:|:-----------:|
+| **jjswift** | ✅ | ✅ | ✅ | ✅ |
+| **jjpy** | ✅ | ✅ | ✅ | ✅ |
+
+- **`run`** - Interpret JJ code directly
+- **`compile`** - Generate ARM64 Mach-O binary (no external tools)
+- **`asm`** - Compile via assembly transpiler (uses `as` + `ld`)
+- **`transpile`** - Convert to Python, JavaScript, C, C++, ARM64 Assembly, Swift, AppleScript, Objective-C, Objective-C++
 
 ---
 

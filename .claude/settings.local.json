@@ -50,7 +50,10 @@
       "Bash(/tmp/hello_py)",
       "Bash(/tmp/fib_py:*)",
       "Bash(/tmp/vars_py)",
-      "Bash(/tmp/fizz_py)"
+      "Bash(/tmp/fizz_py)",
+      "Bash(/tmp/hello_swift_compile)",
+      "Bash(/tmp/hello_swift_asm:*)",
+      "Bash(/tmp/hello_py_asm)"
     ]
   }
 }

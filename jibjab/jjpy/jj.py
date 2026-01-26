@@ -7,6 +7,7 @@ This is the CLI entry point. The implementation is in the jj/ package.
 """
 
 import sys
+import os
 import subprocess
 from jj import (
     Lexer, Parser, Interpreter, NativeCompiler,
@@ -57,8 +58,9 @@ def main():
         output = sys.argv[3] if len(sys.argv) > 3 else 'a.out'
         transpiler = AssemblyTranspiler()
         asm_code = transpiler.transpile(program)
-        asm_file = f'/tmp/{output}.s'
-        obj_file = f'/tmp/{output}.o'
+        basename = os.path.basename(output)
+        asm_file = f'/tmp/{basename}.s'
+        obj_file = f'/tmp/{basename}.o'
         with open(asm_file, 'w') as f:
             f.write(asm_code)
         subprocess.run(['as', '-o', obj_file, asm_file], check=True)
