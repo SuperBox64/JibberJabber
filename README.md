@@ -307,13 +307,13 @@ python3 jj.py transpile ../examples/fibonacci.jj applescript /tmp/fib.scpt && os
 | fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | comparisons.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| arrays.jj | ✅ | 🚧 | ✅ | ✅ | 🚧 | 🚧 | ✅ | 🚧 | 🚧 |
-| dictionaries.jj | ✅ | 🚧 | ✅ | ✅ | 🚧 | 🚧 | ✅ | 🚧 | 🚧 |
-| tuples.jj | ✅ | 🚧 | ✅ | ✅ | 🚧 | 🚧 | ✅ | 🚧 | 🚧 |
-| enums.jj | ✅ | 🚧 | ✅ | ✅ | 🚧 | 🚧 | ✅ | 🚧 | 🚧 |
-| numbers.jj | ✅ | 🚧 | ✅ | ✅ | 🚧 | 🚧 | ✅ | 🚧 | 🚧 |
+| arrays.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
+| dictionaries.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
+| tuples.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
+| enums.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
+| numbers.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
 
-✅ = Working | 🚧 = In Progress
+✅ = Working | - = Not supported (language limitation)
 
 ---
 
