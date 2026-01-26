@@ -1,6 +1,6 @@
 # JibJab Implementation Details
 
-This directory contains the complete JibJab language implementation with two interpreters (Swift and Python), a shared language definition, and example programs.
+Two interpreters (Swift and Python), shared language definition, and examples.
 
 ---
 
@@ -136,9 +136,9 @@ python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 
 ---
 
-## Common Language Definition (`common/jj.json`)
+## Language Definition (`common/jj.json`)
 
-The `jj.json` file defines the entire JibJab language in a structured format that both implementations read:
+Both implementations read from this shared definition:
 
 ### Keywords
 ```json
@@ -215,88 +215,28 @@ The `jj.json` file defines the entire JibJab language in a structured format tha
 ```
 
 ### Transpilation Targets
-Each target language (py, js, c, swift) has templates for code generation:
-```json
-{
-  "targets": {
-    "py": {
-      "name": "Python",
-      "ext": ".py",
-      "header": "#!/usr/bin/env python3\n# Transpiled from JibJab\n",
-      "print": "print({expr})",
-      "var": "{name} = {value}",
-      "forRange": "for {var} in range({start}, {end}):",
-      "if": "if {condition}:",
-      "else": "else:",
-      "func": "def {name}({params}):",
-      "return": "return {value}",
-      "call": "{name}({args})",
-      "indent": "    ",
-      "true": "True",
-      "false": "False",
-      "nil": "None"
-    }
-  }
-}
-```
-See `common/jj.json` for complete templates for all targets (py, js, c, swift).
+
+Each target has code generation templates. See `common/jj.json` for details.
 
 ---
 
-## How the Pipeline Works
-
-### 1. Lexer (Tokenization)
-
-Reads source code character by character and produces tokens:
+## Pipeline
 
 ```
-Input:  "~>snag{x}::val(#42)"
-Output: [SNAG, LBRACE, IDENTIFIER("x"), RBRACE, ACTION, VAL, LPAREN, NUMBER(42), RPAREN]
+Source → Lexer → Tokens → Parser → AST → Interpreter (run)
+                                       → Transpiler (transpile)
 ```
 
-**Files:** `jjswift/Sources/jjswift/JJ/Lexer.swift`, `jjpy/jj/lexer.py`
-
-### 2. Parser (AST Construction)
-
-Takes tokens and builds an Abstract Syntax Tree:
-
-```
-Tokens: [SNAG, LBRACE, IDENTIFIER("x"), RBRACE, ACTION, VAL, LPAREN, NUMBER(42), RPAREN]
-AST:    VarDecl(name="x", value=Literal(42))
-```
-
-**Files:** `jjswift/Sources/jjswift/JJ/Parser.swift`, `jjpy/jj/parser.py`
-
-### 3. Interpreter (Direct Execution)
-
-Walks the AST and executes each node:
-
-```
-VarDecl(name="x", value=Literal(42))
-  → Store 42 in variable "x"
-```
-
-**Files:** `jjswift/Sources/jjswift/JJ/Interpreter.swift`, `jjpy/jj/interpreter.py`
-
-### 4. Transpilers (Code Generation)
-
-Walks the AST and generates target language code:
-
-```
-VarDecl(name="x", value=Literal(42))
-  → Python: "x = 42"
-  → JavaScript: "let x = 42;"
-  → C: "int x = 42;"
-  → Swift: "var x = 42"
-```
-
-**Files:** `jjswift/Sources/jjswift/JJ/Transpilers/*.swift`, `jjpy/jj/transpilers/*.py`
+| Stage | Input | Output |
+|-------|-------|--------|
+| Lexer | `~>snag{x}::val(#42)` | Token stream |
+| Parser | Tokens | AST: `VarDecl(name="x", value=42)` |
+| Interpreter | AST | Executes directly |
+| Transpiler | AST | `x = 42` (Python), `int x = 42;` (C), etc. |
 
 ---
 
 ## Test Results
-
-All examples pass on both implementations across all targets:
 
 | Example | Swift Interp | Python Interp | Python | JavaScript | C | C++ | ARM64 ASM | Swift | AppleScript | Obj-C | Obj-C++ |
 |---------|:------------:|:-------------:|:------:|:----------:|:-:|:---:|:---------:|:-----:|:-----------:|:-----:|:-------:|
@@ -307,9 +247,9 @@ All examples pass on both implementations across all targets:
 
 ---
 
-## Creating Standalone Binaries
+## Creating Binaries
 
-You can create standalone executables from transpiled code. Here's the size comparison:
+Binary sizes by target:
 
 | Target | Size | Tool |
 |--------|------|------|
@@ -324,135 +264,54 @@ You can create standalone executables from transpiled code. Here's the size comp
 
 ### Prerequisites (macOS)
 
-C, Assembly, and Swift compilation require Xcode Command Line Tools:
-
 ```bash
-# Install Xcode Command Line Tools (includes gcc, clang, as, ld, swiftc)
-xcode-select --install
+xcode-select --install  # Xcode Command Line Tools
 ```
 
-### C Binaries
+### C / C++
 
 ```bash
-# Step 1: Transpile JJ to C
-swift run jjswift transpile ../examples/fibonacci.jj c > fib.c
-
-# Step 2: Compile C to binary
-gcc -o fib_c fib.c
-
-# Step 3: Run the binary
-./fib_c
+swift run jjswift transpile ../examples/fibonacci.jj c > fib.c && gcc -o fib_c fib.c && ./fib_c
+swift run jjswift transpile ../examples/fibonacci.jj cpp > fib.cpp && g++ -o fib_cpp fib.cpp && ./fib_cpp
 ```
 
-### C++ Binaries
+### Objective-C / Objective-C++
 
 ```bash
-# Step 1: Transpile JJ to C++
-swift run jjswift transpile ../examples/fibonacci.jj cpp > fib.cpp
-
-# Step 2: Compile C++ to binary
-g++ -o fib_cpp fib.cpp
-
-# Step 3: Run the binary
-./fib_cpp
+swift run jjswift transpile ../examples/fibonacci.jj objc > fib.m && clang -framework Foundation -o fib_objc fib.m && ./fib_objc
+swift run jjswift transpile ../examples/fibonacci.jj objcpp > fib.mm && clang++ -framework Foundation -o fib_objcpp fib.mm && ./fib_objcpp
 ```
 
-### Objective-C Binaries
+### ARM64 Assembly (macOS)
 
 ```bash
-# Step 1: Transpile JJ to Objective-C
-swift run jjswift transpile ../examples/fibonacci.jj objc > fib.m
-
-# Step 2: Compile Objective-C to binary
-clang -framework Foundation -o fib_objc fib.m
-
-# Step 3: Run the binary
-./fib_objc
-```
-
-### Objective-C++ Binaries
-
-```bash
-# Step 1: Transpile JJ to Objective-C++
-swift run jjswift transpile ../examples/fibonacci.jj objcpp > fib.mm
-
-# Step 2: Compile Objective-C++ to binary
-clang++ -framework Foundation -o fib_objcpp fib.mm
-
-# Step 3: Run the binary
-./fib_objcpp
-```
-
-### ARM64 Assembly Binaries (macOS)
-
-```bash
-# Step 1: Transpile JJ to Assembly
 swift run jjswift transpile ../examples/fibonacci.jj asm > fib.s
-
-# Step 2: Assemble to object file
 as -o fib.o fib.s
-
-# Step 3: Link to binary
 ld -o fib_asm fib.o -lSystem -syslibroot $(xcrun -sdk macosx --show-sdk-path) -e _main -arch arm64
-
-# Step 4: Run the binary
 ./fib_asm
 ```
 
-### Swift Binaries
+### Swift
 
 ```bash
-# Step 1: Transpile JJ to Swift
-swift run jjswift transpile ../examples/fibonacci.jj swift > fib.swift
-
-# Step 2: Compile Swift to binary
-swiftc -O -o fib_swift fib.swift
-
-# Step 3: Run the binary
-./fib_swift
+swift run jjswift transpile ../examples/fibonacci.jj swift > fib.swift && swiftc -O -o fib_swift fib.swift && ./fib_swift
 ```
 
-### JavaScript Binaries (QuickJS)
-
-QuickJS produces small standalone JS executables (~722KB vs ~44MB for Node.js pkg).
+### JavaScript (QuickJS)
 
 ```bash
-# Step 1: Install QuickJS (one time)
-brew install quickjs
-
-# Step 2: Transpile JJ to JavaScript
-swift run jjswift transpile ../examples/fibonacci.jj js > fib.js
-
-# Step 3: Compile JS to binary
-qjsc -o fib_qjs fib.js
-
-# Step 4: Run the binary
-./fib_qjs
+brew install quickjs  # one time
+swift run jjswift transpile ../examples/fibonacci.jj js > fib.js && qjsc -o fib_qjs fib.js && ./fib_qjs
 ```
 
 ### Python Binaries (PyInstaller)
 
-PyInstaller creates standalone Python executables (~3.4MB).
-
 ```bash
-# Step 1: Install PyInstaller (one time)
 pip3 install pyinstaller --user
-
-# Step 2: Transpile JJ to Python
 swift run jjswift transpile ../examples/fibonacci.jj py > fib.py
-
-# Step 3: Compile Python to binary
 python3 -m PyInstaller --onefile --distpath . --workpath /tmp/pyinstaller --specpath /tmp/pyinstaller fib.py
-
-# Step 4: Run the binary
 ./fib
 ```
-
-**PyInstaller options:**
-- `--onefile`: Bundle everything into a single executable
-- `--distpath .`: Output directory for the binary
-- `--workpath /tmp/pyinstaller`: Temp build directory (keeps your folder clean)
-- `--specpath /tmp/pyinstaller`: Spec file location
 
 ---
 

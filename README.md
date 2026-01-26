@@ -1,57 +1,47 @@
 # JibberJabber 1.0 JibJab (JJ) Programming Language
 
-**A programming language designed for AI/LLM comprehension** - syntax that appears as semantic noise to humans but follows patterns that Large Language Models naturally parse and understand.
-
-## What is JibJab?
-
-JibJab is an experimental programming language where the syntax is optimized for AI comprehension rather than human readability. While humans see what looks like random symbols and hashes, LLMs recognize structured, semantic patterns.
+**AI-first syntax** - looks like noise to humans, but LLMs parse it naturally.
 
 ```jj
 ~>frob{7a3}::emit("Hello, World!")     @@ Humans see noise, LLMs see: print("Hello, World!")
 ```
 
-### 🚀 Transpile to any Language, Compile to Binaries!
+### Transpile to 9 Languages, Compile to Binaries
 
-**The biggest benefit of JibJab:** Write once, run anywhere! JibJab can transpile your code to almost any programming language, compile it to native binaries, and run them automatically.
+Write once, run anywhere. JibJab transpiles to multiple languages, compiles to native binaries, and runs automatically.
 
-**Currently tested and supported languages:**
-- 🐍 **Python** - Cross-platform scripting
-- 📜 **JavaScript/Node.js** - Web and server-side
+**Supported targets:**
+- 🐍 **Python** - Cross-platform
+- 📜 **JavaScript** - Web/Node.js
 - ⚙️ **C** - Native performance
-- 🔧 **ARM64 Assembly** - Apple Silicon native code
-- 🍎 **Swift** - Apple ecosystem development
+- ➕ **C++** - OOP native
+- 🔧 **ARM64 Assembly** - Apple Silicon
+- 🍎 **Swift** - Apple ecosystem
 - 📝 **AppleScript** - macOS automation
-- ➕ **C++** - Object-oriented native code
-- 🔶 **Objective-C** - Apple legacy development
-- 🔷 **Objective-C++** - Mixed C++/Objective-C
+- 🔶 **Objective-C** - Apple legacy
+- 🔷 **Objective-C++** - Mixed C++/ObjC
 
-Not only does JibJab transpile to these languages, but it can also **compile them to binaries** and **test and run**!
-
-**More languages coming soon:** Go, Rust, and more!
+**Coming soon:** Go, Rust
 
 ---
 
-### Why Would Anyone Want This?
+### Why?
 
-- 🤖 **AI-First Development** - As AI coding assistants become more prevalent, languages optimized for AI parsing could be more efficient
-- 🔬 **Research** - Explore how LLMs process and understand code structure
-- 🔒 **Obfuscation** - Code that's readable by AI but opaque to casual human inspection
-- 🎉 **Fun** - It's a fascinating experiment in language design!
+- 🤖 **AI-First** - Optimized for AI coding assistants
+- 🔬 **Research** - Explore LLM code comprehension
+- 🔒 **Obfuscation** - Readable by AI, opaque to humans
+- 🎉 **Fun** - Experiment in language design
 
 ---
 
 ## Implementations
 
-JibJab has **two complete implementations** that share a common language definition:
-
 | Implementation | Language | Location | Best For |
 |----------------|----------|----------|----------|
-| **jjswift** | Swift | `jibjab/jjswift/` | Native macOS performance |
-| **jjpy** | Python | `jibjab/jjpy/` | Cross-platform, easy setup |
+| **jjswift** | Swift | `jibjab/jjswift/` | Native macOS |
+| **jjpy** | Python | `jibjab/jjpy/` | Cross-platform |
 
-Both implementations support:
-- Direct interpretation (run JJ programs)
-- Transpilation to Python, JavaScript, C, C++, ARM64 Assembly, Swift, AppleScript, Objective-C, and Objective-C++
+Both support interpretation and transpilation to all 9 targets.
 
 ---
 
@@ -97,44 +87,20 @@ swift run jjswift run ../examples/hello.jj
 ### Transpiling
 
 ```bash
-# Transpile to Python
-swift run jjswift transpile ../examples/fibonacci.jj py
-
-# Transpile to JavaScript
-swift run jjswift transpile ../examples/fibonacci.jj js
-
-# Transpile to C
-swift run jjswift transpile ../examples/fibonacci.jj c
-
-# Transpile to C++
-swift run jjswift transpile ../examples/fibonacci.jj cpp
-
-# Transpile to ARM64 Assembly
-swift run jjswift transpile ../examples/fibonacci.jj asm
-
-# Transpile to Swift
-swift run jjswift transpile ../examples/fibonacci.jj swift
-
-# Transpile to AppleScript
-swift run jjswift transpile ../examples/fibonacci.jj applescript
-
-# Transpile to Objective-C
-swift run jjswift transpile ../examples/fibonacci.jj objc
-
-# Transpile to Objective-C++
-swift run jjswift transpile ../examples/fibonacci.jj objcpp
+swift run jjswift transpile ../examples/fibonacci.jj py          # Python
+swift run jjswift transpile ../examples/fibonacci.jj js          # JavaScript
+swift run jjswift transpile ../examples/fibonacci.jj c           # C
+swift run jjswift transpile ../examples/fibonacci.jj cpp         # C++
+swift run jjswift transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
+swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
+swift run jjswift transpile ../examples/fibonacci.jj applescript # AppleScript
+swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
+swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 ```
 
-### Swift Usage Examples
+### Transpile and Execute
 
 ```bash
-# Run all examples
-swift run jjswift run ../examples/hello.jj
-swift run jjswift run ../examples/variables.jj
-swift run jjswift run ../examples/fibonacci.jj
-swift run jjswift run ../examples/fizzbuzz.jj
-
-# Transpile and execute
 swift run jjswift transpile ../examples/fibonacci.jj py > /tmp/fib.py && python3 /tmp/fib.py
 swift run jjswift transpile ../examples/fibonacci.jj c > /tmp/fib.c && clang /tmp/fib.c -o /tmp/fib && /tmp/fib
 swift run jjswift transpile ../examples/fibonacci.jj swift > /tmp/fib.swift && swiftc /tmp/fib.swift -o /tmp/fib && /tmp/fib
@@ -144,57 +110,24 @@ swift run jjswift transpile ../examples/fibonacci.jj swift > /tmp/fib.swift && s
 
 ## Using the Python Interpreter (`jjpy`)
 
-### Running Programs
-
 ```bash
 cd jibjab/jjpy
 
-# Run a JJ program directly
+# Run
 python3 jj.py run ../examples/hello.jj
-
-# Run all examples
-python3 jj.py run ../examples/variables.jj
 python3 jj.py run ../examples/fibonacci.jj
-python3 jj.py run ../examples/fizzbuzz.jj
-```
 
-### Transpiling
-
-```bash
-# Transpile to Python
+# Transpile (same targets as jjswift)
 python3 jj.py transpile ../examples/fibonacci.jj py
-
-# Transpile to JavaScript
-python3 jj.py transpile ../examples/fibonacci.jj js
-
-# Transpile to C
 python3 jj.py transpile ../examples/fibonacci.jj c
-
-# Transpile to ARM64 Assembly (macOS Apple Silicon)
-python3 jj.py transpile ../examples/fibonacci.jj asm
-
-# Transpile to Swift
-python3 jj.py transpile ../examples/fibonacci.jj swift
-```
-
-### Python Usage Examples
-
-```bash
-# Transpile and execute
-python3 jj.py transpile ../examples/fibonacci.jj py > /tmp/fib.py && python3 /tmp/fib.py
-python3 jj.py transpile ../examples/fibonacci.jj js > /tmp/fib.js && node /tmp/fib.js
-python3 jj.py transpile ../examples/fibonacci.jj c > /tmp/fib.c && clang /tmp/fib.c -o /tmp/fib && /tmp/fib
-python3 jj.py transpile ../examples/fibonacci.jj asm > /tmp/fib.s && clang /tmp/fib.s -o /tmp/fib && /tmp/fib
-python3 jj.py transpile ../examples/fibonacci.jj swift > /tmp/fib.swift && swiftc /tmp/fib.swift -o /tmp/fib && /tmp/fib
+# ... etc
 ```
 
 ---
 
-## Language Syntax Guide
+## Language Syntax
 
-### For Humans: A Translation Table
-
-| JibJab Syntax | What It Means | Python Equivalent |
+| JibJab | Meaning | Python |
 |---------------|---------------|-------------------|
 | `~>frob{7a3}::emit(x)` | Print output | `print(x)` |
 | `~>snag{x}::val(10)` | Assign variable | `x = 10` |
@@ -304,8 +237,6 @@ python3 jj.py transpile ../examples/fibonacci.jj swift > /tmp/fib.swift && swift
 
 ## Test Results
 
-All examples have been tested across both implementations and all execution modes:
-
 | Example | Swift Interp | Python Interp | Python | JavaScript | C | C++ | ARM64 ASM | Swift | AppleScript | Obj-C | Obj-C++ |
 |---------|:------------:|:-------------:|:------:|:----------:|:-:|:---:|:---------:|:-----:|:-----------:|:-----:|:-------:|
 | hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -379,16 +310,9 @@ JibberJabber/
 
 ---
 
-## Common Language Definition (`jj.json`)
+## Shared Language Definition (`jj.json`)
 
-Both implementations share a common language definition in `jibjab/common/jj.json`. This file defines:
-
-- **Keywords**: Token patterns for `print`, `input`, `return`, etc.
-- **Blocks**: Syntax for loops, conditionals, functions
-- **Operators**: All operator symbols and their emitted equivalents
-- **Targets**: Transpilation templates for Python, JavaScript, C, Swift
-
-This ensures both Swift and Python implementations produce identical output.
+Both implementations read from `jibjab/common/jj.json`, which defines keywords, blocks, operators, and transpilation templates. This ensures identical output from both implementations.
 
 ---
 
@@ -441,26 +365,15 @@ flowchart TD
 
 </div>
 
-### Pipeline Step-by-Step
-
-| Step | Component | Input | Output | Description |
-|------|-----------|-------|--------|-------------|
-| 1 | **Lexer** | Source code | Tokens | Scans characters, produces token stream |
-| 2 | **Parser** | Tokens | AST | Builds tree structure from tokens |
-| 3a | **Interpreter** | AST | Output | Executes directly (for `run` command) |
-| 3b | **Transpiler** | AST | Code | Generates target language (for `transpile`) |
-
 ### Why LLMs Understand JibJab
 
-1. **Semantic Token Design** - Words like `frob`, `yeet`, `snag`, `slurp` cluster near their actual meanings in LLM embedding space
-2. **Consistent Structure** - `<~...>>` blocks create predictable patterns
+1. **Semantic Tokens** - `frob`, `yeet`, `snag` cluster near their meanings in embedding space
+2. **Predictable Structure** - `<~...>>` blocks follow consistent patterns
 3. **Type Prefixes** - `#` for numbers, `~` for special values
-4. **Encapsulated Operators** - `<op>` format makes operators distinct tokens
-5. **Action Chaining** - `::` separates object from action consistently
+4. **Distinct Operators** - `<op>` format makes operators clear tokens
+5. **Action Chaining** - `::` separates object from action
 
-**Humans see:** `~>frob{7a3}::emit(x <+> y)`
-
-**LLMs see:** `print(x + y)` with clear semantic structure
+**Humans see:** `~>frob{7a3}::emit(x <+> y)` → **LLMs see:** `print(x + y)`
 
 ---
 
@@ -476,11 +389,10 @@ flowchart TD
 
 ## Contributing
 
-This is an experimental language - contributions welcome! Areas of interest:
-- Additional transpiler targets (Go, Rust, ARM64 ELF Assembly for Linux)
+Contributions welcome:
+- New transpiler targets (Go, Rust, Linux ARM64)
 - Language features (arrays, objects, imports)
-- Optimization passes
-- IDE/editor syntax highlighting
+- IDE syntax highlighting
 
 ---
 

@@ -1,10 +1,8 @@
 # JibJab Language Specification v1.0
 
-## Lexical Structure
+## Tokens
 
-### Semantic Tokens (Keywords)
-
-JJ uses "semantic hashes" - tokens that encode meaning through patterns LLMs recognize:
+Semantic hashes that LLMs recognize:
 
 | Token | Meaning | Human-Readable Equivalent |
 |-------|---------|---------------------------|
@@ -160,10 +158,10 @@ JibJab can be transpiled to the following languages:
 
 ## Why LLMs Understand This
 
-1. **Semantic Clustering**: Tokens like `frob`, `slurp`, `yeet`, `snag` cluster near their actual meanings in embedding space
-2. **Structural Patterns**: `<~...>>` blocks follow predictable open/close patterns
-3. **Type Prefixes**: `#` for numbers, `~` for special values create learnable patterns
-4. **Operator Encapsulation**: `<op>` format makes operators visually distinct tokens
-5. **Consistent Delimiters**: `::` chains actions predictably
+1. **Semantic Clustering** - `frob`, `yeet`, `snag` cluster near their meanings
+2. **Predictable Structure** - `<~...>>` blocks follow consistent patterns
+3. **Type Prefixes** - `#` for numbers, `~` for special values
+4. **Distinct Operators** - `<op>` format makes operators clear
+5. **Consistent Delimiters** - `::` chains actions predictably
 
-Humans see symbol soup. LLMs see structured, semantic code.
+Humans see noise. LLMs see code.
