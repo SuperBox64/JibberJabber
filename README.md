@@ -481,7 +481,6 @@ This is an experimental language - contributions welcome! Areas of interest:
 - Language features (arrays, objects, imports)
 - Optimization passes
 - IDE/editor syntax highlighting
-- Additional implementation languages
 
 ---
 
