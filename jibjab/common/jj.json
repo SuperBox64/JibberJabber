@@ -6,6 +6,7 @@
     "yeet": "~>yeet",
     "snag": "~>snag",
     "invoke": "~>invoke",
+    "enum": "~>enum",
     "nil": "~nil",
     "true": "~yep",
     "false": "~nope"
@@ -45,7 +46,8 @@
     "emit": "emit",
     "grab": "grab",
     "val": "val",
-    "with": "with"
+    "with": "with",
+    "cases": "cases"
   },
   "literals": {
     "numberPrefix": "#",

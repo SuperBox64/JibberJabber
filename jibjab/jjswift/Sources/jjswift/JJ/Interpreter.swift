@@ -71,6 +71,13 @@ class Interpreter {
             }
         } else if let funcDef = node as? FuncDef {
             functions[funcDef.name] = funcDef
+        } else if let enumDef = node as? EnumDef {
+            // Store enum as a dictionary mapping case names to themselves
+            var enumDict: [String: Any?] = [:]
+            for caseName in enumDef.cases {
+                enumDict[caseName] = caseName
+            }
+            locals[locals.count - 1][enumDef.name] = enumDict
         } else if let returnStmt = node as? ReturnStmt {
             return ("return", evaluate(returnStmt.value) as Any)
         }

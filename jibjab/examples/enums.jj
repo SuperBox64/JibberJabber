@@ -1,0 +1,37 @@
+@@ JibJab Enums Example
+@@ Tests enum definitions and usage
+
+@@ Define an enum for colors
+~>enum{Color}::cases(Red, Green, Blue)
+
+@@ Access enum values
+~>frob{7a3}::emit("Color.Red:")
+~>frob{7a3}::emit(Color["Red"])
+
+~>frob{7a3}::emit("Color.Green:")
+~>frob{7a3}::emit(Color["Green"])
+
+~>frob{7a3}::emit("Color.Blue:")
+~>frob{7a3}::emit(Color["Blue"])
+
+@@ Use enum in variable
+~>snag{myColor}::val(Color["Red"])
+~>frob{7a3}::emit("My color:")
+~>frob{7a3}::emit(myColor)
+
+@@ Compare enum values
+<~when{myColor <=> Color["Red"]}>>
+    ~>frob{7a3}::emit("Color is Red!")
+<~>>
+
+@@ Another enum
+~>enum{Status}::cases(Pending, Active, Done)
+~>snag{taskStatus}::val(Status["Active"])
+~>frob{7a3}::emit("Task status:")
+~>frob{7a3}::emit(taskStatus)
+
+@@ Print all enum values
+~>frob{7a3}::emit("Full Color enum:")
+~>frob{7a3}::emit(Color)
+
+~>frob{7a3}::emit("Done!")

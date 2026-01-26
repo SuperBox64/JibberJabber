@@ -1,0 +1,44 @@
+@@ JibJab Numbers Example
+@@ Tests integers and floating-point numbers
+
+@@ Integer operations
+~>snag{a}::val(#10)
+~>snag{b}::val(#3)
+
+~>frob{7a3}::emit("Integer math:")
+~>frob{7a3}::emit(a <+> b)
+~>frob{7a3}::emit(a <-> b)
+~>frob{7a3}::emit(a <*> b)
+~>frob{7a3}::emit(a </> b)
+~>frob{7a3}::emit(a <%> b)
+
+@@ Floating-point numbers
+~>snag{pi}::val(#3.14159)
+~>snag{e}::val(#2.71828)
+
+~>frob{7a3}::emit("Float values:")
+~>frob{7a3}::emit(pi)
+~>frob{7a3}::emit(e)
+
+@@ Float math
+~>frob{7a3}::emit("Float math:")
+~>frob{7a3}::emit(pi <+> e)
+~>frob{7a3}::emit(pi <*> #2)
+
+@@ Negative numbers
+~>snag{neg}::val(#-5)
+~>frob{7a3}::emit("Negative:")
+~>frob{7a3}::emit(neg)
+~>frob{7a3}::emit(neg <*> #-1)
+
+@@ Comparisons with numbers
+~>frob{7a3}::emit("Comparisons:")
+<~when{pi <gt> #3}>>
+    ~>frob{7a3}::emit("pi > 3: true")
+<~>>
+
+<~when{#5 <lte> #5}>>
+    ~>frob{7a3}::emit("5 <= 5: true")
+<~>>
+
+~>frob{7a3}::emit("Done!")

@@ -114,6 +114,10 @@ class Lexer {
             addToken(.invoke)
             return
         }
+        if match(JJ.keywords.enum) != nil {
+            addToken(.enum)
+            return
+        }
         if match(JJ.keywords.nil) != nil {
             addToken(.nil)
             return
@@ -340,6 +344,10 @@ class Lexer {
         }
         if match(JJ.syntax.with) != nil {
             addToken(.with)
+            return
+        }
+        if match(JJ.syntax.cases) != nil {
+            addToken(.cases)
             return
         }
 

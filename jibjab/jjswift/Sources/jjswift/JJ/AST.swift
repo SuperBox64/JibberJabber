@@ -68,6 +68,11 @@ struct ReturnStmt: ASTNode {
     let value: ASTNode
 }
 
+struct EnumDef: ASTNode {
+    let name: String
+    let cases: [String]
+}
+
 struct ArrayLiteral: ASTNode {
     let elements: [ASTNode]
 }

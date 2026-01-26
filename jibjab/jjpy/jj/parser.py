@@ -10,7 +10,7 @@ from .lexer import Lexer, Token, TokenType, JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess
+    EnumDef, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess
 )
 
 # Get operator emit values from config
@@ -64,6 +64,8 @@ class Parser:
             return self.parse_func_def()
         if self.peek().type == TokenType.YEET:
             return self.parse_return()
+        if self.peek().type == TokenType.ENUM:
+            return self.parse_enum_def()
         return None
 
     def parse_print(self) -> PrintStmt:
@@ -136,6 +138,22 @@ class Parser:
         value = self.parse_expression()
         self.expect(TokenType.RBRACE)
         return ReturnStmt(value)
+
+    def parse_enum_def(self) -> EnumDef:
+        self.advance()  # ENUM
+        self.expect(TokenType.LBRACE)
+        name = self.expect(TokenType.IDENTIFIER).value
+        self.expect(TokenType.RBRACE)
+        self.expect(TokenType.ACTION)
+        self.expect(TokenType.CASES)
+        self.expect(TokenType.LPAREN)
+        cases = []
+        if self.peek().type != TokenType.RPAREN:
+            cases.append(self.expect(TokenType.IDENTIFIER).value)
+            while self.match(TokenType.COMMA):
+                cases.append(self.expect(TokenType.IDENTIFIER).value)
+        self.expect(TokenType.RPAREN)
+        return EnumDef(name, cases)
 
     def parse_block(self) -> List[ASTNode]:
         statements = []

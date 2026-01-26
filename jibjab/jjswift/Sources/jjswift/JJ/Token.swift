@@ -11,6 +11,7 @@ enum TokenType {
     case yeet       // ~>yeet{...}
     case snag       // ~>snag{...}
     case invoke     // ~>invoke{...}
+    case `enum`     // ~>enum{...}
     case `try`      // <~try>>
     case oops       // <~oops>>
     case blockEnd   // <~>>
@@ -46,6 +47,7 @@ enum TokenType {
     case grab       // grab
     case val        // val
     case with       // with
+    case cases      // cases
     case range      // ..
     case colon      // :
     case lparen     // (

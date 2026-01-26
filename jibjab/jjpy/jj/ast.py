@@ -91,6 +91,12 @@ class ReturnStmt(ASTNode):
 
 
 @dataclass
+class EnumDef(ASTNode):
+    name: str
+    cases: List[str]
+
+
+@dataclass
 class ArrayLiteral(ASTNode):
     elements: List[ASTNode]
 

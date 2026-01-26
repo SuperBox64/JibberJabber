@@ -19,6 +19,7 @@ struct JJConfig: Codable {
         let yeet: String
         let snag: String
         let invoke: String
+        let `enum`: String
         let `nil`: String
         let `true`: String
         let `false`: String
@@ -67,6 +68,7 @@ struct JJConfig: Codable {
         let grab: String
         let val: String
         let with: String
+        let cases: String
     }
 
     struct Literals: Codable {

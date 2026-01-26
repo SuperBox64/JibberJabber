@@ -22,6 +22,7 @@ class TokenType(Enum):
     YEET = auto()
     SNAG = auto()
     INVOKE = auto()
+    ENUM = auto()
     TRY = auto()
     OOPS = auto()
     BLOCK_END = auto()
@@ -57,6 +58,7 @@ class TokenType(Enum):
     GRAB = auto()
     VAL = auto()
     WITH = auto()
+    CASES = auto()
     RANGE = auto()
     COLON = auto()
     LPAREN = auto()
@@ -177,6 +179,9 @@ class Lexer:
             return
         if self.match(JJ['keywords']['invoke']):
             self.add_token(TokenType.INVOKE)
+            return
+        if self.match(JJ['keywords']['enum']):
+            self.add_token(TokenType.ENUM)
             return
         if self.match(JJ['keywords']['nil']):
             self.add_token(TokenType.NIL)
@@ -337,6 +342,9 @@ class Lexer:
             return
         if self.match(JJ['syntax']['with']):
             self.add_token(TokenType.WITH)
+            return
+        if self.match(JJ['syntax']['cases']):
+            self.add_token(TokenType.CASES)
             return
 
         # Identifiers

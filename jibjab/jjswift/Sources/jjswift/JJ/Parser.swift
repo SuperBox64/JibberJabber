@@ -63,6 +63,8 @@ class Parser {
             return try parseFuncDef()
         case .yeet:
             return try parseReturn()
+        case .enum:
+            return try parseEnumDef()
         default:
             return nil
         }
@@ -157,6 +159,28 @@ class Parser {
         let value = try parseExpression()
         _ = try expect(.rbrace)
         return ReturnStmt(value: value)
+    }
+
+    private func parseEnumDef() throws -> EnumDef {
+        _ = advance() // ENUM
+        _ = try expect(.lbrace)
+        let nameToken = try expect(.identifier)
+        let name = nameToken.value as! String
+        _ = try expect(.rbrace)
+        _ = try expect(.action)
+        _ = try expect(.cases)
+        _ = try expect(.lparen)
+        var cases: [String] = []
+        if peek().type != .rparen {
+            let caseToken = try expect(.identifier)
+            cases.append(caseToken.value as! String)
+            while match(.comma) != nil {
+                let caseToken = try expect(.identifier)
+                cases.append(caseToken.value as! String)
+            }
+        }
+        _ = try expect(.rparen)
+        return EnumDef(name: name, cases: cases)
     }
 
     private func parseBlock() throws -> [ASTNode] {
