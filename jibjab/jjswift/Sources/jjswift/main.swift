@@ -16,7 +16,7 @@ func main() {
         print("  jjswift asm <file.jj> [output]       - Compile via asm transpiler + as/ld")
         print("  jjswift transpile <file.jj> <target> - Transpile to target language")
         print("")
-        print("Transpile targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp")
+        print("Transpile targets: py, js, c, cpp, asm, swift, applescript [output], objc, objcpp")
         exit(1)
     }
 
@@ -161,7 +161,27 @@ func main() {
             print(transpiler.transpile(program))
         case "applescript":
             let transpiler = AppleScriptTranspiler()
-            print(transpiler.transpile(program))
+            let code = transpiler.transpile(program)
+            let output = args.count > 4 ? args[4] : "a.scpt"
+            let tempFile = "/tmp/jj_temp.applescript"
+            do {
+                try code.write(toFile: tempFile, atomically: true, encoding: .utf8)
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/osacompile")
+                process.arguments = ["-o", output, tempFile]
+                try process.run()
+                process.waitUntilExit()
+                try? FileManager.default.removeItem(atPath: tempFile)
+                if process.terminationStatus == 0 {
+                    print("Compiled to \(output)")
+                } else {
+                    print("osacompile failed")
+                    exit(1)
+                }
+            } catch {
+                print("Error: \(error)")
+                exit(1)
+            }
         case "cpp":
             let transpiler = CppTranspiler()
             print(transpiler.transpile(program))

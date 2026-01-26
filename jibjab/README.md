@@ -116,7 +116,7 @@ swift run jjswift transpile ../examples/fibonacci.jj c           # C
 swift run jjswift transpile ../examples/fibonacci.jj cpp         # C++
 swift run jjswift transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
 swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
-swift run jjswift transpile ../examples/fibonacci.jj applescript # AppleScript
+swift run jjswift transpile ../examples/fibonacci.jj applescript fib.scpt # AppleScript (compiled)
 swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
 swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 ```
@@ -142,7 +142,7 @@ python3 jj.py transpile ../examples/fibonacci.jj c           # C
 python3 jj.py transpile ../examples/fibonacci.jj cpp         # C++
 python3 jj.py transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
 python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
-python3 jj.py transpile ../examples/fibonacci.jj applescript # AppleScript
+python3 jj.py transpile ../examples/fibonacci.jj applescript fib.scpt # AppleScript (compiled)
 python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
 python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 ```
@@ -274,6 +274,7 @@ Binary sizes by target:
 | Objective-C | ~33KB | clang |
 | Objective-C++ | ~33KB | clang++ |
 | Swift | ~100KB | swiftc |
+| AppleScript | ~1.5KB | osacompile (built-in) |
 | JavaScript | ~722KB | QuickJS |
 | Python | ~3.4MB | PyInstaller |
 
@@ -329,6 +330,22 @@ swift run jjswift transpile ../examples/fibonacci.jj swift > fib.swift && swiftc
 ```bash
 brew install quickjs  # one time
 swift run jjswift transpile ../examples/fibonacci.jj js > fib.js && qjsc -o fib_qjs fib.js && ./fib_qjs
+```
+
+### AppleScript (osacompile)
+
+The `transpile applescript` command internally uses `osacompile` to produce a compiled binary:
+
+```bash
+swift run jjswift transpile ../examples/fibonacci.jj applescript fib.scpt
+osascript fib.scpt
+```
+
+You can also compile to an app bundle:
+
+```bash
+swift run jjswift transpile ../examples/fibonacci.jj applescript fib.app
+osascript fib.app
 ```
 
 ### Python Binaries (PyInstaller)
