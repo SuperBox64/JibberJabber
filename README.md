@@ -451,7 +451,7 @@ flowchart TD
 ## Contributing
 
 This is an experimental language - contributions welcome! Areas of interest:
-- Additional transpiler targets (Swift, Go, Rust, C++, AppleScript, Arm64 ELF Assembly for Raspberry Pi)
+- Additional transpiler targets (Go, Rust, C++, AppleScript, Arm64 ELF Assembly)
 - Language features (arrays, objects, imports)
 - Optimization passes
 - IDE/editor syntax highlighting
