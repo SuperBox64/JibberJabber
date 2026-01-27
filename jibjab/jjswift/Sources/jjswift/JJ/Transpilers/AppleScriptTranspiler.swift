@@ -8,7 +8,7 @@ private let appleScriptReserved: Set<String> = [
     "boolean", "date", "file", "alias", "class", "script", "property",
     "application", "window", "document", "folder", "disk", "reference",
     "it", "me", "my", "result", "true", "false", "missing", "value",
-    "error", "pi", "tab", "return", "linefeed", "quote", "space"
+    "error", "pi", "tab", "return", "linefeed", "quote", "space", "color"
 ]
 
 private func safeName(_ name: String) -> String {
@@ -22,6 +22,7 @@ class AppleScriptTranspiler {
     private var indentLevel = 0
     private let T = loadTarget("applescript")
     private let OP = JJ.operators
+    private var enums: [String: [String]] = [:]  // Track enum name -> cases
 
     func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
@@ -86,6 +87,12 @@ class AppleScriptTranspiler {
             return "\(header)\n\(body)\n\(ind())end \(safeFuncName)"
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
+        } else if let enumDef = node as? EnumDef {
+            let safeEnumName = safeName(enumDef.name)
+            enums[enumDef.name] = enumDef.cases
+            // In AppleScript, represent enum as a record with case name -> index
+            let pairs = enumDef.cases.enumerated().map { "\($0.element):\($0.offset)" }.joined(separator: ", ")
+            return ind() + "set \(safeEnumName) to {\(pairs)}"
         }
         return ""
     }
@@ -116,6 +123,12 @@ class AppleScriptTranspiler {
             let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
             return "{\(elements)}"
         } else if let idx = node as? IndexAccess {
+            // Check if this is enum access (e.g., Color["Red"] -> Red of my_Color)
+            if let varRef = idx.array as? VarRef, enums[varRef.name] != nil {
+                if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    return "\(strVal) of \(safeName(varRef.name))"
+                }
+            }
             return "item (\(expr(idx.index)) + 1) of \(expr(idx.array))"
         } else if let binaryOp = node as? BinaryOp {
             var op = binaryOp.op

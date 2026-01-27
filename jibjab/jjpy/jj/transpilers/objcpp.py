@@ -39,6 +39,7 @@ class ObjCppTranspiler:
     def __init__(self):
         self.indent = 0
         self.enums = set()  # Track defined enum names
+        self.int_vars = set()  # Track integer variable names
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip(), '']
@@ -84,6 +85,9 @@ class ObjCppTranspiler:
                 # Check if trying to print an enum type (not a value)
                 if expr.name in self.enums:
                     return self.ind() + f'NSLog(@"%@", @"enum {expr.name}");'
+                # Integer variables need %ld format
+                if expr.name in self.int_vars:
+                    return self.ind() + f'NSLog(@"%ld", (long){self.expr(expr)});'
                 return self.ind() + f'NSLog(@"%@", {self.expr(expr)});'
             elif isinstance(expr, ArrayLiteral):
                 return self.ind() + f'NSLog(@"%@", {self.expr(expr)});'
@@ -97,6 +101,9 @@ class ObjCppTranspiler:
             # Check if it's an array
             if isinstance(node.value, ArrayLiteral):
                 return self.ind() + f"NSArray *{node.name} = {self.expr(node.value)};"
+            # Track integer variables for proper print formatting
+            if infer_type(node.value) == 'Int':
+                self.int_vars.add(node.name)
             var_type = get_target_type(infer_type(node.value))
             return self.ind() + T['var'].replace('{type}', var_type).replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):

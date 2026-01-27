@@ -4,6 +4,8 @@
 class ObjCTranspiler {
     private var indentLevel = 0
     private let T = loadTarget("objc")
+    private var enums = Set<String>()  // Track defined enum names
+    private var intVars = Set<String>()  // Track integer variable names
 
     private func inferType(_ node: ASTNode) -> String {
         if let literal = node as? Literal {
@@ -77,8 +79,23 @@ class ObjCTranspiler {
             if let lit = e as? Literal, lit.value is String {
                 // String literal - use @"string" format
                 return ind() + "NSLog(@\"%@\", @\(expr(e)));"
-            } else if e is ArrayLiteral || e is VarRef || e is IndexAccess {
-                // Arrays and variables print with %@
+            } else if let varRef = e as? VarRef {
+                // Check if trying to print an enum type (not a value)
+                if enums.contains(varRef.name) {
+                    return ind() + "NSLog(@\"%@\", @\"enum \(varRef.name)\");"
+                }
+                // Integer variables need %ld format
+                if intVars.contains(varRef.name) {
+                    return ind() + "NSLog(@\"%ld\", (long)\(expr(e)));"
+                }
+                return ind() + "NSLog(@\"%@\", \(expr(e)));"
+            } else if let idx = e as? IndexAccess {
+                // Check if this is enum value access
+                if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
+                    return ind() + "NSLog(@\"%ld\", (long)\(expr(e)));"
+                }
+                return ind() + "NSLog(@\"%@\", \(expr(e)));"
+            } else if e is ArrayLiteral {
                 return ind() + "NSLog(@\"%@\", \(expr(e)));"
             }
             return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
@@ -86,6 +103,10 @@ class ObjCTranspiler {
             // Check if it's an array
             if varDecl.value is ArrayLiteral {
                 return ind() + "NSArray *\(varDecl.name) = \(expr(varDecl.value));"
+            }
+            // Track integer variables
+            if inferType(varDecl.value) == "Int" {
+                intVars.insert(varDecl.name)
             }
             let varType = getTargetType(inferType(varDecl.value))
             return ind() + T.var
@@ -134,6 +155,10 @@ class ObjCTranspiler {
             return "\(header)\n\(body)\n\(T.blockEnd)"
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
+        } else if let enumDef = node as? EnumDef {
+            enums.insert(enumDef.name)
+            let cases = enumDef.cases.joined(separator: ", ")
+            return ind() + "typedef NS_ENUM(NSInteger, \(enumDef.name)) { \(cases) };"
         }
         return ""
     }
@@ -172,6 +197,12 @@ class ObjCTranspiler {
             let elements = tuple.elements.map { "@(\(expr($0)))" }.joined(separator: ", ")
             return "@[\(elements)]"
         } else if let idx = node as? IndexAccess {
+            // Check if this is enum access (e.g., Color["Red"] -> Red)
+            if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
+                if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    return strVal  // Just return the enum case name
+                }
+            }
             return "\(expr(idx.array))[\(expr(idx.index))]"
         } else if let binaryOp = node as? BinaryOp {
             return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"

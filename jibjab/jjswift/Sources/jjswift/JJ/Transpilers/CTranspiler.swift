@@ -4,6 +4,7 @@
 class CTranspiler {
     private var indentLevel = 0
     private let T = loadTarget("c")
+    private var enums = Set<String>()  // Track defined enum names
 
     private func inferType(_ node: ASTNode) -> String {
         if let literal = node as? Literal {
@@ -77,6 +78,16 @@ class CTranspiler {
             let e = printStmt.expr
             if let lit = e as? Literal, lit.value is String {
                 return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
+            } else if let varRef = e as? VarRef {
+                // Check if trying to print an enum type (not a value)
+                if enums.contains(varRef.name) {
+                    return ind() + "printf(\"enum \(varRef.name)\\n\");"
+                }
+            } else if let idx = e as? IndexAccess {
+                // Check if this is enum value access
+                if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
+                    return ind() + "printf(\"%d\\n\", \(expr(e)));"
+                }
             }
             return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         } else if let varDecl = node as? VarDecl {
@@ -150,6 +161,10 @@ class CTranspiler {
             return "\(header)\n\(body)\n\(T.blockEnd)"
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
+        } else if let enumDef = node as? EnumDef {
+            enums.insert(enumDef.name)
+            let cases = enumDef.cases.joined(separator: ", ")
+            return ind() + "enum \(enumDef.name) { \(cases) };"
         }
         return ""
     }
@@ -180,6 +195,12 @@ class CTranspiler {
             let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
             return "{\(elements)}"
         } else if let idx = node as? IndexAccess {
+            // Check if this is enum access (e.g., Color["Red"] -> Red)
+            if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
+                if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    return strVal  // Just return the enum case name
+                }
+            }
             return "\(expr(idx.array))[\(expr(idx.index))]"
         } else if let binaryOp = node as? BinaryOp {
             return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"

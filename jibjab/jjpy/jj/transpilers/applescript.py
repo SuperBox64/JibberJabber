@@ -21,7 +21,7 @@ APPLESCRIPT_RESERVED = {
     'boolean', 'date', 'file', 'alias', 'class', 'script', 'property',
     'application', 'window', 'document', 'folder', 'disk', 'reference',
     'it', 'me', 'my', 'result', 'true', 'false', 'missing', 'value',
-    'error', 'pi', 'tab', 'return', 'linefeed', 'quote', 'space',
+    'error', 'pi', 'tab', 'return', 'linefeed', 'quote', 'space', 'color',
 }
 
 
