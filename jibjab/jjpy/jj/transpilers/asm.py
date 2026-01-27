@@ -253,6 +253,8 @@ class AssemblyTranspiler:
                 OP['neq']['emit']: 'b.eq',
                 OP['lt']['emit']: 'b.ge',
                 OP['gt']['emit']: 'b.le',
+                OP['lte']['emit']: 'b.gt',
+                OP['gte']['emit']: 'b.lt',
             }
             if node.op in branches:
                 self.asm_lines.append(f"    {branches[node.op]} {false_label}")
@@ -316,6 +318,12 @@ class AssemblyTranspiler:
             elif node.op == OP['gt']['emit']:
                 self.asm_lines.append("    cmp w0, w1")
                 self.asm_lines.append("    cset w0, gt")
+            elif node.op == OP['lte']['emit']:
+                self.asm_lines.append("    cmp w0, w1")
+                self.asm_lines.append("    cset w0, le")
+            elif node.op == OP['gte']['emit']:
+                self.asm_lines.append("    cmp w0, w1")
+                self.asm_lines.append("    cset w0, ge")
             elif node.op == OP['and']['emit']:
                 self.asm_lines.append("    and w0, w0, w1")
             elif node.op == OP['or']['emit']:

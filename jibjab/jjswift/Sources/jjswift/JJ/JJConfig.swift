@@ -114,6 +114,8 @@ struct TargetConfig: Codable {
     private let _not: String?
     private let _eq: String?
     private let _neq: String?
+    private let _lte: String?
+    private let _gte: String?
     private let _mod: String?
     let main: String?
     let types: [String: String]?
@@ -134,6 +136,8 @@ struct TargetConfig: Codable {
         case _not = "not"
         case _eq = "eq"
         case _neq = "neq"
+        case _lte = "lte"
+        case _gte = "gte"
         case _mod = "mod"
         // true/false/nil handled specially
     }
@@ -172,6 +176,8 @@ struct TargetConfig: Codable {
         _not = try container.decodeIfPresent(String.self, forKey: ._not)
         _eq = try container.decodeIfPresent(String.self, forKey: ._eq)
         _neq = try container.decodeIfPresent(String.self, forKey: ._neq)
+        _lte = try container.decodeIfPresent(String.self, forKey: ._lte)
+        _gte = try container.decodeIfPresent(String.self, forKey: ._gte)
         _mod = try container.decodeIfPresent(String.self, forKey: ._mod)
 
         // Handle true/false/nil with special decoder keys
@@ -201,6 +207,8 @@ struct TargetConfig: Codable {
     var not: String { _not ?? "!" }
     var eq: String { _eq ?? "==" }
     var neq: String { _neq ?? "!=" }
+    var lte: String { _lte ?? "<=" }
+    var gte: String { _gte ?? ">=" }
     var mod: String { _mod ?? "%" }
 }
 

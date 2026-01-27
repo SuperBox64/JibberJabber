@@ -25,6 +25,8 @@
   "not": "not ",
   "eq": "=",
   "neq": "≠",
+  "lte": "≤",
+  "gte": "≥",
   "mod": "mod",
   "types": {
     "Int": "integer",

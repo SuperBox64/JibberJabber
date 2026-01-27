@@ -115,8 +115,9 @@ class CppTranspiler {
                 }
                 return ind() + "int \(varDecl.name)[] = {};"
             }
-            // Track integer variables
-            if inferType(varDecl.value) == "Int" {
+            // Track variable types
+            let inferredType = inferType(varDecl.value)
+            if inferredType == "Int" {
                 intVars.insert(varDecl.name)
             }
             let varType = getTargetType(inferType(varDecl.value))
@@ -185,7 +186,7 @@ class CppTranspiler {
             } else if let int = literal.value as? Int {
                 return String(int)
             } else if let double = literal.value as? Double {
-                return String(Int(double))
+                return String(double)
             }
             return "0"
         } else if let varRef = node as? VarRef {

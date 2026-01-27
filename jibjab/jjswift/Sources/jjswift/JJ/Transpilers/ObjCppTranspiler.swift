@@ -6,6 +6,7 @@ class ObjCppTranspiler {
     private let T = loadTarget("objcpp")
     private var enums = Set<String>()  // Track defined enum names
     private var intVars = Set<String>()  // Track integer variable names
+    private var doubleVars = Set<String>()  // Track double variable names
 
     private func inferType(_ node: ASTNode) -> String {
         if let literal = node as? Literal {
@@ -26,6 +27,14 @@ class ObjCppTranspiler {
 
     private func getTargetType(_ jjType: String) -> String {
         return T.types?[jjType] ?? "int"
+    }
+
+    private func isFloatExpr(_ node: ASTNode) -> Bool {
+        if let lit = node as? Literal { return lit.value is Double }
+        if let v = node as? VarRef { return doubleVars.contains(v.name) }
+        if let b = node as? BinaryOp { return isFloatExpr(b.left) || isFloatExpr(b.right) }
+        if let u = node as? UnaryOp { return isFloatExpr(u.operand) }
+        return false
     }
 
     func transpile(_ program: Program) -> String {
@@ -87,6 +96,10 @@ class ObjCppTranspiler {
                 if intVars.contains(varRef.name) {
                     return ind() + "NSLog(@\"%ld\", (long)\(expr(e)));"
                 }
+                // Double variables need %g format
+                if doubleVars.contains(varRef.name) {
+                    return ind() + "NSLog(@\"%g\", \(expr(e)));"
+                }
                 return ind() + "NSLog(@\"%@\", \(expr(e)));"
             } else if let idx = e as? IndexAccess {
                 // Check if this is enum value access
@@ -97,17 +110,23 @@ class ObjCppTranspiler {
             } else if e is ArrayLiteral {
                 return ind() + "NSLog(@\"%@\", \(expr(e)));"
             }
-            return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
+            if isFloatExpr(e) {
+                return ind() + "NSLog(@\"%g\", \(expr(e)));"
+            }
+            return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         } else if let varDecl = node as? VarDecl {
             // Check if it's an array
             if varDecl.value is ArrayLiteral {
                 return ind() + "NSArray *\(varDecl.name) = \(expr(varDecl.value));"
             }
-            // Track integer variables
-            if inferType(varDecl.value) == "Int" {
+            // Track variable types
+            let inferredType = inferType(varDecl.value)
+            if inferredType == "Int" {
                 intVars.insert(varDecl.name)
+            } else if inferredType == "Double" {
+                doubleVars.insert(varDecl.name)
             }
-            let varType = getTargetType(inferType(varDecl.value))
+            let varType = getTargetType(inferredType)
             return ind() + T.var
                 .replacingOccurrences(of: "{type}", with: varType)
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
@@ -173,7 +192,7 @@ class ObjCppTranspiler {
             } else if let int = literal.value as? Int {
                 return String(int)
             } else if let double = literal.value as? Double {
-                return String(Int(double))
+                return String(double)
             }
             return "0"
         } else if let varRef = node as? VarRef {

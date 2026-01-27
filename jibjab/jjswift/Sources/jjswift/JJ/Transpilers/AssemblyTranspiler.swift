@@ -597,6 +597,12 @@ class AssemblyTranspiler {
             case let op where op == OP.gt.emit:
                 asmLines.append("    cmp w0, w1")
                 asmLines.append("    cset w0, gt")
+            case let op where op == OP.lte.emit:
+                asmLines.append("    cmp w0, w1")
+                asmLines.append("    cset w0, le")
+            case let op where op == OP.gte.emit:
+                asmLines.append("    cmp w0, w1")
+                asmLines.append("    cset w0, ge")
             case let op where op == OP.and.emit:
                 asmLines.append("    and w0, w0, w1")
             case let op where op == OP.or.emit:

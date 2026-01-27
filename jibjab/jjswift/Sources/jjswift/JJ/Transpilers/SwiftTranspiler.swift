@@ -21,7 +21,8 @@ class SwiftTranspiler {
         if let printStmt = node as? PrintStmt {
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
         } else if let varDecl = node as? VarDecl {
-            return ind() + T.var
+            let template = T.varInfer ?? T.var
+            return ind() + template
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
         } else if let loopStmt = node as? LoopStmt {

@@ -141,6 +141,10 @@ class AppleScriptTranspiler {
                 op = T.eq
             } else if op == "!=" || op == OP.neq.emit {
                 op = T.neq
+            } else if op == "<=" || op == OP.lte.emit {
+                op = T.lte
+            } else if op == ">=" || op == OP.gte.emit {
+                op = T.gte
             } else if op == "%" || op == OP.mod.emit {
                 op = T.mod
             }
