@@ -80,7 +80,13 @@
       "Bash(jjswift/.build/debug/jjswift:*)",
       "Bash(/tmp/fib.app/Contents/MacOS/applet)",
       "Bash(ls:*)",
-      "Bash(file:*)"
+      "Bash(file:*)",
+      "Bash(/tmp/arr)",
+      "Bash(/tmp/arr_objc)",
+      "Bash(/tmp/arr_objcpp:*)",
+      "Bash(/tmp/arr_cpp)",
+      "Bash(node:*)",
+      "Bash(/tmp/arr_swift_objc)"
     ]
   }
 }
