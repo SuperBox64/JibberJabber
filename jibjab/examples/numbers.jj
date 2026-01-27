@@ -10,6 +10,7 @@
 ~>frob{7a3}::emit(a <-> b)
 ~>frob{7a3}::emit(a <*> b)
 ~>frob{7a3}::emit(a </> b)
+~>frob{7a3}::emit(a <%> b)
 
 @@ Floating-point numbers
 ~>snag{pi}::val(#3.14159)

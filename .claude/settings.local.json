@@ -86,7 +86,27 @@
       "Bash(/tmp/arr_objcpp:*)",
       "Bash(/tmp/arr_cpp)",
       "Bash(node:*)",
-      "Bash(/tmp/arr_swift_objc)"
+      "Bash(/tmp/arr_swift_objc)",
+      "Bash(do)",
+      "Bash(./.build/arm64-apple-macosx/debug/jjswift:*)",
+      "Bash(/tmp/enums_cpp)",
+      "Bash(/tmp/enums_asm)",
+      "Bash(for example in arrays dictionaries tuples numbers)",
+      "Bash(/tmp/arrays_asm)",
+      "Bash(/tmp/fib_asm)",
+      "Bash(/tmp/fizz_asm:*)",
+      "WebFetch(domain:eclecticlight.co)",
+      "Bash(/tmp/numbers_asm:*)",
+      "Bash(/tmp/numbers_c)",
+      "Bash(find:*)",
+      "Bash(/tmp/numbers_cpp)",
+      "Bash(/tmp/numbers_objc)",
+      "Bash(/tmp/numbers_objcpp:*)",
+      "Bash(/tmp/n_cpp:*)",
+      "Bash(/tmp/n_objc)",
+      "Bash(/tmp/n_objcpp)",
+      "Bash(/tmp/n_c)",
+      "Bash(/tmp/n_asm)"
     ]
   }
 }
