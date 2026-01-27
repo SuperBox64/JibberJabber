@@ -1,6 +1,23 @@
 /// JibJab AppleScript Transpiler - Converts JJ to AppleScript
 /// Uses shared config from common/jj.json
 
+// AppleScript reserved words and class names that can't be used as variable names
+private let appleScriptReserved: Set<String> = [
+    "numbers", "strings", "characters", "words", "paragraphs", "items",
+    "text", "list", "record", "number", "integer", "real", "string",
+    "boolean", "date", "file", "alias", "class", "script", "property",
+    "application", "window", "document", "folder", "disk", "reference",
+    "it", "me", "my", "result", "true", "false", "missing", "value",
+    "error", "pi", "tab", "return", "linefeed", "quote", "space"
+]
+
+private func safeName(_ name: String) -> String {
+    if appleScriptReserved.contains(name.lowercased()) {
+        return "my_\(name)"
+    }
+    return name
+}
+
 class AppleScriptTranspiler {
     private var indentLevel = 0
     private let T = loadTarget("applescript")
@@ -23,18 +40,18 @@ class AppleScriptTranspiler {
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
         } else if let varDecl = node as? VarDecl {
             return ind() + T.var
-                .replacingOccurrences(of: "{name}", with: varDecl.name)
+                .replacingOccurrences(of: "{name}", with: safeName(varDecl.name))
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
         } else if let loopStmt = node as? LoopStmt {
             var header: String
             if loopStmt.start != nil {
                 header = ind() + T.forRange
-                    .replacingOccurrences(of: "{var}", with: loopStmt.var)
+                    .replacingOccurrences(of: "{var}", with: safeName(loopStmt.var))
                     .replacingOccurrences(of: "{start}", with: expr(loopStmt.start!))
                     .replacingOccurrences(of: "{end}", with: expr(loopStmt.end!))
             } else if let collection = loopStmt.collection {
                 header = ind() + T.forIn
-                    .replacingOccurrences(of: "{var}", with: loopStmt.var)
+                    .replacingOccurrences(of: "{var}", with: safeName(loopStmt.var))
                     .replacingOccurrences(of: "{collection}", with: expr(collection))
             } else {
                 header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(loopStmt.condition!))
@@ -58,13 +75,15 @@ class AppleScriptTranspiler {
             result += "\n\(ind())end if"
             return result
         } else if let funcDef = node as? FuncDef {
+            let safeParams = funcDef.params.map { safeName($0) }.joined(separator: ", ")
+            let safeFuncName = safeName(funcDef.name)
             let header = ind() + T.func
-                .replacingOccurrences(of: "{name}", with: funcDef.name)
-                .replacingOccurrences(of: "{params}", with: funcDef.params.joined(separator: ", "))
+                .replacingOccurrences(of: "{name}", with: safeFuncName)
+                .replacingOccurrences(of: "{params}", with: safeParams)
             indentLevel += 1
             let body = funcDef.body.map { stmtToString($0) }.joined(separator: "\n")
             indentLevel -= 1
-            return "\(header)\n\(body)\n\(ind())end \(funcDef.name)"
+            return "\(header)\n\(body)\n\(ind())end \(safeFuncName)"
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
         }
@@ -86,7 +105,7 @@ class AppleScriptTranspiler {
             }
             return String(describing: literal.value ?? T.nil)
         } else if let varRef = node as? VarRef {
-            return varRef.name
+            return safeName(varRef.name)
         } else if let arr = node as? ArrayLiteral {
             let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
             return "{\(elements)}"
@@ -118,7 +137,7 @@ class AppleScriptTranspiler {
             return "(\(op)\(expr(unaryOp.operand)))"
         } else if let funcCall = node as? FuncCall {
             let args = funcCall.args.map { expr($0) }.joined(separator: ", ")
-            return "\(funcCall.name)(\(args))"
+            return "\(safeName(funcCall.name))(\(args))"
         }
         return ""
     }

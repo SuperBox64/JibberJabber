@@ -14,6 +14,23 @@ from ..ast import (
 T = load_target_config('applescript')
 OP = JJ['operators']
 
+# AppleScript reserved words and class names that can't be used as variable names
+APPLESCRIPT_RESERVED = {
+    'numbers', 'strings', 'characters', 'words', 'paragraphs', 'items',
+    'text', 'list', 'record', 'number', 'integer', 'real', 'string',
+    'boolean', 'date', 'file', 'alias', 'class', 'script', 'property',
+    'application', 'window', 'document', 'folder', 'disk', 'reference',
+    'it', 'me', 'my', 'result', 'true', 'false', 'missing', 'value',
+    'error', 'pi', 'tab', 'return', 'linefeed', 'quote', 'space',
+}
+
+
+def safe_name(name: str) -> str:
+    """Prefix variable names that conflict with AppleScript reserved words."""
+    if name.lower() in APPLESCRIPT_RESERVED:
+        return f"my_{name}"
+    return name
+
 
 class AppleScriptTranspiler:
     def __init__(self):
@@ -32,12 +49,12 @@ class AppleScriptTranspiler:
         if isinstance(node, PrintStmt):
             return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
-            return self.ind() + T['var'].replace('{name}', node.name).replace('{value}', self.expr(node.value))
+            return self.ind() + T['var'].replace('{name}', safe_name(node.name)).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
-                header = self.ind() + T['forRange'].replace('{var}', node.var).replace('{start}', self.expr(node.start)).replace('{end}', self.expr(node.end))
+                header = self.ind() + T['forRange'].replace('{var}', safe_name(node.var)).replace('{start}', self.expr(node.start)).replace('{end}', self.expr(node.end))
             elif node.collection:
-                header = self.ind() + T['forIn'].replace('{var}', node.var).replace('{collection}', self.expr(node.collection))
+                header = self.ind() + T['forIn'].replace('{var}', safe_name(node.var)).replace('{collection}', self.expr(node.collection))
             else:
                 header = self.ind() + T['while'].replace('{condition}', self.expr(node.condition))
             self.indent += 1
@@ -58,11 +75,12 @@ class AppleScriptTranspiler:
             result += f"\n{self.ind()}end if"
             return result
         elif isinstance(node, FuncDef):
-            header = self.ind() + T['func'].replace('{name}', node.name).replace('{params}', ', '.join(node.params))
+            params = ', '.join(safe_name(p) for p in node.params)
+            header = self.ind() + T['func'].replace('{name}', safe_name(node.name)).replace('{params}', params)
             self.indent += 1
             body = '\n'.join(self.stmt(s) for s in node.body)
             self.indent -= 1
-            return f"{header}\n{body}\n{self.ind()}end {node.name}"
+            return f"{header}\n{body}\n{self.ind()}end {safe_name(node.name)}"
         elif isinstance(node, ReturnStmt):
             return self.ind() + T['return'].replace('{value}', self.expr(node.value))
         return ""
@@ -77,7 +95,7 @@ class AppleScriptTranspiler:
                 return T['true'] if node.value else T['false']
             return str(node.value)
         elif isinstance(node, VarRef):
-            return node.name
+            return safe_name(node.name)
         elif isinstance(node, ArrayLiteral):
             elements = ', '.join(self.expr(e) for e in node.elements)
             return f"{{{elements}}}"
@@ -112,5 +130,5 @@ class AppleScriptTranspiler:
             return f'text returned of (display dialog {self.expr(node.prompt)} default answer "")'
         elif isinstance(node, FuncCall):
             args = ', '.join(self.expr(a) for a in node.args)
-            return f"{node.name}({args})"
+            return f"{safe_name(node.name)}({args})"
         return ""
