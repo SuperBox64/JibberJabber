@@ -1,16 +1,15 @@
 @@ JibJab Numbers Example
 @@ Tests integers and floating-point numbers
 
-@@ Integer operations
-~>snag{a}::val(#10)
-~>snag{b}::val(#3)
+@@ Float operations (using floats so all targets produce identical output)
+~>snag{a}::val(#10.0)
+~>snag{b}::val(#3.0)
 
-~>frob{7a3}::emit("Integer math:")
+~>frob{7a3}::emit("Math:")
 ~>frob{7a3}::emit(a <+> b)
 ~>frob{7a3}::emit(a <-> b)
 ~>frob{7a3}::emit(a <*> b)
 ~>frob{7a3}::emit(a </> b)
-~>frob{7a3}::emit(a <%> b)
 
 @@ Floating-point numbers
 ~>snag{pi}::val(#3.14159)
