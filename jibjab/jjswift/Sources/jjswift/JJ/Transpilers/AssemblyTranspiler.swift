@@ -12,8 +12,10 @@ struct ArrayInfo {
 class AssemblyTranspiler {
     private var asmLines: [String] = []
     private var strings: [(label: String, value: String, addNewline: Bool)] = []
+    private var doubles: [(label: String, value: Double)] = []  // Float constants in data section
     private var labelCounter = 0
     private var variables: [String: Int] = [:]
+    private var floatVars: Set<String> = []  // Track which variables are floats
     private var stackOffset = 0
     private var functions: [String: FuncDef] = [:]
     private var currentFunc: String? = nil
@@ -23,8 +25,10 @@ class AssemblyTranspiler {
     func transpile(_ program: Program) -> String {
         asmLines = []
         strings = []
+        doubles = []
         labelCounter = 0
         variables = [:]
+        floatVars = []
         stackOffset = 0
         functions = [:]
         arrays = [:]
@@ -66,6 +70,8 @@ class AssemblyTranspiler {
         stackOffset = 16
         variables = [:]
         arrays = [:]
+        floatVars = []
+        nestedArrays = [:]
 
         for stmt in mainStmts {
             genStmt(stmt)
@@ -89,6 +95,8 @@ class AssemblyTranspiler {
         asmLines.append("    .asciz \"%d\\n\"")
         asmLines.append("_fmt_str:")
         asmLines.append("    .asciz \"%s\\n\"")
+        asmLines.append("_fmt_float:")
+        asmLines.append("    .asciz \"%g\\n\"")
 
         for item in strings {
             var escaped = item.value.replacingOccurrences(of: "\\", with: "\\\\")
@@ -98,6 +106,15 @@ class AssemblyTranspiler {
             }
             asmLines.append("\(item.label):")
             asmLines.append("    .asciz \"\(escaped)\"")
+        }
+
+        // Double constants (8-byte aligned)
+        if !doubles.isEmpty {
+            asmLines.append(".align 3")  // 8-byte alignment for doubles
+            for item in doubles {
+                asmLines.append("\(item.label):")
+                asmLines.append("    .double \(item.value)")
+            }
         }
 
         return asmLines.joined(separator: "\n")
@@ -120,6 +137,12 @@ class AssemblyTranspiler {
         return label
     }
 
+    private func addDouble(_ value: Double) -> String {
+        let label = newLabel(prefix: "dbl")
+        doubles.append((label, value))
+        return label
+    }
+
     private func genFunc(_ node: FuncDef) {
         currentFunc = node.name
         asmLines.append("_\(node.name):")
@@ -137,9 +160,11 @@ class AssemblyTranspiler {
         let oldVars = variables
         let oldOffset = stackOffset
         let oldArrays = arrays
+        let oldFloatVars = floatVars
         variables = [:]
         stackOffset = 16
         arrays = [:]
+        floatVars = []
 
         // Store parameters
         let paramRegs = ["w0", "w1", "w2", "w3", "w4", "w5", "w6", "w7"]
@@ -169,6 +194,7 @@ class AssemblyTranspiler {
         variables = oldVars
         stackOffset = oldOffset
         arrays = oldArrays
+        floatVars = oldFloatVars
     }
 
     private func genStmt(_ node: ASTNode) {
@@ -238,6 +264,13 @@ class AssemblyTranspiler {
                 asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
                 asmLines.append("    bl _printf")
             }
+        } else if isFloatExpr(node.expr) {
+            // Float expression — print with %g
+            genFloatExpr(node.expr)
+            asmLines.append("    str d0, [sp]")
+            asmLines.append("    adrp x0, _fmt_float@PAGE")
+            asmLines.append("    add x0, x0, _fmt_float@PAGEOFF")
+            asmLines.append("    bl _printf")
         } else {
             genExpr(node.expr)
             asmLines.append("    sxtw x0, w0")
@@ -341,14 +374,26 @@ class AssemblyTranspiler {
             arrays[node.name] = info
             variables[node.name] = baseOffset
         } else {
-            // Scalar variable
-            genExpr(node.value)
-            if variables[node.name] == nil {
-                variables[node.name] = stackOffset
-                stackOffset += 8
+            // Scalar variable — check if float
+            let isFloat = isFloatExpr(node.value)
+            if isFloat {
+                genFloatExpr(node.value)
+                if variables[node.name] == nil {
+                    variables[node.name] = stackOffset
+                    stackOffset += 8
+                }
+                let offset = variables[node.name]!
+                floatVars.insert(node.name)
+                asmLines.append("    stur d0, [x29, #-\(offset + 16)]")
+            } else {
+                genExpr(node.value)
+                if variables[node.name] == nil {
+                    variables[node.name] = stackOffset
+                    stackOffset += 8
+                }
+                let offset = variables[node.name]!
+                asmLines.append("    stur w0, [x29, #-\(offset + 16)]")
             }
-            let offset = variables[node.name]!
-            asmLines.append("    stur w0, [x29, #-\(offset + 16)]")
         }
     }
 
@@ -416,23 +461,50 @@ class AssemblyTranspiler {
 
     private func genCondition(_ node: ASTNode, falseLabel: String) {
         if let binaryOp = node as? BinaryOp {
-            genExpr(binaryOp.left)
-            asmLines.append("    mov w9, w0")
-            genExpr(binaryOp.right)
-            asmLines.append("    cmp w9, w0")
+            let useFloat = isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)
 
-            let branches: [String: String] = [
-                JJ.operators.eq.emit: "b.ne",
-                JJ.operators.neq.emit: "b.eq",
-                JJ.operators.lt.emit: "b.ge",
-                JJ.operators.gt.emit: "b.le"
-            ]
-            if let branch = branches[binaryOp.op] {
-                asmLines.append("    \(branch) \(falseLabel)")
+            if useFloat {
+                // Float comparison using fcmp
+                genFloatExpr(binaryOp.left)
+                asmLines.append("    str d0, [sp, #-16]!")
+                genFloatExpr(binaryOp.right)
+                asmLines.append("    fmov d1, d0")
+                asmLines.append("    ldr d0, [sp], #16")
+                asmLines.append("    fcmp d0, d1")
+
+                let floatBranches: [String: String] = [
+                    JJ.operators.eq.emit: "b.ne",
+                    JJ.operators.neq.emit: "b.eq",
+                    JJ.operators.lt.emit: "b.ge",
+                    JJ.operators.gt.emit: "b.le",
+                    JJ.operators.lte.emit: "b.gt",
+                    JJ.operators.gte.emit: "b.lt"
+                ]
+                if let branch = floatBranches[binaryOp.op] {
+                    asmLines.append("    \(branch) \(falseLabel)")
+                }
             } else {
-                genExpr(node)
-                asmLines.append("    cmp w0, #0")
-                asmLines.append("    b.eq \(falseLabel)")
+                // Integer comparison
+                genExpr(binaryOp.left)
+                asmLines.append("    mov w9, w0")
+                genExpr(binaryOp.right)
+                asmLines.append("    cmp w9, w0")
+
+                let branches: [String: String] = [
+                    JJ.operators.eq.emit: "b.ne",
+                    JJ.operators.neq.emit: "b.eq",
+                    JJ.operators.lt.emit: "b.ge",
+                    JJ.operators.gt.emit: "b.le",
+                    JJ.operators.lte.emit: "b.gt",
+                    JJ.operators.gte.emit: "b.lt"
+                ]
+                if let branch = branches[binaryOp.op] {
+                    asmLines.append("    \(branch) \(falseLabel)")
+                } else {
+                    genExpr(node)
+                    asmLines.append("    cmp w0, #0")
+                    asmLines.append("    b.eq \(falseLabel)")
+                }
             }
         } else {
             genExpr(node)
@@ -543,6 +615,77 @@ class AssemblyTranspiler {
                     asmLines.append("    mov w\(i), \(argRegs[i])")
                 }
                 asmLines.append("    bl _\(funcCall.name)")
+            }
+        }
+    }
+
+    // MARK: - Float Support
+
+    /// Determine if an expression evaluates to a float
+    private func isFloatExpr(_ node: ASTNode) -> Bool {
+        if let literal = node as? Literal {
+            return literal.value is Double
+        } else if let varRef = node as? VarRef {
+            return floatVars.contains(varRef.name)
+        } else if let binaryOp = node as? BinaryOp {
+            return isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)
+        } else if let unaryOp = node as? UnaryOp {
+            return isFloatExpr(unaryOp.operand)
+        }
+        return false
+    }
+
+    /// Generate code that leaves a float result in d0
+    private func genFloatExpr(_ node: ASTNode) {
+        if let literal = node as? Literal {
+            if let dblVal = literal.value as? Double {
+                let label = addDouble(dblVal)
+                asmLines.append("    adrp x8, \(label)@PAGE")
+                asmLines.append("    ldr d0, [x8, \(label)@PAGEOFF]")
+            } else if let intVal = literal.value as? Int {
+                // Int literal in float context — convert
+                if intVal >= -65536 && intVal <= 65535 {
+                    asmLines.append("    mov w0, #\(intVal)")
+                } else {
+                    asmLines.append("    movz w0, #\(intVal & 0xFFFF)")
+                    if intVal > 65535 {
+                        asmLines.append("    movk w0, #\((intVal >> 16) & 0xFFFF), lsl #16")
+                    }
+                }
+                asmLines.append("    scvtf d0, w0")
+            }
+        } else if let varRef = node as? VarRef {
+            if floatVars.contains(varRef.name), let offset = variables[varRef.name] {
+                asmLines.append("    ldur d0, [x29, #-\(offset + 16)]")
+            } else if let offset = variables[varRef.name] {
+                // Int variable in float context — load and convert
+                asmLines.append("    ldur w0, [x29, #-\(offset + 16)]")
+                asmLines.append("    scvtf d0, w0")
+            }
+        } else if let binaryOp = node as? BinaryOp {
+            // Left operand -> d0, push to stack, right operand -> d0, pop left into d1
+            genFloatExpr(binaryOp.left)
+            asmLines.append("    str d0, [sp, #-16]!")
+            genFloatExpr(binaryOp.right)
+            asmLines.append("    fmov d1, d0")
+            asmLines.append("    ldr d0, [sp], #16")
+
+            switch binaryOp.op {
+            case let op where op == OP.add.emit:
+                asmLines.append("    fadd d0, d0, d1")
+            case let op where op == OP.sub.emit:
+                asmLines.append("    fsub d0, d0, d1")
+            case let op where op == OP.mul.emit:
+                asmLines.append("    fmul d0, d0, d1")
+            case let op where op == OP.div.emit:
+                asmLines.append("    fdiv d0, d0, d1")
+            default:
+                break
+            }
+        } else if let unaryOp = node as? UnaryOp {
+            genFloatExpr(unaryOp.operand)
+            if unaryOp.op == "-" || unaryOp.op == OP.sub.emit {
+                asmLines.append("    fneg d0, d0")
             }
         }
     }
