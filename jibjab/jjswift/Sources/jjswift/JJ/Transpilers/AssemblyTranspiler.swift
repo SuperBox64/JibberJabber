@@ -9,6 +9,24 @@ struct ArrayInfo {
     let isString: Bool    // String pointers vs int values
 }
 
+struct TupleInfo {
+    let baseOffset: Int
+    let count: Int
+    let elemTypes: [TupleElemType]  // Type of each element
+}
+
+enum TupleElemType {
+    case int
+    case string
+    case bool
+}
+
+struct DictInfo {
+    let keys: [String]           // Key names in order
+    let valueOffsets: [Int]      // Stack offsets for values
+    let valueTypes: [TupleElemType]  // Type of each value
+}
+
 class AssemblyTranspiler {
     private var asmLines: [String] = []
     private var strings: [(label: String, value: String, addNewline: Bool)] = []
@@ -20,7 +38,11 @@ class AssemblyTranspiler {
     private var functions: [String: FuncDef] = [:]
     private var currentFunc: String? = nil
     private var enums: [String: [String: Int]] = [:]  // Track enum name -> case name -> value
+    private var enumCaseStrings: [String: [String]] = [:]  // enum name -> ordered case name strings
+    private var enumCaseLabels: [String: [String: String]] = [:]  // enum name -> case name -> string label
     private var arrays: [String: ArrayInfo] = [:]     // Track array variables
+    private var tuples: [String: TupleInfo] = [:]     // Track tuple variables
+    private var dicts: [String: DictInfo] = [:]       // Track dictionary variables
 
     func transpile(_ program: Program) -> String {
         asmLines = []
@@ -70,6 +92,8 @@ class AssemblyTranspiler {
         stackOffset = 16
         variables = [:]
         arrays = [:]
+        tuples = [:]
+        dicts = [:]
         floatVars = []
         nestedArrays = [:]
 
@@ -212,10 +236,16 @@ class AssemblyTranspiler {
         } else if let enumDef = node as? EnumDef {
             // Store enum case values (0, 1, 2, ...)
             var caseValues: [String: Int] = [:]
+            var caseLabels: [String: String] = [:]
             for (i, caseName) in enumDef.cases.enumerated() {
                 caseValues[caseName] = i
+                // Pre-create string labels for each case name
+                let label = addString(caseName)
+                caseLabels[caseName] = label
             }
             enums[enumDef.name] = caseValues
+            enumCaseStrings[enumDef.name] = enumDef.cases
+            enumCaseLabels[enumDef.name] = caseLabels
         }
     }
 
@@ -225,6 +255,139 @@ class AssemblyTranspiler {
             asmLines.append("    adrp x0, \(strLabel)@PAGE")
             asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
             asmLines.append("    bl _printf")
+        } else if let varRef = node.expr as? VarRef, let enumInfo = enumVarLabels[varRef.name] {
+            // Print enum variable by name (stored as string pointer)
+            if let offset = variables[varRef.name] {
+                asmLines.append("    ldur x0, [x29, #-\(offset + 16)]")
+                asmLines.append("    str x0, [sp]")
+                asmLines.append("    adrp x0, _fmt_str@PAGE")
+                asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
+                asmLines.append("    bl _printf")
+            }
+        } else if let idx = node.expr as? IndexAccess,
+                  let varRef = idx.array as? VarRef,
+                  let _ = enums[varRef.name] {
+            // Print enum case access by name: Color["Red"] -> "Red"
+            if let lit = idx.index as? Literal, let strVal = lit.value as? String,
+               let caseLabels = enumCaseLabels[varRef.name],
+               let label = caseLabels[strVal] {
+                asmLines.append("    adrp x0, \(label)@PAGE")
+                asmLines.append("    add x0, x0, \(label)@PAGEOFF")
+                asmLines.append("    str x0, [sp]")
+                asmLines.append("    adrp x0, _fmt_str@PAGE")
+                asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
+                asmLines.append("    bl _printf")
+            }
+        } else if let varRef = node.expr as? VarRef, let enumCases = enums[varRef.name] {
+            // Print full enum: {"Red": Red, "Green": Green, "Blue": Blue}
+            let caseNames = enumCaseStrings[varRef.name] ?? Array(enumCases.keys)
+            // Build the string at compile time
+            let items = caseNames.map { "\"\($0)\": \($0)" }
+            let enumStr = "{" + items.joined(separator: ", ") + "}"
+            let strLabel = addStringRaw(enumStr)
+            asmLines.append("    adrp x0, \(strLabel)@PAGE")
+            asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+            asmLines.append("    bl _printf")
+        } else if let varRef = node.expr as? VarRef, let tupleInfo = tuples[varRef.name] {
+            // Print full tuple: (elem1, elem2, ...)
+            // We print it formatted like the interpreter
+            genPrintTupleFull(varRef.name, tupleInfo)
+        } else if let idx = node.expr as? IndexAccess,
+                  let varRef = idx.array as? VarRef,
+                  let tupleInfo = tuples[varRef.name] {
+            // Print single tuple element by index
+            if let lit = idx.index as? Literal, let intVal = lit.value as? Int {
+                let elemOffset = tupleInfo.baseOffset + intVal * 8
+                let elemType = tupleInfo.elemTypes[intVal]
+                switch elemType {
+                case .string:
+                    asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
+                    asmLines.append("    str x0, [sp]")
+                    asmLines.append("    adrp x0, _fmt_str@PAGE")
+                    asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
+                    asmLines.append("    bl _printf")
+                case .int:
+                    asmLines.append("    ldur w0, [x29, #-\(elemOffset + 16)]")
+                    asmLines.append("    sxtw x0, w0")
+                    asmLines.append("    str x0, [sp]")
+                    asmLines.append("    adrp x0, _fmt_int@PAGE")
+                    asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
+                    asmLines.append("    bl _printf")
+                case .bool:
+                    asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
+                    asmLines.append("    str x0, [sp]")
+                    asmLines.append("    adrp x0, _fmt_str@PAGE")
+                    asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
+                    asmLines.append("    bl _printf")
+                }
+            }
+        } else if let varRef = node.expr as? VarRef, let dictInfo = dicts[varRef.name] {
+            // Print empty dict
+            if dictInfo.keys.isEmpty {
+                let strLabel = addStringRaw("{}")
+                asmLines.append("    adrp x0, \(strLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+            } else {
+                // Print dict not fully supported in asm, print placeholder
+                let strLabel = addStringRaw("{...}")
+                asmLines.append("    adrp x0, \(strLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+            }
+        } else if let idx = node.expr as? IndexAccess,
+                  let varRef = idx.array as? VarRef,
+                  let dictInfo = dicts[varRef.name] {
+            // Dict key access: person["name"]
+            if let lit = idx.index as? Literal, let keyStr = lit.value as? String {
+                if let keyIdx = dictInfo.keys.firstIndex(of: keyStr) {
+                    let valOffset = dictInfo.valueOffsets[keyIdx]
+                    let valType = dictInfo.valueTypes[keyIdx]
+                    switch valType {
+                    case .string:
+                        asmLines.append("    ldur x0, [x29, #-\(valOffset + 16)]")
+                        asmLines.append("    str x0, [sp]")
+                        asmLines.append("    adrp x0, _fmt_str@PAGE")
+                        asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    case .int:
+                        asmLines.append("    ldur w0, [x29, #-\(valOffset + 16)]")
+                        asmLines.append("    sxtw x0, w0")
+                        asmLines.append("    str x0, [sp]")
+                        asmLines.append("    adrp x0, _fmt_int@PAGE")
+                        asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    case .bool:
+                        asmLines.append("    ldur x0, [x29, #-\(valOffset + 16)]")
+                        asmLines.append("    str x0, [sp]")
+                        asmLines.append("    adrp x0, _fmt_str@PAGE")
+                        asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    }
+                }
+            }
+        } else if let idx = node.expr as? IndexAccess,
+                  let outerIdx = idx.array as? IndexAccess,
+                  let varRef = outerIdx.array as? VarRef,
+                  let dictInfo = dicts[varRef.name] {
+            // Nested dict access: data["items"][0]
+            if let keyLit = outerIdx.index as? Literal, let keyStr = keyLit.value as? String {
+                let syntheticName = "\(varRef.name).\(keyStr)"
+                if let arrInfo = arrays[syntheticName] {
+                    genArrayLoad(varRef: VarRef(name: syntheticName), index: idx.index, arrInfo: arrInfo, useX: arrInfo.isString)
+                    if arrInfo.isString {
+                        asmLines.append("    str x0, [sp]")
+                        asmLines.append("    adrp x0, _fmt_str@PAGE")
+                        asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
+                    } else {
+                        asmLines.append("    sxtw x0, w0")
+                        asmLines.append("    str x0, [sp]")
+                        asmLines.append("    adrp x0, _fmt_int@PAGE")
+                        asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
+                    }
+                    asmLines.append("    bl _printf")
+                }
+            }
         } else if let varRef = node.expr as? VarRef, let arrInfo = arrays[varRef.name] {
             // Print entire array: loop through elements
             for i in 0..<arrInfo.count {
@@ -313,7 +476,47 @@ class AssemblyTranspiler {
         }
     }
 
+    /// Check if an expression is an enum access like Color["Red"]
+    private func isEnumAccess(_ node: ASTNode) -> (enumName: String, caseName: String)? {
+        if let idx = node as? IndexAccess,
+           let varRef = idx.array as? VarRef,
+           let _ = enums[varRef.name],
+           let lit = idx.index as? Literal,
+           let strVal = lit.value as? String {
+            return (varRef.name, strVal)
+        }
+        return nil
+    }
+
     private func genVarDecl(_ node: VarDecl) {
+        // Handle enum variable assignment: store as string pointer
+        if let enumAccess = isEnumAccess(node.value) {
+            if let caseLabels = enumCaseLabels[enumAccess.enumName],
+               let label = caseLabels[enumAccess.caseName] {
+                asmLines.append("    adrp x0, \(label)@PAGE")
+                asmLines.append("    add x0, x0, \(label)@PAGEOFF")
+                if variables[node.name] == nil {
+                    variables[node.name] = stackOffset
+                    stackOffset += 8
+                }
+                let offset = variables[node.name]!
+                asmLines.append("    stur x0, [x29, #-\(offset + 16)]")
+                // Mark as a string-like variable for printing
+                enumVarLabels[node.name] = (enumAccess.enumName, enumAccess.caseName)
+                return
+            }
+        }
+
+        if let tupleLit = node.value as? TupleLiteral {
+            genTupleDecl(node.name, tupleLit)
+            return
+        }
+
+        if let dictLit = node.value as? DictLiteral {
+            genDictDecl(node.name, dictLit)
+            return
+        }
+
         if let arr = node.value as? ArrayLiteral {
             // Check if this is a nested array (2D)
             let isNested = arr.elements.first is ArrayLiteral
@@ -399,6 +602,178 @@ class AssemblyTranspiler {
 
     // Track nested (2D) array dimensions
     private var nestedArrays: [String: (outerCount: Int, innerSize: Int)] = [:]
+    // Track enum variable assignments: var name -> (enum name, case name)
+    private var enumVarLabels: [String: (String, String)] = [:]
+
+    private func genTupleDecl(_ name: String, _ tupleLit: TupleLiteral) {
+        let baseOffset = stackOffset
+        var elemTypes: [TupleElemType] = []
+
+        for elem in tupleLit.elements {
+            if let lit = elem as? Literal {
+                if let str = lit.value as? String {
+                    let strLabel = addString(str)
+                    asmLines.append("    adrp x0, \(strLabel)@PAGE")
+                    asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                    asmLines.append("    stur x0, [x29, #-\(stackOffset + 16)]")
+                    elemTypes.append(.string)
+                } else if let boolVal = lit.value as? Bool {
+                    // Store bool as string "true"/"false" for printing
+                    let strLabel = addString(boolVal ? "true" : "false")
+                    asmLines.append("    adrp x0, \(strLabel)@PAGE")
+                    asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                    asmLines.append("    stur x0, [x29, #-\(stackOffset + 16)]")
+                    elemTypes.append(.string)
+                } else if let intVal = lit.value as? Int {
+                    genExpr(elem)
+                    asmLines.append("    stur w0, [x29, #-\(stackOffset + 16)]")
+                    elemTypes.append(.int)
+                } else {
+                    genExpr(elem)
+                    asmLines.append("    stur w0, [x29, #-\(stackOffset + 16)]")
+                    elemTypes.append(.int)
+                }
+            } else {
+                genExpr(elem)
+                asmLines.append("    stur w0, [x29, #-\(stackOffset + 16)]")
+                elemTypes.append(.int)
+            }
+            stackOffset += 8
+        }
+
+        let info = TupleInfo(baseOffset: baseOffset, count: tupleLit.elements.count, elemTypes: elemTypes)
+        tuples[name] = info
+        variables[name] = baseOffset
+    }
+
+    private func genPrintTupleFull(_ name: String, _ info: TupleInfo) {
+        if info.count == 0 {
+            let strLabel = addStringRaw("()")
+            asmLines.append("    adrp x0, \(strLabel)@PAGE")
+            asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+            asmLines.append("    bl _printf")
+            return
+        }
+
+        // Print opening paren (no newline)
+        let openLabel = addString("(")
+        asmLines.append("    adrp x0, \(openLabel)@PAGE")
+        asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
+        asmLines.append("    bl _printf")
+
+        for i in 0..<info.count {
+            let elemOffset = info.baseOffset + i * 8
+            let elemType = info.elemTypes[i]
+
+            // Print separator
+            if i > 0 {
+                let sepLabel = addString(", ")
+                asmLines.append("    adrp x0, \(sepLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+            }
+
+            // Use %s or %d without newline — we need custom format strings
+            switch elemType {
+            case .string, .bool:
+                asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
+                asmLines.append("    str x0, [sp]")
+                let fmtLabel = addString("%s")
+                asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+            case .int:
+                asmLines.append("    ldur w1, [x29, #-\(elemOffset + 16)]")
+                asmLines.append("    sxtw x1, w1")
+                asmLines.append("    str x1, [sp]")
+                let fmtLabel = addString("%d")
+                asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+            }
+        }
+
+        // Print closing paren + newline
+        let closeLabel = addStringRaw(")")
+        asmLines.append("    adrp x0, \(closeLabel)@PAGE")
+        asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
+        asmLines.append("    bl _printf")
+    }
+
+    private func genDictDecl(_ name: String, _ dictLit: DictLiteral) {
+        var keys: [String] = []
+        var valueOffsets: [Int] = []
+        var valueTypes: [TupleElemType] = []
+
+        for pair in dictLit.pairs {
+            let keyStr: String
+            if let lit = pair.key as? Literal, let s = lit.value as? String {
+                keyStr = s
+            } else {
+                keyStr = "?"
+            }
+            keys.append(keyStr)
+
+            let valOffset = stackOffset
+            valueOffsets.append(valOffset)
+
+            if let lit = pair.value as? Literal {
+                if let str = lit.value as? String {
+                    let strLabel = addString(str)
+                    asmLines.append("    adrp x0, \(strLabel)@PAGE")
+                    asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                    asmLines.append("    stur x0, [x29, #-\(valOffset + 16)]")
+                    valueTypes.append(.string)
+                } else if let boolVal = lit.value as? Bool {
+                    let strLabel = addString(boolVal ? "true" : "false")
+                    asmLines.append("    adrp x0, \(strLabel)@PAGE")
+                    asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                    asmLines.append("    stur x0, [x29, #-\(valOffset + 16)]")
+                    valueTypes.append(.string)
+                } else if let intVal = lit.value as? Int {
+                    genExpr(pair.value)
+                    asmLines.append("    stur w0, [x29, #-\(valOffset + 16)]")
+                    valueTypes.append(.int)
+                } else {
+                    genExpr(pair.value)
+                    asmLines.append("    stur w0, [x29, #-\(valOffset + 16)]")
+                    valueTypes.append(.int)
+                }
+            } else if let arrLit = pair.value as? ArrayLiteral {
+                // Store nested array elements inline and track as array
+                let arrBase = stackOffset
+                let isStr = arrLit.elements.first.flatMap { ($0 as? Literal)?.value as? String } != nil
+                for arrElem in arrLit.elements {
+                    if isStr {
+                        if let lit = arrElem as? Literal, let s = lit.value as? String {
+                            let sl = addString(s)
+                            asmLines.append("    adrp x0, \(sl)@PAGE")
+                            asmLines.append("    add x0, x0, \(sl)@PAGEOFF")
+                            asmLines.append("    stur x0, [x29, #-\(stackOffset + 16)]")
+                        }
+                    } else {
+                        genExpr(arrElem)
+                        asmLines.append("    stur w0, [x29, #-\(stackOffset + 16)]")
+                    }
+                    stackOffset += 8
+                }
+                let arrInfo = ArrayInfo(baseOffset: arrBase, count: arrLit.elements.count, isString: isStr)
+                // Use a synthetic name for the nested array
+                arrays["\(name).\(keyStr)"] = arrInfo
+                valueTypes.append(.int)  // placeholder
+                continue
+            } else {
+                genExpr(pair.value)
+                asmLines.append("    stur w0, [x29, #-\(valOffset + 16)]")
+                valueTypes.append(.int)
+            }
+            stackOffset += 8
+        }
+
+        let info = DictInfo(keys: keys, valueOffsets: valueOffsets, valueTypes: valueTypes)
+        dicts[name] = info
+        variables[name] = valueOffsets.first ?? stackOffset
+    }
 
     private func genLoop(_ node: LoopStmt) {
         if node.start != nil && node.end != nil {
@@ -530,7 +905,11 @@ class AssemblyTranspiler {
                 asmLines.append("    mov w0, #0")
             }
         } else if let varRef = node as? VarRef {
-            if let offset = variables[varRef.name] {
+            if let _ = enumVarLabels[varRef.name], let offset = variables[varRef.name] {
+                // Enum variable stored as string pointer — load as x0 for comparison
+                asmLines.append("    ldur x0, [x29, #-\(offset + 16)]")
+                asmLines.append("    mov w0, w0")  // truncate to w0 for int comparison context
+            } else if let offset = variables[varRef.name] {
                 asmLines.append("    ldur w0, [x29, #-\(offset + 16)]")
             } else if enums[varRef.name] != nil {
                 asmLines.append("    mov w0, #0")
@@ -541,6 +920,14 @@ class AssemblyTranspiler {
             // Check if this is enum access (e.g., Color["Red"] -> enum value)
             if let varRef = idx.array as? VarRef, let enumCases = enums[varRef.name] {
                 if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    // Load string pointer for comparison (consistent with enum var storage)
+                    if let caseLabels = enumCaseLabels[varRef.name],
+                       let label = caseLabels[strVal] {
+                        asmLines.append("    adrp x0, \(label)@PAGE")
+                        asmLines.append("    add x0, x0, \(label)@PAGEOFF")
+                        asmLines.append("    mov w0, w0")  // truncate to w0 for comparison
+                        return
+                    }
                     let value = enumCases[strVal] ?? 0
                     asmLines.append("    mov w0, #\(value)")
                     return
@@ -685,6 +1072,11 @@ class AssemblyTranspiler {
                 asmLines.append("    fmul d0, d0, d1")
             case let op where op == OP.div.emit:
                 asmLines.append("    fdiv d0, d0, d1")
+            case let op where op == OP.mod.emit:
+                // Float mod: d0 = d0 - (trunc(d0/d1) * d1)
+                asmLines.append("    fdiv d2, d0, d1")      // d2 = d0 / d1
+                asmLines.append("    frintz d2, d2")         // d2 = trunc(d2) (round toward zero)
+                asmLines.append("    fmsub d0, d2, d1, d0")  // d0 = d0 - d2*d1
             default:
                 break
             }
