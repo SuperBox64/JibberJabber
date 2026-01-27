@@ -38,6 +38,7 @@ def get_target_type(jj_type: str) -> str:
 class ObjCppTranspiler:
     def __init__(self):
         self.indent = 0
+        self.enums = set()  # Track defined enum names
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip(), '']
@@ -79,9 +80,17 @@ class ObjCppTranspiler:
             expr = node.expr
             if isinstance(expr, Literal) and isinstance(expr.value, str):
                 return self.ind() + f'NSLog(@"%@", @{self.expr(expr)});'
-            elif isinstance(expr, ArrayLiteral) or isinstance(expr, VarRef):
+            elif isinstance(expr, VarRef):
+                # Check if trying to print an enum type (not a value)
+                if expr.name in self.enums:
+                    return self.ind() + f'NSLog(@"%@", @"enum {expr.name}");'
+                return self.ind() + f'NSLog(@"%@", {self.expr(expr)});'
+            elif isinstance(expr, ArrayLiteral):
                 return self.ind() + f'NSLog(@"%@", {self.expr(expr)});'
             elif isinstance(expr, IndexAccess):
+                # Check if this is enum value access
+                if isinstance(expr.array, VarRef) and expr.array.name in self.enums:
+                    return self.ind() + f'NSLog(@"%ld", (long){self.expr(expr)});'
                 return self.ind() + f'NSLog(@"%@", {self.expr(expr)});'
             return self.ind() + T['printInt'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
@@ -123,6 +132,10 @@ class ObjCppTranspiler:
             return f"{header}\n{body}\n{T['blockEnd']}"
         elif isinstance(node, ReturnStmt):
             return self.ind() + T['return'].replace('{value}', self.expr(node.value))
+        elif isinstance(node, EnumDef):
+            self.enums.add(node.name)
+            cases = ', '.join(node.cases)
+            return self.ind() + f"typedef NS_ENUM(NSInteger, {node.name}) {{ {cases} }};"
         return ""
 
     def expr(self, node: ASTNode) -> str:
@@ -156,6 +169,10 @@ class ObjCppTranspiler:
             elements = ', '.join(self.expr(e) for e in node.elements)
             return f"std::make_tuple({elements})"
         elif isinstance(node, IndexAccess):
+            # Check if this is enum access (e.g., Color["Red"] -> Red)
+            if isinstance(node.array, VarRef) and node.array.name in self.enums:
+                if isinstance(node.index, Literal) and isinstance(node.index.value, str):
+                    return node.index.value  # Just return the enum case name
             return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
             return f"({self.expr(node.left)} {node.op} {self.expr(node.right)})"

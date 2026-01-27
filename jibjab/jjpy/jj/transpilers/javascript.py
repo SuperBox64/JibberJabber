@@ -6,7 +6,8 @@ Uses shared config from common/jj.json
 from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef
 )
 
 # Get target config and operators
@@ -64,6 +65,10 @@ class JavaScriptTranspiler:
             return f"{header}\n{body}\n{self.ind()}{T['blockEnd']}"
         elif isinstance(node, ReturnStmt):
             return self.ind() + T['return'].replace('{value}', self.expr(node.value))
+        elif isinstance(node, EnumDef):
+            # JavaScript: const Color = {Red: 'Red', Green: 'Green', Blue: 'Blue'};
+            cases = ', '.join(f"{c}: '{c}'" for c in node.cases)
+            return self.ind() + f"const {node.name} = {{{cases}}};"
         return ""
 
     def expr(self, node: ASTNode) -> str:
@@ -77,6 +82,18 @@ class JavaScriptTranspiler:
             return str(node.value)
         elif isinstance(node, VarRef):
             return node.name
+        elif isinstance(node, ArrayLiteral):
+            elements = ', '.join(self.expr(e) for e in node.elements)
+            return f"[{elements}]"
+        elif isinstance(node, DictLiteral):
+            pairs = ', '.join(f"{self.expr(k)}: {self.expr(v)}" for k, v in node.pairs)
+            return "{" + pairs + "}"
+        elif isinstance(node, TupleLiteral):
+            # JavaScript doesn't have tuples, use arrays
+            elements = ', '.join(self.expr(e) for e in node.elements)
+            return f"[{elements}]"
+        elif isinstance(node, IndexAccess):
+            return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
             op = node.op
             if op == OP['eq']['emit']: op = T.get('eq', '===')

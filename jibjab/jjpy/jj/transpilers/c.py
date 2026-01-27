@@ -40,6 +40,7 @@ def get_target_type(jj_type: str) -> str:
 class CTranspiler:
     def __init__(self):
         self.indent = 0
+        self.enums = set()  # Track defined enum names
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip(), '']
@@ -89,6 +90,9 @@ class CTranspiler:
                         lines.append(self.ind() + T['printInt'].replace('{expr}', self.expr(elem)))
                 return '\n'.join(lines) if lines else ''
             elif isinstance(expr_node, VarRef):
+                # Check if trying to print an enum type (not a value)
+                if expr_node.name in self.enums:
+                    return self.ind() + f'printf("%s\\n", "enum {expr_node.name}");'
                 # For variable refs, we just print - arrays print as pointers
                 return self.ind() + f'printf("%p\\n", (void*){self.expr(expr_node)});'
             return self.ind() + T['printInt'].replace('{expr}', self.expr(expr_node))
@@ -149,6 +153,11 @@ class CTranspiler:
             return f"{header}\n{body}\n{T['blockEnd']}"
         elif isinstance(node, ReturnStmt):
             return self.ind() + T['return'].replace('{value}', self.expr(node.value))
+        elif isinstance(node, EnumDef):
+            # C: enum Color { Red, Green, Blue };
+            self.enums.add(node.name)
+            cases = ', '.join(node.cases)
+            return self.ind() + f"enum {node.name} {{ {cases} }};"
         return ""
 
     def expr(self, node: ASTNode) -> str:
@@ -173,6 +182,10 @@ class CTranspiler:
             elements = ', '.join(self.expr(e) for e in node.elements)
             return f"{{{elements}}}"
         elif isinstance(node, IndexAccess):
+            # Check if this is enum access (e.g., Color["Red"] -> Red)
+            if isinstance(node.array, VarRef) and node.array.name in self.enums:
+                if isinstance(node.index, Literal) and isinstance(node.index.value, str):
+                    return node.index.value  # Just return the enum case name
             return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
             return f"({self.expr(node.left)} {node.op} {self.expr(node.right)})"

@@ -7,7 +7,7 @@ from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef
 )
 
 # Get target config and operators
@@ -64,6 +64,10 @@ class PythonTranspiler:
             return f"{header}\n{body}"
         elif isinstance(node, ReturnStmt):
             return self.ind() + T['return'].replace('{value}', self.expr(node.value))
+        elif isinstance(node, EnumDef):
+            # Python: Color = {'Red': 'Red', 'Green': 'Green', 'Blue': 'Blue'}
+            cases = ', '.join(f"'{c}': '{c}'" for c in node.cases)
+            return self.ind() + f"{node.name} = {{{cases}}}"
         return ""
 
     def expr(self, node: ASTNode) -> str:
