@@ -16,6 +16,11 @@ class CTranspiler {
             } else if literal.value is String {
                 return "String"
             }
+        } else if let arr = node as? ArrayLiteral {
+            if let first = arr.elements.first {
+                return inferType(first)
+            }
+            return "Int"
         }
         return "Int"
     }
@@ -75,6 +80,29 @@ class CTranspiler {
             }
             return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         } else if let varDecl = node as? VarDecl {
+            // Check if it's an array
+            if let arr = varDecl.value as? ArrayLiteral {
+                if let firstElem = arr.elements.first {
+                    if let nestedArr = firstElem as? ArrayLiteral {
+                        // 2D array
+                        let innerType = nestedArr.elements.first.map { getTargetType(inferType($0)) } ?? "int"
+                        let innerSize = nestedArr.elements.count
+                        let outerSize = arr.elements.count
+                        let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+                        return ind() + "\(innerType) \(varDecl.name)[\(outerSize)][\(innerSize)] = {\(elements)};"
+                    }
+                    // Check if it's a string array
+                    let elemType: String
+                    if let lit = firstElem as? Literal, lit.value is String {
+                        elemType = "const char*"
+                    } else {
+                        elemType = getTargetType(inferType(firstElem))
+                    }
+                    let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+                    return ind() + "\(elemType) \(varDecl.name)[] = {\(elements)};"
+                }
+                return ind() + "int \(varDecl.name)[] = {};"
+            }
             let varType = getTargetType(inferType(varDecl.value))
             return ind() + T.var
                 .replacingOccurrences(of: "{type}", with: varType)

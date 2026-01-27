@@ -25,6 +25,8 @@ def infer_type(node) -> str:
             return 'Double'
         elif isinstance(node.value, str):
             return 'String'
+    elif isinstance(node, ArrayLiteral):
+        return 'Array'
     return 'Int'  # default
 
 def get_target_type(jj_type: str) -> str:
@@ -74,8 +76,18 @@ class ObjCppTranspiler:
 
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
+            expr = node.expr
+            if isinstance(expr, Literal) and isinstance(expr.value, str):
+                return self.ind() + f'NSLog(@"%@", @{self.expr(expr)});'
+            elif isinstance(expr, ArrayLiteral) or isinstance(expr, VarRef):
+                return self.ind() + f'NSLog(@"%@", {self.expr(expr)});'
+            elif isinstance(expr, IndexAccess):
+                return self.ind() + f'NSLog(@"%@", {self.expr(expr)});'
             return self.ind() + T['printInt'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
+            # Check if it's an array
+            if isinstance(node.value, ArrayLiteral):
+                return self.ind() + f"NSArray *{node.name} = {self.expr(node.value)};"
             var_type = get_target_type(infer_type(node.value))
             return self.ind() + T['var'].replace('{type}', var_type).replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
@@ -125,8 +137,18 @@ class ObjCppTranspiler:
         elif isinstance(node, VarRef):
             return node.name
         elif isinstance(node, ArrayLiteral):
-            elements = ', '.join(self.expr(e) for e in node.elements)
-            return f"{{{elements}}}"
+            def box_element(e):
+                if isinstance(e, Literal):
+                    if isinstance(e.value, str):
+                        return f'@{self.expr(e)}'  # @"string"
+                    else:
+                        return f'@({self.expr(e)})'  # @(number)
+                elif isinstance(e, ArrayLiteral):
+                    return self.expr(e)  # Nested arrays
+                else:
+                    return f'@({self.expr(e)})'
+            elements = ', '.join(box_element(e) for e in node.elements)
+            return f"@[{elements}]"
         elif isinstance(node, DictLiteral):
             pairs = ', '.join(f"{{{self.expr(k)}, {self.expr(v)}}}" for k, v in node.pairs)
             return f"{{{pairs}}}"

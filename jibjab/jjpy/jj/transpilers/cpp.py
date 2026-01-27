@@ -25,6 +25,10 @@ def infer_type(node) -> str:
             return 'Double'
         elif isinstance(node.value, str):
             return 'String'
+    elif isinstance(node, ArrayLiteral):
+        if node.elements:
+            return infer_type(node.elements[0])
+        return 'Int'
     return 'Int'  # default
 
 def get_target_type(jj_type: str) -> str:
@@ -72,8 +76,32 @@ class CppTranspiler:
 
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
+            expr = node.expr
+            if isinstance(expr, Literal) and isinstance(expr.value, str):
+                return self.ind() + f'std::cout << {self.expr(expr)} << std::endl;'
             return self.ind() + T['printInt'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
+            # Check if it's an array
+            if isinstance(node.value, ArrayLiteral):
+                # Determine element type
+                if node.value.elements:
+                    first = node.value.elements[0]
+                    if isinstance(first, ArrayLiteral):
+                        # Nested array - 2D array
+                        inner_type = get_target_type(infer_type(first.elements[0])) if first.elements else 'int'
+                        inner_size = len(first.elements)
+                        outer_size = len(node.value.elements)
+                        elements = ', '.join(self.expr(e) for e in node.value.elements)
+                        return self.ind() + f"{inner_type} {node.name}[{outer_size}][{inner_size}] = {{{elements}}};"
+                    # Check if it's a string array
+                    if isinstance(first, Literal) and isinstance(first.value, str):
+                        elem_type = 'const char*'
+                    else:
+                        elem_type = get_target_type(infer_type(first))
+                else:
+                    elem_type = 'int'
+                elements = ', '.join(self.expr(e) for e in node.value.elements)
+                return self.ind() + f"{elem_type} {node.name}[] = {{{elements}}};"
             var_type = get_target_type(infer_type(node.value))
             return self.ind() + T['var'].replace('{type}', var_type).replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):

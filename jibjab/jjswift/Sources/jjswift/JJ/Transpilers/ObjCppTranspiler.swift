@@ -16,6 +16,8 @@ class ObjCppTranspiler {
             } else if literal.value is String {
                 return "String"
             }
+        } else if node is ArrayLiteral {
+            return "Array"
         }
         return "Int"
     }
@@ -71,8 +73,18 @@ class ObjCppTranspiler {
 
     private func stmtToString(_ node: ASTNode) -> String {
         if let printStmt = node as? PrintStmt {
+            let e = printStmt.expr
+            if let lit = e as? Literal, lit.value is String {
+                return ind() + "NSLog(@\"%@\", @\(expr(e)));"
+            } else if e is ArrayLiteral || e is VarRef || e is IndexAccess {
+                return ind() + "NSLog(@\"%@\", \(expr(e)));"
+            }
             return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
         } else if let varDecl = node as? VarDecl {
+            // Check if it's an array
+            if varDecl.value is ArrayLiteral {
+                return ind() + "NSArray *\(varDecl.name) = \(expr(varDecl.value));"
+            }
             let varType = getTargetType(inferType(varDecl.value))
             return ind() + T.var
                 .replacingOccurrences(of: "{type}", with: varType)
@@ -141,8 +153,16 @@ class ObjCppTranspiler {
         } else if let varRef = node as? VarRef {
             return varRef.name
         } else if let arr = node as? ArrayLiteral {
-            let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
-            return "{\(elements)}"
+            let elements = arr.elements.map { elem -> String in
+                if let lit = elem as? Literal, lit.value is String {
+                    return "@\(expr(elem))"  // @"string"
+                } else if elem is ArrayLiteral {
+                    return expr(elem)  // Nested arrays
+                } else {
+                    return "@(\(expr(elem)))"  // @(number)
+                }
+            }.joined(separator: ", ")
+            return "@[\(elements)]"
         } else if let dict = node as? DictLiteral {
             let pairs = dict.pairs.map { "{\(expr($0.0)), \(expr($0.1))}" }.joined(separator: ", ")
             return "{\(pairs)}"

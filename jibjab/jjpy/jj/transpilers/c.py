@@ -25,6 +25,10 @@ def infer_type(node) -> str:
             return 'Double'
         elif isinstance(node.value, str):
             return 'String'
+    elif isinstance(node, ArrayLiteral):
+        if node.elements:
+            return infer_type(node.elements[0])
+        return 'Int'
     return 'Int'  # default
 
 def get_target_type(jj_type: str) -> str:
@@ -72,11 +76,44 @@ class CTranspiler:
 
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
-            expr = node.expr
-            if isinstance(expr, Literal) and isinstance(expr.value, str):
-                return self.ind() + T['printStr'].replace('{expr}', self.expr(expr))
-            return self.ind() + T['printInt'].replace('{expr}', self.expr(expr))
+            expr_node = node.expr
+            if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
+                return self.ind() + T['printStr'].replace('{expr}', self.expr(expr_node))
+            elif isinstance(expr_node, ArrayLiteral):
+                # Print array by printing each element
+                lines = []
+                for i, elem in enumerate(expr_node.elements):
+                    if isinstance(elem, Literal) and isinstance(elem.value, str):
+                        lines.append(self.ind() + T['printStr'].replace('{expr}', self.expr(elem)))
+                    else:
+                        lines.append(self.ind() + T['printInt'].replace('{expr}', self.expr(elem)))
+                return '\n'.join(lines) if lines else ''
+            elif isinstance(expr_node, VarRef):
+                # For variable refs, we just print - arrays print as pointers
+                return self.ind() + f'printf("%p\\n", (void*){self.expr(expr_node)});'
+            return self.ind() + T['printInt'].replace('{expr}', self.expr(expr_node))
         elif isinstance(node, VarDecl):
+            # Check if it's an array
+            if isinstance(node.value, ArrayLiteral):
+                # Determine element type
+                if node.value.elements:
+                    first = node.value.elements[0]
+                    if isinstance(first, ArrayLiteral):
+                        # Nested array - 2D array
+                        inner_type = get_target_type(infer_type(first.elements[0])) if first.elements else 'int'
+                        inner_size = len(first.elements)
+                        outer_size = len(node.value.elements)
+                        elements = ', '.join(self.expr(e) for e in node.value.elements)
+                        return self.ind() + f"{inner_type} {node.name}[{outer_size}][{inner_size}] = {{{elements}}};"
+                    # Check if it's a string array
+                    if isinstance(first, Literal) and isinstance(first.value, str):
+                        elem_type = 'const char*'
+                    else:
+                        elem_type = get_target_type(infer_type(first))
+                else:
+                    elem_type = 'int'
+                elements = ', '.join(self.expr(e) for e in node.value.elements)
+                return self.ind() + f"{elem_type} {node.name}[] = {{{elements}}};"
             var_type = get_target_type(infer_type(node.value))
             return self.ind() + T['var'].replace('{type}', var_type).replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
