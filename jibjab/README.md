@@ -119,6 +119,12 @@ swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
 swift run jjswift transpile ../examples/fibonacci.jj applescript fib.scpt # AppleScript (compiled)
 swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
 swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+
+# Build (transpile + compile to binary)
+swift run jjswift build ../examples/fibonacci.jj c               # Build C binary
+
+# Exec (transpile + compile + run)
+swift run jjswift exec ../examples/fibonacci.jj c                # Run via C
 ```
 
 ### Using Python (`jjpy`)
@@ -145,6 +151,12 @@ python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
 python3 jj.py transpile ../examples/fibonacci.jj applescript fib.scpt # AppleScript (compiled)
 python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
 python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+
+# Build (transpile + compile to binary)
+python3 jj.py build ../examples/fibonacci.jj c               # Build C binary
+
+# Exec (transpile + compile + run)
+python3 jj.py exec ../examples/fibonacci.jj c                # Run via C
 ```
 
 ---

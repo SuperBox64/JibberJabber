@@ -4,6 +4,7 @@
 class JavaScriptTranspiler {
     private var indentLevel = 0
     private let T = loadTarget("js")
+    private var enums = Set<String>()
 
     func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
@@ -66,6 +67,10 @@ class JavaScriptTranspiler {
             return "\(header)\n\(body)\n\(ind())\(T.blockEnd)"
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
+        } else if let enumDef = node as? EnumDef {
+            enums.insert(enumDef.name)
+            let cases = enumDef.cases.map { "\"\($0)\": \"\($0)\"" }.joined(separator: ", ")
+            return ind() + "const \(enumDef.name) = { \(cases) };"
         }
         return ""
     }
@@ -98,6 +103,21 @@ class JavaScriptTranspiler {
             return T.call
                 .replacingOccurrences(of: "{name}", with: funcCall.name)
                 .replacingOccurrences(of: "{args}", with: args)
+        } else if let idx = node as? IndexAccess {
+            // Check if this is enum access (e.g., Color["Red"])
+            if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
+                return "\(varRef.name)[\(expr(idx.index))]"
+            }
+            return "\(expr(idx.array))[\(expr(idx.index))]"
+        } else if let arr = node as? ArrayLiteral {
+            let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+            return "[\(elements)]"
+        } else if let dict = node as? DictLiteral {
+            let pairs = dict.pairs.map { "\(expr($0.key)): \(expr($0.value))" }.joined(separator: ", ")
+            return "{ \(pairs) }"
+        } else if let tuple = node as? TupleLiteral {
+            let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
+            return "[\(elements)]"
         }
         return ""
     }

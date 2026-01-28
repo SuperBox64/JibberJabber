@@ -40,6 +40,14 @@ swift run jjswift transpile ../examples/fibonacci.jj applescript # AppleScript
 swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
 swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 
+# Build (transpile + compile to binary)
+swift run jjswift build ../examples/fibonacci.jj c               # Build C binary
+swift run jjswift build ../examples/fibonacci.jj swift           # Build Swift binary
+
+# Exec (transpile + compile + run)
+swift run jjswift exec ../examples/fibonacci.jj c                # Run via C
+swift run jjswift exec ../examples/fibonacci.jj swift            # Run via Swift
+
 # Using release binary
 .build/release/jjswift run ../examples/hello.jj
 ```

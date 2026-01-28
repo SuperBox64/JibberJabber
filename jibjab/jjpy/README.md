@@ -26,6 +26,14 @@ python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
 python3 jj.py transpile ../examples/fibonacci.jj applescript # AppleScript
 python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
 python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+
+# Build (transpile + compile to binary)
+python3 jj.py build ../examples/fibonacci.jj c               # Build C binary
+python3 jj.py build ../examples/fibonacci.jj swift           # Build Swift binary
+
+# Exec (transpile + compile + run)
+python3 jj.py exec ../examples/fibonacci.jj c                # Run via C
+python3 jj.py exec ../examples/fibonacci.jj swift            # Run via Swift
 ```
 
 ## Structure

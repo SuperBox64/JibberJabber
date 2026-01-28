@@ -5,6 +5,40 @@
 
 import Foundation
 
+func getFileExt(_ target: String) -> String {
+    let exts = ["py": ".py", "js": ".js", "c": ".c", "cpp": ".cpp",
+                "swift": ".swift", "objc": ".m", "objcpp": ".mm", "asm": ".s"]
+    return exts[target] ?? ".txt"
+}
+
+func compileTranspiled(_ target: String, _ srcFile: String, _ outFile: String) -> Bool {
+    let cmds: [String: [String]] = [
+        "c": ["clang", srcFile, "-o", outFile],
+        "cpp": ["clang++", srcFile, "-o", outFile],
+        "swift": ["swiftc", srcFile, "-o", outFile],
+        "objc": ["clang", "-framework", "Foundation", srcFile, "-o", outFile],
+        "objcpp": ["clang++", "-framework", "Foundation", srcFile, "-o", outFile],
+        "js": ["qjsc", "-o", outFile, srcFile],
+    ]
+    guard let cmd = cmds[target], !cmd.isEmpty else { return false }
+    let process = Process()
+    // Use /usr/bin/env to find the executable in PATH
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    process.arguments = cmd
+    do {
+        try process.run()
+        process.waitUntilExit()
+        return process.terminationStatus == 0
+    } catch { return false }
+}
+
+func runBinary(_ path: String) {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: path)
+    try? process.run()
+    process.waitUntilExit()
+}
+
 func main() {
     let args = CommandLine.arguments
 
@@ -15,8 +49,10 @@ func main() {
         print("  jjswift compile <file.jj> [output]   - Compile direct to native binary")
         print("  jjswift asm <file.jj> [output]       - Compile via asm transpiler + as/ld")
         print("  jjswift transpile <file.jj> <target> - Transpile to target language")
+        print("  jjswift build <file.jj> <target> [output] - Transpile + compile")
+        print("  jjswift exec <file.jj> <target>      - Transpile + compile + run")
         print("")
-        print("Transpile targets: py, js, c, cpp, asm, swift, applescript [output], objc, objcpp")
+        print("Targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp")
         exit(1)
     }
 
@@ -196,6 +232,168 @@ func main() {
             print("Valid targets: py, js, c, asm, swift, applescript, cpp, objc, objcpp")
             exit(1)
         }
+
+    } else if command == "build" {
+        let target = args.count > 3 ? args[3] : "c"
+        let basename = (filename as NSString).lastPathComponent.replacingOccurrences(of: ".jj", with: "")
+        let output = args.count > 4 ? args[4] : "\(basename)_\(target)"
+
+        let code: String
+        switch target {
+        case "py": code = PythonTranspiler().transpile(program)
+        case "js": code = JavaScriptTranspiler().transpile(program)
+        case "c": code = CTranspiler().transpile(program)
+        case "cpp": code = CppTranspiler().transpile(program)
+        case "swift": code = SwiftTranspiler().transpile(program)
+        case "objc": code = ObjCTranspiler().transpile(program)
+        case "objcpp": code = ObjCppTranspiler().transpile(program)
+        case "asm": code = AssemblyTranspiler().transpile(program)
+        case "applescript": code = AppleScriptTranspiler().transpile(program)
+        default:
+            print("Unknown target: \(target)")
+            exit(1)
+        }
+
+        if target == "applescript" {
+            let srcFile = "/tmp/\(basename).applescript"
+            try? code.write(toFile: srcFile, atomically: true, encoding: .utf8)
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/osacompile")
+            process.arguments = ["-o", output, srcFile]
+            try? process.run()
+            process.waitUntilExit()
+            print("Built: \(output)")
+        } else if target == "py" {
+            try? code.write(toFile: "\(output).py", atomically: true, encoding: .utf8)
+            print("Built: \(output).py (interpreted)")
+        } else if target == "asm" {
+            let asmFile = "/tmp/\(basename).s"
+            let objFile = "/tmp/\(basename).o"
+            try? code.write(toFile: asmFile, atomically: true, encoding: .utf8)
+            let asProc = Process()
+            asProc.executableURL = URL(fileURLWithPath: "/usr/bin/as")
+            asProc.arguments = ["-o", objFile, asmFile]
+            try? asProc.run()
+            asProc.waitUntilExit()
+            let sdkProc = Process()
+            sdkProc.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+            sdkProc.arguments = ["-sdk", "macosx", "--show-sdk-path"]
+            let pipe = Pipe()
+            sdkProc.standardOutput = pipe
+            try? sdkProc.run()
+            sdkProc.waitUntilExit()
+            let sdkPath = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let ldProc = Process()
+            ldProc.executableURL = URL(fileURLWithPath: "/usr/bin/ld")
+            ldProc.arguments = ["-o", output, objFile, "-lSystem", "-syslibroot", sdkPath, "-e", "_main", "-arch", "arm64"]
+            try? ldProc.run()
+            ldProc.waitUntilExit()
+            print("Built: \(output)")
+        } else {
+            let ext = getFileExt(target)
+            let srcFile = "/tmp/\(basename)\(ext)"
+            try? code.write(toFile: srcFile, atomically: true, encoding: .utf8)
+            if compileTranspiled(target, srcFile, output) {
+                print("Built: \(output)")
+            } else {
+                print("Build failed for target: \(target)")
+                exit(1)
+            }
+        }
+
+    } else if command == "exec" {
+        let target = args.count > 3 ? args[3] : "c"
+        let basename = (filename as NSString).lastPathComponent.replacingOccurrences(of: ".jj", with: "")
+        let output = "/tmp/\(basename)_\(target)"
+
+        let code: String
+        switch target {
+        case "py": code = PythonTranspiler().transpile(program)
+        case "js": code = JavaScriptTranspiler().transpile(program)
+        case "c": code = CTranspiler().transpile(program)
+        case "cpp": code = CppTranspiler().transpile(program)
+        case "swift": code = SwiftTranspiler().transpile(program)
+        case "objc": code = ObjCTranspiler().transpile(program)
+        case "objcpp": code = ObjCppTranspiler().transpile(program)
+        case "asm": code = AssemblyTranspiler().transpile(program)
+        case "applescript": code = AppleScriptTranspiler().transpile(program)
+        default:
+            print("Unknown target: \(target)")
+            exit(1)
+        }
+
+        if target == "applescript" {
+            let srcFile = "/tmp/\(basename).applescript"
+            let scptFile = "/tmp/\(basename).scpt"
+            try? code.write(toFile: srcFile, atomically: true, encoding: .utf8)
+            let compProc = Process()
+            compProc.executableURL = URL(fileURLWithPath: "/usr/bin/osacompile")
+            compProc.arguments = ["-o", scptFile, srcFile]
+            try? compProc.run()
+            compProc.waitUntilExit()
+            let runProc = Process()
+            runProc.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+            runProc.arguments = [scptFile]
+            try? runProc.run()
+            runProc.waitUntilExit()
+        } else if target == "py" {
+            let srcFile = "/tmp/\(basename).py"
+            try? code.write(toFile: srcFile, atomically: true, encoding: .utf8)
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+            process.arguments = [srcFile]
+            try? process.run()
+            process.waitUntilExit()
+        } else if target == "js" {
+            let srcFile = "/tmp/\(basename).js"
+            try? code.write(toFile: srcFile, atomically: true, encoding: .utf8)
+            let process = Process()
+            // Try node first
+            if FileManager.default.fileExists(atPath: "/usr/local/bin/node") {
+                process.executableURL = URL(fileURLWithPath: "/usr/local/bin/node")
+            } else if FileManager.default.fileExists(atPath: "/opt/homebrew/bin/node") {
+                process.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/node")
+            } else {
+                process.executableURL = URL(fileURLWithPath: "/usr/local/bin/qjs")
+            }
+            process.arguments = [srcFile]
+            try? process.run()
+            process.waitUntilExit()
+        } else if target == "asm" {
+            let asmFile = "/tmp/\(basename).s"
+            let objFile = "/tmp/\(basename).o"
+            try? code.write(toFile: asmFile, atomically: true, encoding: .utf8)
+            let asProc = Process()
+            asProc.executableURL = URL(fileURLWithPath: "/usr/bin/as")
+            asProc.arguments = ["-o", objFile, asmFile]
+            try? asProc.run()
+            asProc.waitUntilExit()
+            let sdkProc = Process()
+            sdkProc.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+            sdkProc.arguments = ["-sdk", "macosx", "--show-sdk-path"]
+            let pipe = Pipe()
+            sdkProc.standardOutput = pipe
+            try? sdkProc.run()
+            sdkProc.waitUntilExit()
+            let sdkPath = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let ldProc = Process()
+            ldProc.executableURL = URL(fileURLWithPath: "/usr/bin/ld")
+            ldProc.arguments = ["-o", output, objFile, "-lSystem", "-syslibroot", sdkPath, "-e", "_main", "-arch", "arm64"]
+            try? ldProc.run()
+            ldProc.waitUntilExit()
+            runBinary(output)
+        } else {
+            let ext = getFileExt(target)
+            let srcFile = "/tmp/\(basename)\(ext)"
+            try? code.write(toFile: srcFile, atomically: true, encoding: .utf8)
+            if compileTranspiled(target, srcFile, output) {
+                runBinary(output)
+            } else {
+                print("Build failed for target: \(target)")
+                exit(1)
+            }
+        }
+
     } else {
         print("Unknown command: \(command)")
         exit(1)

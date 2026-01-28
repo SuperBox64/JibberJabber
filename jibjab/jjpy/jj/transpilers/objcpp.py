@@ -40,6 +40,19 @@ class ObjCppTranspiler:
         self.indent = 0
         self.enums = set()  # Track defined enum names
         self.int_vars = set()  # Track integer variable names
+        self.double_vars = set()  # Track double variable names
+
+    def is_float_expr(self, node) -> bool:
+        """Check if expression involves floating-point values"""
+        if isinstance(node, Literal):
+            return isinstance(node.value, float)
+        if isinstance(node, VarRef):
+            return node.name in self.double_vars
+        if isinstance(node, BinaryOp):
+            return self.is_float_expr(node.left) or self.is_float_expr(node.right)
+        if isinstance(node, UnaryOp):
+            return self.is_float_expr(node.operand)
+        return False
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip(), '']
@@ -85,6 +98,9 @@ class ObjCppTranspiler:
                 # Check if trying to print an enum type (not a value)
                 if expr.name in self.enums:
                     return self.ind() + f'NSLog(@"%@", @"enum {expr.name}");'
+                # Double variables use %f
+                if expr.name in self.double_vars:
+                    return self.ind() + f'NSLog(@"%f", {self.expr(expr)});'
                 # Integer variables need %ld format
                 if expr.name in self.int_vars:
                     return self.ind() + f'NSLog(@"%ld", (long){self.expr(expr)});'
@@ -96,15 +112,21 @@ class ObjCppTranspiler:
                 if isinstance(expr.array, VarRef) and expr.array.name in self.enums:
                     return self.ind() + f'NSLog(@"%ld", (long){self.expr(expr)});'
                 return self.ind() + f'NSLog(@"%@", {self.expr(expr)});'
+            # Check if expression involves floats
+            if self.is_float_expr(expr):
+                return self.ind() + f'NSLog(@"%f", {self.expr(expr)});'
             return self.ind() + T['printInt'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
             # Check if it's an array
             if isinstance(node.value, ArrayLiteral):
                 return self.ind() + f"NSArray *{node.name} = {self.expr(node.value)};"
-            # Track integer variables for proper print formatting
-            if infer_type(node.value) == 'Int':
+            # Track variable types for proper print formatting
+            inferred = infer_type(node.value)
+            if inferred == 'Int':
                 self.int_vars.add(node.name)
-            var_type = get_target_type(infer_type(node.value))
+            elif inferred == 'Double':
+                self.double_vars.add(node.name)
+            var_type = get_target_type(inferred)
             return self.ind() + T['var'].replace('{type}', var_type).replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
@@ -153,6 +175,8 @@ class ObjCppTranspiler:
                 return T['nil']
             elif isinstance(node.value, bool):
                 return T['true'] if node.value else T['false']
+            elif isinstance(node.value, float):
+                return str(node.value)
             return str(int(node.value))
         elif isinstance(node, VarRef):
             return node.name
@@ -182,6 +206,9 @@ class ObjCppTranspiler:
                     return node.index.value  # Just return the enum case name
             return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
+            # Use fmod for float modulo
+            if node.op == '%' and (self.is_float_expr(node.left) or self.is_float_expr(node.right)):
+                return f"fmod({self.expr(node.left)}, {self.expr(node.right)})"
             return f"({self.expr(node.left)} {node.op} {self.expr(node.right)})"
         elif isinstance(node, UnaryOp):
             return f"({node.op}{self.expr(node.operand)})"

@@ -5,6 +5,7 @@ class SwiftTranspiler {
     private var indentLevel = 0
     private let T = loadTarget("swift")
     private var doubleVars = Set<String>()
+    private var enums = Set<String>()
 
     private func isFloatExpr(_ node: ASTNode) -> Bool {
         if let lit = node as? Literal { return lit.value is Double }
@@ -88,6 +89,10 @@ class SwiftTranspiler {
             return "\(header)\n\(body)\n\(ind())\(T.blockEnd)"
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
+        } else if let enumDef = node as? EnumDef {
+            enums.insert(enumDef.name)
+            let cases = enumDef.cases.joined(separator: ", ")
+            return ind() + "enum \(enumDef.name) { case \(cases) }"
         }
         return ""
     }
@@ -107,6 +112,10 @@ class SwiftTranspiler {
             }
             return String(describing: literal.value ?? T.nil)
         } else if let varRef = node as? VarRef {
+            // If referencing an enum type directly, use .self
+            if enums.contains(varRef.name) {
+                return "\(varRef.name).self"
+            }
             return varRef.name
         } else if let binaryOp = node as? BinaryOp {
             // Use truncatingRemainder for float modulo in Swift
@@ -121,6 +130,23 @@ class SwiftTranspiler {
             return T.call
                 .replacingOccurrences(of: "{name}", with: funcCall.name)
                 .replacingOccurrences(of: "{args}", with: args)
+        } else if let idx = node as? IndexAccess {
+            // Check if this is enum access (e.g., Color["Red"] -> Color.Red)
+            if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
+                if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    return "\(varRef.name).\(strVal)"
+                }
+            }
+            return "\(expr(idx.array))[\(expr(idx.index))]"
+        } else if let arr = node as? ArrayLiteral {
+            let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+            return "[\(elements)]"
+        } else if let dict = node as? DictLiteral {
+            let pairs = dict.pairs.map { "\(expr($0.key)): \(expr($0.value))" }.joined(separator: ", ")
+            return "[\(pairs)]"
+        } else if let tuple = node as? TupleLiteral {
+            let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
+            return "(\(elements))"
         }
         return ""
     }

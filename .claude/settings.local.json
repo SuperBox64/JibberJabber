@@ -153,7 +153,13 @@
       "Bash(/tmp/fizzbuzz_objc)",
       "Bash(/tmp/fizzbuzz_objcpp)",
       "Bash(cd /Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift /tmp/numbers_c)",
-      "Bash(/tmp/numbers_swift)"
+      "Bash(/tmp/numbers_swift)",
+      "Bash(chmod:*)",
+      "Bash(/Users/toddbruss/Documents/GitHub/JibberJabber/test_example.sh python enums)",
+      "Bash(/Users/toddbruss/Documents/GitHub/JibberJabber/test_example.sh:*)",
+      "Bash(/Users/toddbruss/Documents/GitHub/JibberJabber/test_all.sh jjpy enums)",
+      "Bash(/Users/toddbruss/Documents/GitHub/JibberJabber/test_all.sh:*)",
+      "Bash(qjsc --help:*)"
     ]
   }
 }

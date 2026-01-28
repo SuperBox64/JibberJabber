@@ -41,6 +41,19 @@ class CppTranspiler:
     def __init__(self):
         self.indent = 0
         self.enums = set()  # Track defined enum names
+        self.double_vars = set()  # Track double variable names
+
+    def is_float_expr(self, node) -> bool:
+        """Check if expression involves floating-point values"""
+        if isinstance(node, Literal):
+            return isinstance(node.value, float)
+        if isinstance(node, VarRef):
+            return node.name in self.double_vars
+        if isinstance(node, BinaryOp):
+            return self.is_float_expr(node.left) or self.is_float_expr(node.right)
+        if isinstance(node, UnaryOp):
+            return self.is_float_expr(node.operand)
+        return False
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip(), '']
@@ -77,9 +90,12 @@ class CppTranspiler:
 
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
-            expr = node.expr
-            if isinstance(expr, Literal) and isinstance(expr.value, str):
-                return self.ind() + f'std::cout << {self.expr(expr)} << std::endl;'
+            expr_node = node.expr
+            if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
+                return self.ind() + f'std::cout << {self.expr(expr_node)} << std::endl;'
+            # Check if trying to print an enum type
+            if isinstance(expr_node, VarRef) and expr_node.name in self.enums:
+                return self.ind() + f'std::cout << "enum {expr_node.name}" << std::endl;'
             return self.ind() + T['printInt'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
             # Check if it's an array
@@ -103,7 +119,10 @@ class CppTranspiler:
                     elem_type = 'int'
                 elements = ', '.join(self.expr(e) for e in node.value.elements)
                 return self.ind() + f"{elem_type} {node.name}[] = {{{elements}}};"
-            var_type = get_target_type(infer_type(node.value))
+            inferred = infer_type(node.value)
+            if inferred == 'Double':
+                self.double_vars.add(node.name)
+            var_type = get_target_type(inferred)
             return self.ind() + T['var'].replace('{type}', var_type).replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
@@ -152,6 +171,8 @@ class CppTranspiler:
                 return T['nil']
             elif isinstance(node.value, bool):
                 return T['true'] if node.value else T['false']
+            elif isinstance(node.value, float):
+                return str(node.value)
             return str(int(node.value))
         elif isinstance(node, VarRef):
             return node.name
@@ -171,6 +192,9 @@ class CppTranspiler:
                     return node.index.value  # Just return the enum case name
             return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
+            # Use fmod for float modulo
+            if node.op == '%' and (self.is_float_expr(node.left) or self.is_float_expr(node.right)):
+                return f"fmod({self.expr(node.left)}, {self.expr(node.right)})"
             return f"({self.expr(node.left)} {node.op} {self.expr(node.right)})"
         elif isinstance(node, UnaryOp):
             return f"({node.op}{self.expr(node.operand)})"

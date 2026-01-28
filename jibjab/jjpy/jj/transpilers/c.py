@@ -41,6 +41,19 @@ class CTranspiler:
     def __init__(self):
         self.indent = 0
         self.enums = set()  # Track defined enum names
+        self.double_vars = set()  # Track double variable names
+
+    def is_float_expr(self, node) -> bool:
+        """Check if expression involves floating-point values"""
+        if isinstance(node, Literal):
+            return isinstance(node.value, float)
+        if isinstance(node, VarRef):
+            return node.name in self.double_vars
+        if isinstance(node, BinaryOp):
+            return self.is_float_expr(node.left) or self.is_float_expr(node.right)
+        if isinstance(node, UnaryOp):
+            return self.is_float_expr(node.operand)
+        return False
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip(), '']
@@ -86,6 +99,8 @@ class CTranspiler:
                 for i, elem in enumerate(expr_node.elements):
                     if isinstance(elem, Literal) and isinstance(elem.value, str):
                         lines.append(self.ind() + T['printStr'].replace('{expr}', self.expr(elem)))
+                    elif self.is_float_expr(elem):
+                        lines.append(self.ind() + T['printFloat'].replace('{expr}', self.expr(elem)))
                     else:
                         lines.append(self.ind() + T['printInt'].replace('{expr}', self.expr(elem)))
                 return '\n'.join(lines) if lines else ''
@@ -93,8 +108,13 @@ class CTranspiler:
                 # Check if trying to print an enum type (not a value)
                 if expr_node.name in self.enums:
                     return self.ind() + f'printf("%s\\n", "enum {expr_node.name}");'
-                # For variable refs, we just print - arrays print as pointers
-                return self.ind() + f'printf("%p\\n", (void*){self.expr(expr_node)});'
+                # Check if it's a double variable
+                if expr_node.name in self.double_vars:
+                    return self.ind() + T['printFloat'].replace('{expr}', self.expr(expr_node))
+                return self.ind() + T['printInt'].replace('{expr}', self.expr(expr_node))
+            # Check if expression involves floats
+            if self.is_float_expr(expr_node):
+                return self.ind() + T['printFloat'].replace('{expr}', self.expr(expr_node))
             return self.ind() + T['printInt'].replace('{expr}', self.expr(expr_node))
         elif isinstance(node, VarDecl):
             # Check if it's an array
@@ -118,7 +138,10 @@ class CTranspiler:
                     elem_type = 'int'
                 elements = ', '.join(self.expr(e) for e in node.value.elements)
                 return self.ind() + f"{elem_type} {node.name}[] = {{{elements}}};"
-            var_type = get_target_type(infer_type(node.value))
+            inferred = infer_type(node.value)
+            if inferred == 'Double':
+                self.double_vars.add(node.name)
+            var_type = get_target_type(inferred)
             return self.ind() + T['var'].replace('{type}', var_type).replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
@@ -168,6 +191,8 @@ class CTranspiler:
                 return T['nil']
             elif isinstance(node.value, bool):
                 return T['true'] if node.value else T['false']
+            elif isinstance(node.value, float):
+                return str(node.value)
             return str(int(node.value))
         elif isinstance(node, VarRef):
             return node.name
@@ -188,6 +213,9 @@ class CTranspiler:
                     return node.index.value  # Just return the enum case name
             return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
+            # Use fmod for float modulo
+            if node.op == '%' and (self.is_float_expr(node.left) or self.is_float_expr(node.right)):
+                return f"fmod({self.expr(node.left)}, {self.expr(node.right)})"
             return f"({self.expr(node.left)} {node.op} {self.expr(node.right)})"
         elif isinstance(node, UnaryOp):
             return f"({node.op}{self.expr(node.operand)})"
