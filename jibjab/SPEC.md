@@ -14,6 +14,7 @@ Semantic hashes that LLMs recognize:
 | `<~morph{...}>>` | Function definition | def/function |
 | `~>yeet{...}` | Return value | return |
 | `~>snag{...}` | Variable assignment | let/var |
+| `~>enum{...}` | Enum definition | enum |
 | `<~try>>...<~oops>>` | Error handling | try/catch |
 | `::` | Method/action separator | . (dot) |
 | `>>` | Block terminator | } or end |
@@ -27,7 +28,8 @@ Semantic hashes that LLMs recognize:
 | `#3.14` | Float |
 | `"text"` | String |
 | `[a,b,c]` | Array |
-| `{k:v}` | Map/Object | 
+| `{"key": value}` | Dictionary/Map |
+| `(a, b, c)` | Tuple |
 | `~nil` | Null |
 | `~yep` / `~nope` | Boolean |
 
@@ -43,7 +45,9 @@ Semantic hashes that LLMs recognize:
 | `<=>` | Equality |
 | `<!=>` | Inequality |
 | `<lt>` | Less than |
+| `<lte>` | Less than or equal |
 | `<gt>` | Greater than |
+| `<gte>` | Greater than or equal |
 | `<&&>` | Logical AND |
 | `<\|\|>` | Logical OR |
 | `<!>` | Logical NOT |
@@ -100,6 +104,31 @@ Semantic hashes that LLMs recognize:
 ### Function Calls
 ```
 ~>invoke{name}::with(args)
+```
+
+### Enums
+```
+~>enum{Name}::cases(A, B, C)
+Name["A"]
+```
+
+### Tuples
+```
+~>snag{point}::val((#10, #20))
+point[#0]
+point[#1]
+```
+
+Single element tuple uses trailing comma:
+```
+~>snag{single}::val((#42,))
+```
+
+### Dictionaries
+```
+~>snag{person}::val({"name": "Alice", "age": #30})
+person["name"]
+person["age"]
 ```
 
 ## Example Programs

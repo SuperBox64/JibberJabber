@@ -93,6 +93,7 @@ jjswift/
         └── Transpilers/
             ├── PythonTranspiler.swift
             ├── JavaScriptTranspiler.swift
+            ├── CFamilyTranspiler.swift  # Shared C-family base transpiler
             ├── CTranspiler.swift
             ├── CppTranspiler.swift
             ├── AssemblyTranspiler.swift

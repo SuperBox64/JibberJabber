@@ -27,6 +27,7 @@ jibjab/
 │           └── Transpilers/
 │               ├── PythonTranspiler.swift
 │               ├── JavaScriptTranspiler.swift
+│               ├── CFamilyTranspiler.swift  # Shared C-family base
 │               ├── CTranspiler.swift
 │               ├── CppTranspiler.swift
 │               ├── AssemblyTranspiler.swift
@@ -48,6 +49,7 @@ jibjab/
 │           ├── __init__.py
 │           ├── python.py
 │           ├── javascript.py
+│           ├── cfamily.py   # Shared C-family base transpiler
 │           ├── c.py
 │           ├── cpp.py
 │           ├── asm.py       # ARM64 Assembly (macOS)
@@ -60,7 +62,13 @@ jibjab/
 │   ├── hello.jj
 │   ├── variables.jj
 │   ├── fibonacci.jj
-│   └── fizzbuzz.jj
+│   ├── fizzbuzz.jj
+│   ├── numbers.jj
+│   ├── enums.jj
+│   ├── dictionaries.jj
+│   ├── tuples.jj
+│   ├── arrays.jj
+│   └── comparisons.jj
 │
 ├── output/                  # Pre-built transpiled code and binaries
 │   ├── jjpy/                # Output from Python implementation (jjpy)
@@ -335,12 +343,24 @@ Source → Lexer → Tokens → Parser → AST → Interpreter (run)
 
 ## Test Results
 
-| Example | Interpreter | Mach-O | Python | JS | C/C++ | ASM | Swift | AS | ObjC/C++ |
-|---------|:-----------:|:------:|:------:|:--:|:-----:|:---:|:-----:|:--:|:--------:|
-| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+Run `bash regression.sh -vg` from the project root for full results.
+
+```
+              run  comp asm  py   js   c    cpp  swft objc ocpp
+              ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+variables     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+enums         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+dictionaries  ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+tuples        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+arrays        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+
+TOTAL: 340 passed, 0 failed (both jjpy and jjswift)
+```
 
 ---
 

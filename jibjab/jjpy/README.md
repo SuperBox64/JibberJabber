@@ -1,10 +1,11 @@
 # jjpy - Python Implementation of JibJab
 
-Python interpreter and transpiler for the JibJab (JJ) programming language.
+Python interpreter, native compiler, and transpiler for the JibJab (JJ) programming language.
 
 ## Requirements
 
 - Python 3.8+
+- Apple Silicon (ARM64) for native compilation
 
 ## Usage
 
@@ -15,6 +16,10 @@ cd jjpy
 python3 jj.py run ../examples/hello.jj
 python3 jj.py run ../examples/fibonacci.jj
 python3 jj.py run ../examples/fizzbuzz.jj
+
+# Native compilation (two methods)
+python3 jj.py compile ../examples/fibonacci.jj fib      # True native: JJ → Machine Code → Mach-O
+python3 jj.py asm ../examples/fibonacci.jj fib_asm      # Via transpiler: JJ → ASM → as/ld → binary
 
 # Transpile to other languages
 python3 jj.py transpile ../examples/fibonacci.jj py          # Python
@@ -47,9 +52,11 @@ jjpy/
     ├── ast.py         # AST node definitions
     ├── parser.py      # Recursive descent parser
     ├── interpreter.py # Direct execution
+    ├── native_compiler.py # ARM64 Mach-O generator
     └── transpilers/
         ├── python.py
         ├── javascript.py
+        ├── cfamily.py     # Shared C-family base transpiler
         ├── c.py
         ├── cpp.py
         ├── asm.py         # ARM64 Assembly (macOS)
@@ -63,7 +70,8 @@ jjpy/
 
 ```
 .jj source → Lexer → Tokens → Parser → AST → Interpreter (run)
-                                          → Transpiler (transpile)
+                                          → NativeCompiler (compile)
+                                          → Transpiler (transpile/asm)
 ```
 
 ## See Also
