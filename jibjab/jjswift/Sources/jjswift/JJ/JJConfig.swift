@@ -118,10 +118,12 @@ struct TargetConfig: Codable {
     private let _gte: String?
     private let _mod: String?
     let main: String?
+    let compile: [String]?
+    let run: [String]?
     let types: [String: String]?
 
     enum CodingKeys: String, CodingKey {
-        case name, ext, header, `var`, varInfer, varAuto, forRange, `while`, `if`, `else`, `func`, `return`, call, indent, main, types
+        case name, ext, header, `var`, varInfer, varAuto, forRange, `while`, `if`, `else`, `func`, `return`, call, indent, main, compile, run, types
         case _print = "print"
         case _printInt = "printInt"
         case _printStr = "printStr"
@@ -170,6 +172,8 @@ struct TargetConfig: Codable {
         blockEndFunc = try container.decodeIfPresent(String.self, forKey: .blockEndFunc)
         indent = try container.decode(String.self, forKey: .indent)
         main = try container.decodeIfPresent(String.self, forKey: .main)
+        compile = try container.decodeIfPresent([String].self, forKey: .compile)
+        run = try container.decodeIfPresent([String].self, forKey: .run)
         types = try container.decodeIfPresent([String: String].self, forKey: .types)
         _and = try container.decodeIfPresent(String.self, forKey: ._and)
         _or = try container.decodeIfPresent(String.self, forKey: ._or)

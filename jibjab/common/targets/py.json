@@ -19,6 +19,7 @@
   "and": "and",
   "or": "or",
   "not": "not ",
+  "run": ["python3", "{src}"],
   "types": {
     "Int": "int",
     "Int8": "int",

@@ -1,4 +1,5 @@
 /// JibJab AST - Abstract Syntax Tree node definitions
+/// Schema: ../../../common/ast.json
 
 protocol ASTNode {}
 

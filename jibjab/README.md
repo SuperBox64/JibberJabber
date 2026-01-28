@@ -207,7 +207,7 @@ Convert JJ to other languages - outputs source code or compiled binaries:
 | Target | Output | Compile | Run |
 |--------|--------|---------|-----|
 | `py` | Source | - | `python3 fib.py` |
-| `js` | Source | - | `node fib.js` |
+| `js` | Source | - | `qjs fib.js` |
 | `c` | Source | `clang fib.c -o fib` | `./fib` |
 | `cpp` | Source | `clang++ fib.cpp -o fib` | `./fib` |
 | `swift` | Source | `swiftc fib.swift -o fib` | `./fib` |

@@ -28,6 +28,8 @@
   "lte": "≤",
   "gte": "≥",
   "mod": "mod",
+  "compile": ["osacompile", "-o", "{out}", "{src}"],
+  "run": ["osascript", "{src}"],
   "types": {
     "Int": "integer",
     "Int8": "integer",

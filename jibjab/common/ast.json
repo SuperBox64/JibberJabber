@@ -1,0 +1,113 @@
+{
+  "description": "JibJab AST Schema - Single source of truth for all AST node types",
+  "version": "1.0",
+  "base": "ASTNode",
+  "nodes": {
+    "Program": {
+      "fields": {
+        "statements": { "type": "[ASTNode]" }
+      }
+    },
+    "PrintStmt": {
+      "fields": {
+        "expr": { "type": "ASTNode" }
+      }
+    },
+    "InputExpr": {
+      "fields": {
+        "prompt": { "type": "ASTNode" }
+      }
+    },
+    "VarDecl": {
+      "fields": {
+        "name": { "type": "String" },
+        "value": { "type": "ASTNode" }
+      }
+    },
+    "VarRef": {
+      "fields": {
+        "name": { "type": "String" }
+      }
+    },
+    "Literal": {
+      "fields": {
+        "value": { "type": "Any?" }
+      }
+    },
+    "BinaryOp": {
+      "fields": {
+        "left": { "type": "ASTNode" },
+        "op": { "type": "String" },
+        "right": { "type": "ASTNode" }
+      }
+    },
+    "UnaryOp": {
+      "fields": {
+        "op": { "type": "String" },
+        "operand": { "type": "ASTNode" }
+      }
+    },
+    "LoopStmt": {
+      "fields": {
+        "var": { "type": "String" },
+        "start": { "type": "ASTNode?" },
+        "end": { "type": "ASTNode?" },
+        "collection": { "type": "ASTNode?" },
+        "condition": { "type": "ASTNode?" },
+        "body": { "type": "[ASTNode]" }
+      }
+    },
+    "IfStmt": {
+      "fields": {
+        "condition": { "type": "ASTNode" },
+        "thenBody": { "type": "[ASTNode]" },
+        "elseBody": { "type": "[ASTNode]?" }
+      }
+    },
+    "FuncDef": {
+      "fields": {
+        "name": { "type": "String" },
+        "params": { "type": "[String]" },
+        "body": { "type": "[ASTNode]" }
+      }
+    },
+    "FuncCall": {
+      "fields": {
+        "name": { "type": "String" },
+        "args": { "type": "[ASTNode]" }
+      }
+    },
+    "ReturnStmt": {
+      "fields": {
+        "value": { "type": "ASTNode" }
+      }
+    },
+    "EnumDef": {
+      "fields": {
+        "name": { "type": "String" },
+        "cases": { "type": "[String]" }
+      }
+    },
+    "ArrayLiteral": {
+      "fields": {
+        "elements": { "type": "[ASTNode]" }
+      }
+    },
+    "DictLiteral": {
+      "fields": {
+        "pairs": { "type": "[(ASTNode, ASTNode)]" }
+      }
+    },
+    "TupleLiteral": {
+      "fields": {
+        "elements": { "type": "[ASTNode]" }
+      }
+    },
+    "IndexAccess": {
+      "fields": {
+        "array": { "type": "ASTNode" },
+        "index": { "type": "ASTNode" }
+      }
+    }
+  }
+}

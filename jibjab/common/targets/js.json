@@ -19,6 +19,8 @@
   "nil": "null",
   "eq": "===",
   "neq": "!==",
+  "compile": ["qjsc", "-o", "{out}", "{src}"],
+  "run": ["qjs", "{src}"],
   "types": {
     "Int": "Number",
     "Int8": "Number",

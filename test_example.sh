@@ -33,13 +33,14 @@ run_test() {
             ;;
         jjswift)
             cd "$SCRIPT_DIR/jibjab/jjswift" || exit 1
+            JJSWIFT=".build/debug/jjswift"
             case "$MODE" in
-                run)      swift run jjswift run "../examples/$EXAMPLE.jj" ;;
-                compile)  swift run jjswift compile "../examples/$EXAMPLE.jj" "/tmp/${EXAMPLE}_swift" && "/tmp/${EXAMPLE}_swift" ;;
-                asm)      swift run jjswift asm "../examples/$EXAMPLE.jj" "/tmp/${EXAMPLE}_swift_asm" && "/tmp/${EXAMPLE}_swift_asm" ;;
-                exec)     swift run jjswift exec "../examples/$EXAMPLE.jj" "$TARGET" ;;
-                build)    swift run jjswift build "../examples/$EXAMPLE.jj" "$TARGET" "/tmp/${EXAMPLE}_${TARGET}" ;;
-                transpile) swift run jjswift transpile "../examples/$EXAMPLE.jj" "$TARGET" ;;
+                run)      "$JJSWIFT" run "../examples/$EXAMPLE.jj" ;;
+                compile)  "$JJSWIFT" compile "../examples/$EXAMPLE.jj" "/tmp/${EXAMPLE}_swift" && "/tmp/${EXAMPLE}_swift" ;;
+                asm)      "$JJSWIFT" asm "../examples/$EXAMPLE.jj" "/tmp/${EXAMPLE}_swift_asm" && "/tmp/${EXAMPLE}_swift_asm" ;;
+                exec)     "$JJSWIFT" exec "../examples/$EXAMPLE.jj" "$TARGET" ;;
+                build)    "$JJSWIFT" build "../examples/$EXAMPLE.jj" "$TARGET" "/tmp/${EXAMPLE}_${TARGET}" ;;
+                transpile) "$JJSWIFT" transpile "../examples/$EXAMPLE.jj" "$TARGET" ;;
             esac
             ;;
         *)

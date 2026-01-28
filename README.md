@@ -12,7 +12,7 @@ Write once, run anywhere. JibJab includes a **true native compiler** that genera
 
 **Supported targets:**
 - 🐍 **Python** - Cross-platform
-- 📜 **JavaScript** - Web/Node.js
+- 📜 **JavaScript** - QuickJS
 - ⚙️ **C** - Native performance
 - ➕ **C++** - OOP native
 - 🔧 **ARM64 Assembly** - Apple Silicon

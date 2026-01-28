@@ -1,5 +1,6 @@
 """
 JibJab AST - Abstract Syntax Tree node definitions
+Schema: ../common/ast.json
 """
 
 from typing import Any, List, Optional

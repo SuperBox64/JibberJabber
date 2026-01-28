@@ -21,6 +21,7 @@
   "false": "0",
   "nil": "0",
   "main": "int main() {\n{body}    return 0;\n}",
+  "compile": ["clang", "{src}", "-o", "{out}"],
   "types": {
     "Int": "int",
     "Int8": "int8_t",

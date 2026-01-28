@@ -14,28 +14,69 @@ from jj import (
     PythonTranspiler, JavaScriptTranspiler, CTranspiler, AssemblyTranspiler, SwiftTranspiler,
     AppleScriptTranspiler, CppTranspiler, ObjCTranspiler, ObjCppTranspiler
 )
+from jj.lexer import load_target_config
+
+TRANSPILERS = {
+    'py': PythonTranspiler, 'js': JavaScriptTranspiler,
+    'c': CTranspiler, 'cpp': CppTranspiler,
+    'swift': SwiftTranspiler, 'objc': ObjCTranspiler,
+    'objcpp': ObjCppTranspiler, 'asm': AssemblyTranspiler,
+    'applescript': AppleScriptTranspiler,
+}
 
 
-def get_compile_cmd(target, src_file, out_file):
-    """Return compile command for each target."""
-    cmds = {
-        'c': ['clang', src_file, '-o', out_file],
-        'cpp': ['clang++', src_file, '-o', out_file],
-        'swift': ['swiftc', src_file, '-o', out_file],
-        'objc': ['clang', '-framework', 'Foundation', src_file, '-o', out_file],
-        'objcpp': ['clang++', '-framework', 'Foundation', src_file, '-o', out_file],
-        'js': ['qjsc', '-o', out_file, src_file],
-    }
-    return cmds.get(target)
+def get_target_cfg(target):
+    try:
+        return load_target_config(target)
+    except FileNotFoundError:
+        return None
 
 
 def get_file_ext(target):
-    """Return file extension for each target."""
-    exts = {
-        'py': '.py', 'js': '.js', 'c': '.c', 'cpp': '.cpp',
-        'swift': '.swift', 'objc': '.m', 'objcpp': '.mm', 'asm': '.s'
-    }
-    return exts.get(target, '.txt')
+    cfg = get_target_cfg(target)
+    return cfg['ext'] if cfg and 'ext' in cfg else '.txt'
+
+
+def transpile_code(target, program):
+    if target not in TRANSPILERS:
+        print(f"Unknown target: {target}")
+        print(f"Valid targets: {', '.join(TRANSPILERS.keys())}")
+        sys.exit(1)
+    return TRANSPILERS[target]().transpile(program)
+
+
+def write_src(code, basename, target):
+    ext = get_file_ext(target)
+    src_file = f'/tmp/{basename}{ext}'
+    with open(src_file, 'w') as f:
+        f.write(code)
+    return src_file
+
+
+def compile_src(target, src_file, out_file):
+    """Compile using JSON config or special asm handling."""
+    if target == 'asm':
+        obj_file = src_file.replace('.s', '.o')
+        subprocess.run(['as', '-o', obj_file, src_file], check=True)
+        sdk_path = subprocess.check_output(['xcrun', '-sdk', 'macosx', '--show-sdk-path']).decode().strip()
+        subprocess.run(['ld', '-o', out_file, obj_file, '-lSystem', '-syslibroot', sdk_path, '-e', '_main', '-arch', 'arm64'], check=True)
+        return True
+    cfg = get_target_cfg(target)
+    if cfg and 'compile' in cfg:
+        cmd = [a.replace('{src}', src_file).replace('{out}', out_file) for a in cfg['compile']]
+        subprocess.run(cmd, check=True)
+        return True
+    return False
+
+
+def run_src(target, src_file):
+    """Run using JSON config."""
+    cfg = get_target_cfg(target)
+    if cfg and 'run' in cfg:
+        cmd = [a.replace('{src}', src_file) for a in cfg['run']]
+        subprocess.run(cmd)
+        return True
+    return False
 
 
 def main():
@@ -49,7 +90,7 @@ def main():
         print("  python3 jj.py build <file.jj> <target> [output]      - Transpile + compile")
         print("  python3 jj.py exec <file.jj> <target>                - Transpile + compile + run")
         print("")
-        print("Targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp")
+        print(f"Targets: {', '.join(TRANSPILERS.keys())}")
         sys.exit(1)
 
     command = sys.argv[1]
@@ -74,165 +115,72 @@ def main():
         print(f"Compiled to {output}")
     elif command == 'asm':
         output = sys.argv[3] if len(sys.argv) > 3 else 'a.out'
-        transpiler = AssemblyTranspiler()
-        asm_code = transpiler.transpile(program)
+        code = AssemblyTranspiler().transpile(program)
         basename = os.path.basename(output)
-        asm_file = f'/tmp/{basename}.s'
-        obj_file = f'/tmp/{basename}.o'
-        with open(asm_file, 'w') as f:
-            f.write(asm_code)
-        subprocess.run(['as', '-o', obj_file, asm_file], check=True)
-        sdk_path = subprocess.check_output(['xcrun', '-sdk', 'macosx', '--show-sdk-path']).decode().strip()
-        subprocess.run(['ld', '-o', output, obj_file, '-lSystem', '-syslibroot', sdk_path, '-e', '_main', '-arch', 'arm64'], check=True)
+        src_file = f'/tmp/{basename}.s'
+        with open(src_file, 'w') as f:
+            f.write(code)
+        compile_src('asm', src_file, output)
         print(f"Compiled to {output}")
     elif command == 'transpile':
         target = sys.argv[3] if len(sys.argv) > 3 else 'py'
-        transpilers = {
-            'py': PythonTranspiler,
-            'js': JavaScriptTranspiler,
-            'c': CTranspiler,
-            'asm': AssemblyTranspiler,
-            'swift': SwiftTranspiler,
-            'applescript': AppleScriptTranspiler,
-            'cpp': CppTranspiler,
-            'objc': ObjCTranspiler,
-            'objcpp': ObjCppTranspiler,
-        }
-        if target not in transpilers:
-            print(f"Unknown target: {target}")
-            print("Valid targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp")
-            sys.exit(1)
-        transpiler = transpilers[target]()
-        code = transpiler.transpile(program)
-
-        # AppleScript: compile with osacompile
-        if target == 'applescript':
-            output = sys.argv[4] if len(sys.argv) > 4 else 'a.scpt'
-            temp_file = f'/tmp/jj_temp.applescript'
-            with open(temp_file, 'w') as f:
-                f.write(code)
-            subprocess.run(['osacompile', '-o', output, temp_file], check=True)
-            os.remove(temp_file)
-            print(f"Compiled to {output}")
-        else:
-            print(code)
+        code = transpile_code(target, program)
+        print(code)
 
     elif command == 'build':
-        # Transpile + compile to binary
         target = sys.argv[3] if len(sys.argv) > 3 else 'c'
         basename = os.path.splitext(os.path.basename(filename))[0]
         output = sys.argv[4] if len(sys.argv) > 4 else f'{basename}_{target}'
 
-        transpilers = {
-            'py': PythonTranspiler, 'js': JavaScriptTranspiler,
-            'c': CTranspiler, 'cpp': CppTranspiler,
-            'swift': SwiftTranspiler, 'objc': ObjCTranspiler,
-            'objcpp': ObjCppTranspiler, 'asm': AssemblyTranspiler,
-            'applescript': AppleScriptTranspiler,
-        }
-        if target not in transpilers:
-            print(f"Unknown target: {target}")
+        code = transpile_code(target, program)
+        src_file = write_src(code, basename, target)
+
+        cfg = get_target_cfg(target)
+        has_compiler = cfg and 'compile' in cfg
+
+        if has_compiler or target == 'asm':
+            compile_src(target, src_file, output)
+            print(f"Built: {output}")
+        elif cfg and 'run' in cfg:
+            # Interpreted language (py) - src file is the output
+            print(f"Built: {src_file} (interpreted)")
+        else:
+            print(f"No compiler for target: {target}")
             sys.exit(1)
 
-        transpiler = transpilers[target]()
-        code = transpiler.transpile(program)
-
-        if target == 'applescript':
-            temp_file = '/tmp/jj_temp.applescript'
-            with open(temp_file, 'w') as f:
-                f.write(code)
-            subprocess.run(['osacompile', '-o', output, temp_file], check=True)
-            os.remove(temp_file)
-            print(f"Built: {output}")
-        elif target == 'py':
-            with open(output + '.py', 'w') as f:
-                f.write(code)
-            print(f"Built: {output}.py (interpreted, no binary)")
-        elif target == 'asm':
-            asm_file = f'/tmp/{basename}.s'
-            obj_file = f'/tmp/{basename}.o'
-            with open(asm_file, 'w') as f:
-                f.write(code)
-            subprocess.run(['as', '-o', obj_file, asm_file], check=True)
-            sdk_path = subprocess.check_output(['xcrun', '-sdk', 'macosx', '--show-sdk-path']).decode().strip()
-            subprocess.run(['ld', '-o', output, obj_file, '-lSystem', '-syslibroot', sdk_path, '-e', '_main', '-arch', 'arm64'], check=True)
-            print(f"Built: {output}")
-        else:
-            ext = get_file_ext(target)
-            src_file = f'/tmp/{basename}{ext}'
-            with open(src_file, 'w') as f:
-                f.write(code)
-            compile_cmd = get_compile_cmd(target, src_file, output)
-            if compile_cmd:
-                subprocess.run(compile_cmd, check=True)
-                print(f"Built: {output}")
-            else:
-                print(f"No compiler for target: {target}")
-                sys.exit(1)
-
     elif command == 'exec':
-        # Transpile + compile + run
         target = sys.argv[3] if len(sys.argv) > 3 else 'c'
         basename = os.path.splitext(os.path.basename(filename))[0]
         output = f'/tmp/{basename}_{target}'
 
-        transpilers = {
-            'py': PythonTranspiler, 'js': JavaScriptTranspiler,
-            'c': CTranspiler, 'cpp': CppTranspiler,
-            'swift': SwiftTranspiler, 'objc': ObjCTranspiler,
-            'objcpp': ObjCppTranspiler, 'asm': AssemblyTranspiler,
-            'applescript': AppleScriptTranspiler,
-        }
-        if target not in transpilers:
-            print(f"Unknown target: {target}")
-            sys.exit(1)
+        code = transpile_code(target, program)
+        src_file = write_src(code, basename, target)
 
-        transpiler = transpilers[target]()
-        code = transpiler.transpile(program)
+        cfg = get_target_cfg(target)
+        has_compiler = cfg and 'compile' in cfg
+        has_runner = cfg and 'run' in cfg
 
-        if target == 'applescript':
-            src_file = f'/tmp/{basename}.applescript'
-            scpt_file = f'/tmp/{basename}.scpt'
-            with open(src_file, 'w') as f:
-                f.write(code)
-            subprocess.run(['osacompile', '-o', scpt_file, src_file], check=True)
-            subprocess.run(['osascript', scpt_file])
-        elif target == 'py':
-            src_file = f'/tmp/{basename}.py'
-            with open(src_file, 'w') as f:
-                f.write(code)
-            subprocess.run(['python3', src_file])
-        elif target == 'js':
-            src_file = f'/tmp/{basename}.js'
-            with open(src_file, 'w') as f:
-                f.write(code)
-            # Try node first, fall back to qjs
-            result = subprocess.run(['which', 'node'], capture_output=True)
-            if result.returncode == 0:
-                subprocess.run(['node', src_file])
+        if has_compiler and has_runner:
+            # Compile then run the source (e.g. js with qjsc, applescript with osacompile)
+            # For applescript, run the compiled output with osascript
+            compile_src(target, src_file, output)
+            if target == 'applescript':
+                run_src(target, output)
             else:
-                subprocess.run(['qjs', src_file])
+                subprocess.run([output])
+        elif has_compiler:
+            # Compile to binary and run
+            compile_src(target, src_file, output)
+            subprocess.run([output])
+        elif has_runner:
+            # Interpreted - just run the source
+            run_src(target, src_file)
         elif target == 'asm':
-            asm_file = f'/tmp/{basename}.s'
-            obj_file = f'/tmp/{basename}.o'
-            with open(asm_file, 'w') as f:
-                f.write(code)
-            subprocess.run(['as', '-o', obj_file, asm_file], check=True)
-            sdk_path = subprocess.check_output(['xcrun', '-sdk', 'macosx', '--show-sdk-path']).decode().strip()
-            subprocess.run(['ld', '-o', output, obj_file, '-lSystem', '-syslibroot', sdk_path, '-e', '_main', '-arch', 'arm64'], check=True)
+            compile_src('asm', src_file, output)
             subprocess.run([output])
         else:
-            ext = get_file_ext(target)
-            src_file = f'/tmp/{basename}{ext}'
-            with open(src_file, 'w') as f:
-                f.write(code)
-            compile_cmd = get_compile_cmd(target, src_file, output)
-            if compile_cmd:
-                subprocess.run(compile_cmd, check=True)
-                subprocess.run([output])
-            else:
-                print(f"No compiler for target: {target}")
-                sys.exit(1)
+            print(f"No compiler or runner for target: {target}")
+            sys.exit(1)
 
     else:
         print(f"Unknown command: {command}")

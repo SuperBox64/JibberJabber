@@ -18,6 +18,7 @@
   "true": "true",
   "false": "false",
   "nil": "nil",
+  "compile": ["swiftc", "{src}", "-o", "{out}"],
   "types": {
     "Int": "Int",
     "Int8": "Int8",
