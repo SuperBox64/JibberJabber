@@ -126,6 +126,24 @@ class CTranspiler {
                 }
                 return ind() + "int \(varDecl.name)[] = {};"
             }
+            // Handle tuples as arrays in C
+            if let tuple = varDecl.value as? TupleLiteral {
+                if let firstElem = tuple.elements.first {
+                    let elemType: String
+                    if let lit = firstElem as? Literal, lit.value is String {
+                        elemType = "const char*"
+                    } else {
+                        elemType = getTargetType(inferType(firstElem))
+                    }
+                    let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
+                    return ind() + "\(elemType) \(varDecl.name)[] = {\(elements)};"
+                }
+                return ind() + "int \(varDecl.name)[] = {};"
+            }
+            // Handle dictionaries - output as comment since C has no native dict support
+            if varDecl.value is DictLiteral {
+                return ind() + "// dict \(varDecl.name) not supported in C"
+            }
             let inferredType = inferType(varDecl.value)
             if inferredType == "Double" {
                 doubleVars.insert(varDecl.name)

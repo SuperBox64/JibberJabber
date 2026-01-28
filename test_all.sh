@@ -41,6 +41,12 @@ run_test asm
 
 # Build and exec with all targets
 for target in py js c cpp swift objc objcpp; do
+    # Skip C-family for dictionaries/tuples (no native support)
+    if [[ "$EXAMPLE" == "dictionaries" || "$EXAMPLE" == "tuples" ]]; then
+        if [[ "$target" == "c" || "$target" == "cpp" || "$target" == "objc" || "$target" == "objcpp" || "$target" == "swift" ]]; then
+            continue
+        fi
+    fi
     run_test build "$target"
     run_test exec "$target"
 done
