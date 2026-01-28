@@ -106,6 +106,8 @@ if [ "$DOGRID" -eq 1 ]; then
     } > "$GRID"
 
     echo "Grid saved to $GRID"
+    echo ""
+    cat "$GRID"
 fi
 
 rm -rf "$RD"
