@@ -6,6 +6,8 @@ class SwiftTranspiler {
     private let T = loadTarget("swift")
     private var doubleVars = Set<String>()
     private var enums = Set<String>()
+    private var dictVars = Set<String>()
+    private var tupleVars = Set<String>()
 
     private func isFloatExpr(_ node: ASTNode) -> Bool {
         if let lit = node as? Literal { return lit.value is Double }
@@ -40,6 +42,22 @@ class SwiftTranspiler {
         } else if let varDecl = node as? VarDecl {
             if inferType(varDecl.value) == "Double" {
                 doubleVars.insert(varDecl.name)
+            }
+            // Dict declaration
+            if let dictLit = varDecl.value as? DictLiteral {
+                dictVars.insert(varDecl.name)
+                if dictLit.pairs.isEmpty {
+                    return ind() + "var \(varDecl.name): [String: Any] = [:]"
+                }
+                return ind() + "var \(varDecl.name): [String: Any] = \(expr(varDecl.value))"
+            }
+            // Tuple declaration
+            if varDecl.value is TupleLiteral {
+                tupleVars.insert(varDecl.name)
+                let template = T.varInfer ?? T.var
+                return ind() + template
+                    .replacingOccurrences(of: "{name}", with: varDecl.name)
+                    .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
             }
             let template = T.varInfer ?? T.var
             return ind() + template
@@ -137,14 +155,39 @@ class SwiftTranspiler {
                     return "\(varRef.name).\(strVal)"
                 }
             }
+            // Tuple access: use .N dot syntax instead of [N]
+            if let varRef = idx.array as? VarRef, tupleVars.contains(varRef.name) {
+                if let lit = idx.index as? Literal, let intVal = lit.value as? Int {
+                    return "\(varRef.name).\(intVal)"
+                }
+            }
+            // Dict access: force-unwrap with !
+            if let varRef = idx.array as? VarRef, dictVars.contains(varRef.name) {
+                return "\(expr(varRef))[\(expr(idx.index))]!"
+            }
+            // Nested dict access (e.g., data["items"] is already unwrapped, then [0])
+            if let innerIdx = idx.array as? IndexAccess {
+                let inner = expr(innerIdx)
+                let idxExpr = expr(idx.index)
+                // If inner is a dict access that returns Any, cast to array
+                if let innerVarRef = innerIdx.array as? VarRef, dictVars.contains(innerVarRef.name) {
+                    return "(\(inner) as! [Any])[\(idxExpr)]"
+                }
+                return "\(inner)[\(idxExpr)]"
+            }
             return "\(expr(idx.array))[\(expr(idx.index))]"
         } else if let arr = node as? ArrayLiteral {
             let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
             return "[\(elements)]"
         } else if let dict = node as? DictLiteral {
+            if dict.pairs.isEmpty { return "[:]" }
             let pairs = dict.pairs.map { "\(expr($0.key)): \(expr($0.value))" }.joined(separator: ", ")
             return "[\(pairs)]"
         } else if let tuple = node as? TupleLiteral {
+            if tuple.elements.isEmpty { return "()" }
+            if tuple.elements.count == 1 {
+                return "(\(expr(tuple.elements[0])),)"
+            }
             let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
             return "(\(elements))"
         }

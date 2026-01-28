@@ -31,12 +31,15 @@ class ObjCTranspiler: CFamilyTranspiler {
             if enums.contains(varRef.name) {
                 return ind() + "NSLog(@\"%@\", @\"enum \(varRef.name)\");"
             }
+            if doubleVars.contains(varRef.name) {
+                return ind() + "NSLog(@\"%f\", \(expr(e)));"
+            }
             if intVars.contains(varRef.name) {
                 return ind() + "NSLog(@\"%ld\", (long)\(expr(e)));"
             }
-            if doubleVars.contains(varRef.name) {
-                return ind() + "NSLog(@\"%g\", \(expr(e)));"
-            }
+            return ind() + "NSLog(@\"%@\", \(expr(e)));"
+        }
+        if e is ArrayLiteral {
             return ind() + "NSLog(@\"%@\", \(expr(e)));"
         }
         if let idx = e as? IndexAccess {
@@ -45,11 +48,8 @@ class ObjCTranspiler: CFamilyTranspiler {
             }
             return ind() + "NSLog(@\"%@\", \(expr(e)));"
         }
-        if e is ArrayLiteral {
-            return ind() + "NSLog(@\"%@\", \(expr(e)));"
-        }
         if isFloatExpr(e) {
-            return ind() + "NSLog(@\"%g\", \(expr(e)));"
+            return ind() + "NSLog(@\"%f\", \(expr(e)));"
         }
         return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
     }
@@ -58,10 +58,42 @@ class ObjCTranspiler: CFamilyTranspiler {
         return ind() + "NSArray *\(node.name) = \(expr(node.value));"
     }
 
+    override func varDictToString(_ node: VarDecl) -> String {
+        guard let dict = node.value as? DictLiteral else { return "" }
+        if dict.pairs.isEmpty {
+            return ind() + "NSDictionary *\(node.name) = @{};"
+        }
+        return ind() + "NSDictionary *\(node.name) = \(expr(node.value));"
+    }
+
+    override func varTupleToString(_ node: VarDecl, _ tuple: TupleLiteral) -> String {
+        return ind() + "NSArray *\(node.name) = \(expr(node.value));"
+    }
+
     override func enumToString(_ node: EnumDef) -> String {
         enums.insert(node.name)
         let cases = node.cases.joined(separator: ", ")
         return ind() + "typedef NS_ENUM(NSInteger, \(node.name)) { \(cases) };"
+    }
+
+    override func expr(_ node: ASTNode) -> String {
+        if let idx = node as? IndexAccess {
+            // Dict access: use @"key" syntax
+            if let varRef = idx.array as? VarRef, dictVars.contains(varRef.name) {
+                if let lit = idx.index as? Literal, let key = lit.value as? String {
+                    return "\(varRef.name)[@\"\(key)\"]"
+                }
+                return "\(expr(idx.array))[@(\(expr(idx.index)))]"
+            }
+            // Nested: data[@"items"][0]
+            if let innerIdx = idx.array as? IndexAccess {
+                if let innerVarRef = innerIdx.array as? VarRef, dictVars.contains(innerVarRef.name) {
+                    let inner = expr(innerIdx)
+                    return "\(inner)[\(expr(idx.index))]"
+                }
+            }
+        }
+        return super.expr(node)
     }
 
     override func exprArray(_ node: ArrayLiteral) -> String {
@@ -78,12 +110,27 @@ class ObjCTranspiler: CFamilyTranspiler {
     }
 
     override func exprDict(_ node: DictLiteral) -> String {
-        let pairs = node.pairs.map { "@\(expr($0.0)): @(\(expr($0.1)))" }.joined(separator: ", ")
+        func boxValue(_ v: ASTNode) -> String {
+            if let lit = v as? Literal, lit.value is String {
+                return "@\(expr(v))"
+            } else if v is ArrayLiteral {
+                return expr(v)
+            } else {
+                return "@(\(expr(v)))"
+            }
+        }
+        let pairs = node.pairs.map { "@\(expr($0.0)): \(boxValue($0.1))" }.joined(separator: ", ")
         return "@{\(pairs)}"
     }
 
     override func exprTuple(_ node: TupleLiteral) -> String {
-        let elements = node.elements.map { "@(\(expr($0)))" }.joined(separator: ", ")
+        let elements = node.elements.map { elem -> String in
+            if let lit = elem as? Literal, lit.value is String {
+                return "@\(expr(elem))"
+            } else {
+                return "@(\(expr(elem)))"
+            }
+        }.joined(separator: ", ")
         return "@[\(elements)]"
     }
 }

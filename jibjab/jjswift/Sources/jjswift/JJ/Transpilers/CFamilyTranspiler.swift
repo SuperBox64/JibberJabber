@@ -8,6 +8,8 @@ class CFamilyTranspiler {
     var enums = Set<String>()
     var doubleVars = Set<String>()
     var intVars = Set<String>()
+    var dictVars = Set<String>()
+    var tupleVars = Set<String>()
 
     init(target: String) {
         T = loadTarget(target)
@@ -125,9 +127,11 @@ class CFamilyTranspiler {
             return varArrayToString(node, arr)
         }
         if let tuple = node.value as? TupleLiteral {
+            tupleVars.insert(node.name)
             return varTupleToString(node, tuple)
         }
         if node.value is DictLiteral {
+            dictVars.insert(node.name)
             return varDictToString(node)
         }
         let inferredType = inferType(node.value)

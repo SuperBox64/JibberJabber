@@ -40,6 +40,8 @@ class CFamilyTranspiler:
         self.enums = set()
         self.double_vars = set()
         self.int_vars = set()
+        self.dict_vars = set()
+        self.tuple_vars = set()
         self.T = load_target_config(self.target_name)
 
     def get_target_type(self, jj_type: str) -> str:
@@ -165,8 +167,10 @@ class CFamilyTranspiler:
         if isinstance(node.value, ArrayLiteral):
             return self._var_array(node)
         if isinstance(node.value, TupleLiteral):
+            self.tuple_vars.add(node.name)
             return self._var_tuple(node)
         if isinstance(node.value, DictLiteral):
+            self.dict_vars.add(node.name)
             return self._var_dict(node)
         inferred = infer_type(node.value)
         if inferred == 'Int':

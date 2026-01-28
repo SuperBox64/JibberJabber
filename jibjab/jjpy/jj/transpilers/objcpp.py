@@ -48,6 +48,14 @@ class ObjCppTranspiler(CFamilyTranspiler):
             return self.ind() + f'NSLog(@"%f", {self.expr(expr_node)});'
         return self.ind() + self.T['printInt'].replace('{expr}', self.expr(expr_node))
 
+    def _var_dict(self, node: VarDecl) -> str:
+        if not node.value.pairs:
+            return self.ind() + f"NSDictionary *{node.name} = @{{}};"
+        return self.ind() + f"NSDictionary *{node.name} = {self.expr(node.value)};"
+
+    def _var_tuple(self, node: VarDecl) -> str:
+        return self.ind() + f"NSArray *{node.name} = {self.expr(node.value)};"
+
     def _var_array(self, node: VarDecl) -> str:
         return self.ind() + f"NSArray *{node.name} = {self.expr(node.value)};"
 
@@ -55,6 +63,20 @@ class ObjCppTranspiler(CFamilyTranspiler):
         self.enums.add(node.name)
         cases = ', '.join(node.cases)
         return self.ind() + f"typedef NS_ENUM(NSInteger, {node.name}) {{ {cases} }};"
+
+    def expr(self, node) -> str:
+        if isinstance(node, IndexAccess):
+            # Dict access: use @"key" syntax
+            if isinstance(node.array, VarRef) and node.array.name in self.dict_vars:
+                if isinstance(node.index, Literal) and isinstance(node.index.value, str):
+                    return f'{node.array.name}[@"{node.index.value}"]'
+                return f'{self.expr(node.array)}[@({self.expr(node.index)})]'
+            # Nested: data[@"items"][0]
+            if isinstance(node.array, IndexAccess):
+                if isinstance(node.array.array, VarRef) and node.array.array.name in self.dict_vars:
+                    inner = self.expr(node.array)
+                    return f'{inner}[{self.expr(node.index)}]'
+        return super().expr(node)
 
     def _expr_array(self, node: ArrayLiteral) -> str:
         def box_element(e):
@@ -71,9 +93,21 @@ class ObjCppTranspiler(CFamilyTranspiler):
         return f"@[{elements}]"
 
     def _expr_dict(self, node: DictLiteral) -> str:
-        pairs = ', '.join(f"{{{self.expr(k)}, {self.expr(v)}}}" for k, v in node.pairs)
-        return f"{{{pairs}}}"
+        def box_value(v):
+            if isinstance(v, Literal) and isinstance(v.value, str):
+                return f'@{self.expr(v)}'
+            elif isinstance(v, ArrayLiteral):
+                return self.expr(v)
+            else:
+                return f'@({self.expr(v)})'
+        pairs = ', '.join(f"@{self.expr(k)}: {box_value(v)}" for k, v in node.pairs)
+        return f"@{{{pairs}}}"
 
     def _expr_tuple(self, node: TupleLiteral) -> str:
-        elements = ', '.join(self.expr(e) for e in node.elements)
-        return f"std::make_tuple({elements})"
+        def box_element(e):
+            if isinstance(e, Literal) and isinstance(e.value, str):
+                return f'@{self.expr(e)}'
+            else:
+                return f'@({self.expr(e)})'
+        elements = ', '.join(box_element(e) for e in node.elements)
+        return f"@[{elements}]"

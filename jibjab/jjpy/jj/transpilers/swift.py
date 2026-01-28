@@ -20,6 +20,8 @@ class SwiftTranspiler:
         self.indent = 0
         self.enums = set()
         self.double_vars = set()
+        self.dict_vars = set()
+        self.tuple_vars = set()
 
     def is_float_expr(self, node) -> bool:
         """Check if expression involves floating-point values"""
@@ -49,6 +51,17 @@ class SwiftTranspiler:
             # Track double variables
             if isinstance(node.value, Literal) and isinstance(node.value.value, float):
                 self.double_vars.add(node.name)
+            # Dict declaration
+            if isinstance(node.value, DictLiteral):
+                self.dict_vars.add(node.name)
+                if not node.value.pairs:
+                    return self.ind() + f"var {node.name}: [String: Any] = [:]"
+                return self.ind() + f"var {node.name}: [String: Any] = {self.expr(node.value)}"
+            # Tuple declaration
+            if isinstance(node.value, TupleLiteral):
+                self.tuple_vars.add(node.name)
+                template = T.get('varInfer', T['var'])
+                return self.ind() + template.replace('{name}', node.name).replace('{value}', self.expr(node.value))
             template = T.get('varInfer', T['var'])
             return self.ind() + template.replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
@@ -116,14 +129,36 @@ class SwiftTranspiler:
             if isinstance(node.array, VarRef) and node.array.name in self.enums:
                 if isinstance(node.index, Literal) and isinstance(node.index.value, str):
                     return f"{node.array.name}.{node.index.value}"
+            # Tuple access: use .N dot syntax instead of [N]
+            if isinstance(node.array, VarRef) and node.array.name in self.tuple_vars:
+                if isinstance(node.index, Literal) and isinstance(node.index.value, int):
+                    return f"{node.array.name}.{node.index.value}"
+            # Dict access: force-unwrap with !
+            if isinstance(node.array, VarRef) and node.array.name in self.dict_vars:
+                # Nested access like data["items"][0]
+                return f"{self.expr(node.array)}[{self.expr(node.index)}]!"
+            # Nested dict access (e.g., data["items"] is already unwrapped, then [0])
+            if isinstance(node.array, IndexAccess):
+                inner = self.expr(node.array)
+                idx = self.expr(node.index)
+                # If inner is a dict access that returns Any, cast to array
+                if isinstance(node.array.array, VarRef) and node.array.array.name in self.dict_vars:
+                    return f"({inner} as! [Any])[{idx}]"
+                return f"{inner}[{idx}]"
             return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, ArrayLiteral):
             elements = ', '.join(self.expr(e) for e in node.elements)
             return f"[{elements}]"
         elif isinstance(node, DictLiteral):
+            if not node.pairs:
+                return "[:]"
             pairs = ', '.join(f"{self.expr(k)}: {self.expr(v)}" for k, v in node.pairs)
             return f"[{pairs}]"
         elif isinstance(node, TupleLiteral):
+            if not node.elements:
+                return "()"
+            if len(node.elements) == 1:
+                return f"({self.expr(node.elements[0])},)"
             elements = ', '.join(self.expr(e) for e in node.elements)
             return f"({elements})"
         elif isinstance(node, BinaryOp):
