@@ -300,20 +300,22 @@ python3 jj.py transpile ../examples/fibonacci.jj applescript /tmp/fib.scpt && os
 
 ## Test Results
 
-| Example | Interpreter | Mach-O | Python | JS | C/C++ | ASM | Swift | AS | ObjC/C++ |
-|---------|:-----------:|:------:|:------:|:--:|:-----:|:---:|:-----:|:--:|:--------:|
-| hello.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| comparisons.jj | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| arrays.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
-| dictionaries.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
-| tuples.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
-| enums.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
-| numbers.jj | ✅ | - | ✅ | ✅ | - | - | ✅ | - | - |
+| Example | run | Mach-O | asm | py | js | c | cpp | swift | as | objc | objcpp |
+|---------|:---:|:------:|:---:|:--:|:--:|:-:|:---:|:-----:|:--:|:----:|:------:|
+| hello | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| variables | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fibonacci | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| fizzbuzz | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | - | - |
+| comparisons | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| numbers | ✅ | ✅ | ✅ | ✅ | ✅ | - | - | - | ✅ | - | - |
+| enums | ✅ | ✅ | ✅ | - | - | ✅ | ✅ | - | ✅ | ✅ | ✅ |
+| tuples | ✅ | ✅ | ✅ | ✅ | - | - | - | ✅ | - | - | - |
+| dictionaries | ✅ | ✅ | ✅ | ✅ | - | - | - | ✅ | - | - | - |
+| arrays | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-✅ = Working | - = Not supported (language limitation)
+✅ = Working | - = Needs fix
+
+**Mach-O native compiler: 10/10 ✅** | **ASM transpiler: 10/10 ✅**
 
 ---
 

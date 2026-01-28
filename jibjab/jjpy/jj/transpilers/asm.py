@@ -349,23 +349,88 @@ class AssemblyTranspiler:
                         self.asm_lines.append("    add x0, x0, _fmt_int@PAGEOFF")
                     self.asm_lines.append("    bl _printf")
         elif isinstance(expr, VarRef) and expr.name in self.arrays:
-            # Print entire array
+            # Print entire array with brackets: [elem, elem, ...]
             arr_info = self.arrays[expr.name]
-            for i in range(arr_info['count']):
-                elem_offset = arr_info['base_offset'] + i * 8
-                if arr_info['is_string']:
-                    self.asm_lines.append(f"    ldur x0, [x29, #-{elem_offset + 16}]")
-                    self.asm_lines.append("    str x0, [sp]")
-                    self.asm_lines.append("    adrp x0, _fmt_str@PAGE")
-                    self.asm_lines.append("    add x0, x0, _fmt_str@PAGEOFF")
+            if expr.name in self.nested_arrays:
+                # Nested (2D) array: [[1, 2], [3, 4]]
+                nested = self.nested_arrays[expr.name]
+                outer_count, inner_size = nested
+
+                open_label = self.add_string("[")
+                self.asm_lines.append(f"    adrp x0, {open_label}@PAGE")
+                self.asm_lines.append(f"    add x0, x0, {open_label}@PAGEOFF")
+                self.asm_lines.append("    bl _printf")
+
+                for outer in range(outer_count):
+                    if outer > 0:
+                        sep_label = self.add_string(", ")
+                        self.asm_lines.append(f"    adrp x0, {sep_label}@PAGE")
+                        self.asm_lines.append(f"    add x0, x0, {sep_label}@PAGEOFF")
+                        self.asm_lines.append("    bl _printf")
+                    inner_open = self.add_string("[")
+                    self.asm_lines.append(f"    adrp x0, {inner_open}@PAGE")
+                    self.asm_lines.append(f"    add x0, x0, {inner_open}@PAGEOFF")
                     self.asm_lines.append("    bl _printf")
-                else:
-                    self.asm_lines.append(f"    ldur w1, [x29, #-{elem_offset + 16}]")
-                    self.asm_lines.append("    sxtw x1, w1")
-                    self.asm_lines.append("    str x1, [sp]")
-                    self.asm_lines.append("    adrp x0, _fmt_int@PAGE")
-                    self.asm_lines.append("    add x0, x0, _fmt_int@PAGEOFF")
+
+                    for inner in range(inner_size):
+                        if inner > 0:
+                            sep_label = self.add_string(", ")
+                            self.asm_lines.append(f"    adrp x0, {sep_label}@PAGE")
+                            self.asm_lines.append(f"    add x0, x0, {sep_label}@PAGEOFF")
+                            self.asm_lines.append("    bl _printf")
+                        flat_idx = outer * inner_size + inner
+                        elem_offset = arr_info['base_offset'] + flat_idx * 8
+                        self.asm_lines.append(f"    ldur w1, [x29, #-{elem_offset + 16}]")
+                        self.asm_lines.append("    sxtw x1, w1")
+                        self.asm_lines.append("    str x1, [sp]")
+                        fmt_label = self.add_string("%d")
+                        self.asm_lines.append(f"    adrp x0, {fmt_label}@PAGE")
+                        self.asm_lines.append(f"    add x0, x0, {fmt_label}@PAGEOFF")
+                        self.asm_lines.append("    bl _printf")
+
+                    inner_close = self.add_string("]")
+                    self.asm_lines.append(f"    adrp x0, {inner_close}@PAGE")
+                    self.asm_lines.append(f"    add x0, x0, {inner_close}@PAGEOFF")
                     self.asm_lines.append("    bl _printf")
+
+                close_label = self.add_string_raw("]")
+                self.asm_lines.append(f"    adrp x0, {close_label}@PAGE")
+                self.asm_lines.append(f"    add x0, x0, {close_label}@PAGEOFF")
+                self.asm_lines.append("    bl _printf")
+            else:
+                # Flat array: [1, 2, 3]
+                open_label = self.add_string("[")
+                self.asm_lines.append(f"    adrp x0, {open_label}@PAGE")
+                self.asm_lines.append(f"    add x0, x0, {open_label}@PAGEOFF")
+                self.asm_lines.append("    bl _printf")
+
+                for i in range(arr_info['count']):
+                    if i > 0:
+                        sep_label = self.add_string(", ")
+                        self.asm_lines.append(f"    adrp x0, {sep_label}@PAGE")
+                        self.asm_lines.append(f"    add x0, x0, {sep_label}@PAGEOFF")
+                        self.asm_lines.append("    bl _printf")
+                    elem_offset = arr_info['base_offset'] + i * 8
+                    if arr_info['is_string']:
+                        self.asm_lines.append(f"    ldur x0, [x29, #-{elem_offset + 16}]")
+                        self.asm_lines.append("    str x0, [sp]")
+                        fmt_label = self.add_string("%s")
+                        self.asm_lines.append(f"    adrp x0, {fmt_label}@PAGE")
+                        self.asm_lines.append(f"    add x0, x0, {fmt_label}@PAGEOFF")
+                        self.asm_lines.append("    bl _printf")
+                    else:
+                        self.asm_lines.append(f"    ldur w1, [x29, #-{elem_offset + 16}]")
+                        self.asm_lines.append("    sxtw x1, w1")
+                        self.asm_lines.append("    str x1, [sp]")
+                        fmt_label = self.add_string("%d")
+                        self.asm_lines.append(f"    adrp x0, {fmt_label}@PAGE")
+                        self.asm_lines.append(f"    add x0, x0, {fmt_label}@PAGEOFF")
+                        self.asm_lines.append("    bl _printf")
+
+                close_label = self.add_string_raw("]")
+                self.asm_lines.append(f"    adrp x0, {close_label}@PAGE")
+                self.asm_lines.append(f"    add x0, x0, {close_label}@PAGEOFF")
+                self.asm_lines.append("    bl _printf")
         elif isinstance(expr, IndexAccess) and isinstance(expr.array, VarRef) and expr.array.name in self.arrays:
             # Print single array element
             arr_info = self.arrays[expr.array.name]

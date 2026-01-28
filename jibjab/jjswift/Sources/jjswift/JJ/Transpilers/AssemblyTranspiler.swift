@@ -389,25 +389,91 @@ class AssemblyTranspiler {
                 }
             }
         } else if let varRef = node.expr as? VarRef, let arrInfo = arrays[varRef.name] {
-            // Print entire array: loop through elements
-            for i in 0..<arrInfo.count {
-                let elemOffset = arrInfo.baseOffset + i * 8
-                if arrInfo.isString {
-                    // Load string pointer and print with %s (variadic: arg on stack)
-                    asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
-                    asmLines.append("    str x0, [sp]")
-                    asmLines.append("    adrp x0, _fmt_str@PAGE")
-                    asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
+            // Print entire array with brackets: [elem, elem, ...]
+            if let nested = nestedArrays[varRef.name] {
+                // Nested (2D) array: [[1, 2], [3, 4]]
+                let openLabel = addString("[")
+                asmLines.append("    adrp x0, \(openLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+
+                for outer in 0..<nested.outerCount {
+                    if outer > 0 {
+                        let sepLabel = addString(", ")
+                        asmLines.append("    adrp x0, \(sepLabel)@PAGE")
+                        asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    }
+                    let innerOpen = addString("[")
+                    asmLines.append("    adrp x0, \(innerOpen)@PAGE")
+                    asmLines.append("    add x0, x0, \(innerOpen)@PAGEOFF")
                     asmLines.append("    bl _printf")
-                } else {
-                    // Load int and print with %d
-                    asmLines.append("    ldur w1, [x29, #-\(elemOffset + 16)]")
-                    asmLines.append("    sxtw x1, w1")
-                    asmLines.append("    str x1, [sp]")
-                    asmLines.append("    adrp x0, _fmt_int@PAGE")
-                    asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
+
+                    for inner in 0..<nested.innerSize {
+                        if inner > 0 {
+                            let sepLabel = addString(", ")
+                            asmLines.append("    adrp x0, \(sepLabel)@PAGE")
+                            asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
+                            asmLines.append("    bl _printf")
+                        }
+                        let flatIdx = outer * nested.innerSize + inner
+                        let elemOffset = arrInfo.baseOffset + flatIdx * 8
+                        asmLines.append("    ldur w1, [x29, #-\(elemOffset + 16)]")
+                        asmLines.append("    sxtw x1, w1")
+                        asmLines.append("    str x1, [sp]")
+                        let fmtLabel = addString("%d")
+                        asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
+                        asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    }
+
+                    let innerClose = addString("]")
+                    asmLines.append("    adrp x0, \(innerClose)@PAGE")
+                    asmLines.append("    add x0, x0, \(innerClose)@PAGEOFF")
                     asmLines.append("    bl _printf")
                 }
+
+                let closeLabel = addStringRaw("]")
+                asmLines.append("    adrp x0, \(closeLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+            } else {
+                // Flat array: [1, 2, 3]
+                let openLabel = addString("[")
+                asmLines.append("    adrp x0, \(openLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+
+                for i in 0..<arrInfo.count {
+                    if i > 0 {
+                        let sepLabel = addString(", ")
+                        asmLines.append("    adrp x0, \(sepLabel)@PAGE")
+                        asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    }
+                    let elemOffset = arrInfo.baseOffset + i * 8
+                    if arrInfo.isString {
+                        asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
+                        asmLines.append("    str x0, [sp]")
+                        let fmtLabel = addString("%s")
+                        asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
+                        asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    } else {
+                        asmLines.append("    ldur w1, [x29, #-\(elemOffset + 16)]")
+                        asmLines.append("    sxtw x1, w1")
+                        asmLines.append("    str x1, [sp]")
+                        let fmtLabel = addString("%d")
+                        asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
+                        asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    }
+                }
+
+                let closeLabel = addStringRaw("]")
+                asmLines.append("    adrp x0, \(closeLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
             }
         } else if let idx = node.expr as? IndexAccess,
                   let varRef = idx.array as? VarRef,
