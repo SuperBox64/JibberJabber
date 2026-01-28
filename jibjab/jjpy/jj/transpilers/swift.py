@@ -133,18 +133,20 @@ class SwiftTranspiler:
             if isinstance(node.array, VarRef) and node.array.name in self.tuple_vars:
                 if isinstance(node.index, Literal) and isinstance(node.index.value, int):
                     return f"{node.array.name}.{node.index.value}"
-            # Dict access: force-unwrap with !
-            if isinstance(node.array, VarRef) and node.array.name in self.dict_vars:
-                # Nested access like data["items"][0]
-                return f"{self.expr(node.array)}[{self.expr(node.index)}]!"
-            # Nested dict access (e.g., data["items"] is already unwrapped, then [0])
+            # Nested dict access (e.g., data["items"][0]) - must come before simple dict access
             if isinstance(node.array, IndexAccess):
+                if isinstance(node.array.array, VarRef) and node.array.array.name in self.dict_vars:
+                    # Access raw dict value and safely cast to array
+                    dict_name = node.array.array.name
+                    key = self.expr(node.array.index)
+                    idx = self.expr(node.index)
+                    return f"({dict_name}[{key}] as? [Any] ?? [])[{idx}]"
                 inner = self.expr(node.array)
                 idx = self.expr(node.index)
-                # If inner is a dict access that returns Any, cast to array
-                if isinstance(node.array.array, VarRef) and node.array.array.name in self.dict_vars:
-                    return f"({inner} as! [Any])[{idx}]"
                 return f"{inner}[{idx}]"
+            # Dict access: use nil coalescing instead of force unwrap
+            if isinstance(node.array, VarRef) and node.array.name in self.dict_vars:
+                return f'{self.expr(node.array)}[{self.expr(node.index)}] as Any? ?? ""'
             return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, ArrayLiteral):
             elements = ', '.join(self.expr(e) for e in node.elements)

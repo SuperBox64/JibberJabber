@@ -161,19 +161,21 @@ class SwiftTranspiler {
                     return "\(varRef.name).\(intVal)"
                 }
             }
-            // Dict access: force-unwrap with !
-            if let varRef = idx.array as? VarRef, dictVars.contains(varRef.name) {
-                return "\(expr(varRef))[\(expr(idx.index))]!"
-            }
-            // Nested dict access (e.g., data["items"] is already unwrapped, then [0])
+            // Nested dict access (e.g., data["items"][0]) - must come before simple dict access
             if let innerIdx = idx.array as? IndexAccess {
+                if let innerVarRef = innerIdx.array as? VarRef, dictVars.contains(innerVarRef.name) {
+                    // Access raw dict value and safely cast to array
+                    let key = expr(innerIdx.index)
+                    let idxExpr = expr(idx.index)
+                    return "(\(innerVarRef.name)[\(key)] as? [Any] ?? [])[\(idxExpr)]"
+                }
                 let inner = expr(innerIdx)
                 let idxExpr = expr(idx.index)
-                // If inner is a dict access that returns Any, cast to array
-                if let innerVarRef = innerIdx.array as? VarRef, dictVars.contains(innerVarRef.name) {
-                    return "(\(inner) as! [Any])[\(idxExpr)]"
-                }
                 return "\(inner)[\(idxExpr)]"
+            }
+            // Dict access: use nil coalescing instead of force unwrap
+            if let varRef = idx.array as? VarRef, dictVars.contains(varRef.name) {
+                return "\(expr(varRef))[\(expr(idx.index))] as Any? ?? \"\""
             }
             return "\(expr(idx.array))[\(expr(idx.index))]"
         } else if let arr = node as? ArrayLiteral {
