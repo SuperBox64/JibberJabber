@@ -219,6 +219,10 @@ class CTranspiler {
             }
             return "\(expr(idx.array))[\(expr(idx.index))]"
         } else if let binaryOp = node as? BinaryOp {
+            // Use fmod for float modulo
+            if binaryOp.op == "%" && (isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)) {
+                return "fmod(\(expr(binaryOp.left)), \(expr(binaryOp.right)))"
+            }
             return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"
         } else if let unaryOp = node as? UnaryOp {
             return "(\(unaryOp.op)\(expr(unaryOp.operand)))"

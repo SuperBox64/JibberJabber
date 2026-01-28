@@ -1,7 +1,7 @@
 {
   "name": "C++",
   "ext": ".cpp",
-  "header": "// Transpiled from JibJab\n#include <iostream>\n#include <cstdint>\n",
+  "header": "// Transpiled from JibJab\n#include <iostream>\n#include <cstdint>\n#include <cmath>\n",
   "printInt": "std::cout << {expr} << std::endl;",
   "printStr": "std::cout << {expr} << std::endl;",
   "printFloat": "std::cout << {expr} << std::endl;",

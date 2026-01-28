@@ -307,7 +307,7 @@ python3 jj.py transpile ../examples/fibonacci.jj applescript /tmp/fib.scpt && os
 | fibonacci | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | fizzbuzz | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | comparisons | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| numbers | ✅ | ✅ | ✅ | ✅ | ✅ | - | - | - | ✅ | - | - |
+| numbers | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | enums | ✅ | ✅ | ✅ | - | - | ✅ | ✅ | - | ✅ | ✅ | ✅ |
 | tuples | ✅ | ✅ | ✅ | ✅ | - | - | - | ✅ | - | - | - |
 | dictionaries | ✅ | ✅ | ✅ | ✅ | - | - | - | ✅ | - | - | - |

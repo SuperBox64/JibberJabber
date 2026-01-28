@@ -151,7 +151,9 @@
       "Bash(for ex in fizzbuzz comparisons enums tuples dictionaries arrays variables)",
       "Bash(/tmp/py_$ex)",
       "Bash(/tmp/fizzbuzz_objc)",
-      "Bash(/tmp/fizzbuzz_objcpp)"
+      "Bash(/tmp/fizzbuzz_objcpp)",
+      "Bash(cd /Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift /tmp/numbers_c)",
+      "Bash(/tmp/numbers_swift)"
     ]
   }
 }

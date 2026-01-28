@@ -4,6 +4,22 @@
 class SwiftTranspiler {
     private var indentLevel = 0
     private let T = loadTarget("swift")
+    private var doubleVars = Set<String>()
+
+    private func isFloatExpr(_ node: ASTNode) -> Bool {
+        if let lit = node as? Literal { return lit.value is Double }
+        if let v = node as? VarRef { return doubleVars.contains(v.name) }
+        if let b = node as? BinaryOp { return isFloatExpr(b.left) || isFloatExpr(b.right) }
+        if let u = node as? UnaryOp { return isFloatExpr(u.operand) }
+        return false
+    }
+
+    private func inferType(_ node: ASTNode) -> String {
+        if let literal = node as? Literal {
+            if literal.value is Double { return "Double" }
+        }
+        return "Int"
+    }
 
     func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
@@ -21,6 +37,9 @@ class SwiftTranspiler {
         if let printStmt = node as? PrintStmt {
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
         } else if let varDecl = node as? VarDecl {
+            if inferType(varDecl.value) == "Double" {
+                doubleVars.insert(varDecl.name)
+            }
             let template = T.varInfer ?? T.var
             return ind() + template
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
@@ -90,6 +109,10 @@ class SwiftTranspiler {
         } else if let varRef = node as? VarRef {
             return varRef.name
         } else if let binaryOp = node as? BinaryOp {
+            // Use truncatingRemainder for float modulo in Swift
+            if binaryOp.op == "%" && (isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)) {
+                return "\(expr(binaryOp.left)).truncatingRemainder(dividingBy: \(expr(binaryOp.right)))"
+            }
             return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"
         } else if let unaryOp = node as? UnaryOp {
             return "(\(unaryOp.op)\(expr(unaryOp.operand)))"

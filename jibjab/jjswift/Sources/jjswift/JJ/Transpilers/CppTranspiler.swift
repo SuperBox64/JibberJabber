@@ -6,6 +6,15 @@ class CppTranspiler {
     private let T = loadTarget("cpp")
     private var enums = Set<String>()  // Track defined enum names
     private var intVars = Set<String>()  // Track integer variable names
+    private var doubleVars = Set<String>()  // Track double variable names
+
+    private func isFloatExpr(_ node: ASTNode) -> Bool {
+        if let lit = node as? Literal { return lit.value is Double }
+        if let v = node as? VarRef { return doubleVars.contains(v.name) }
+        if let b = node as? BinaryOp { return isFloatExpr(b.left) || isFloatExpr(b.right) }
+        if let u = node as? UnaryOp { return isFloatExpr(u.operand) }
+        return false
+    }
 
     private func inferType(_ node: ASTNode) -> String {
         if let literal = node as? Literal {
@@ -119,6 +128,8 @@ class CppTranspiler {
             let inferredType = inferType(varDecl.value)
             if inferredType == "Int" {
                 intVars.insert(varDecl.name)
+            } else if inferredType == "Double" {
+                doubleVars.insert(varDecl.name)
             }
             let varType = getTargetType(inferType(varDecl.value))
             return ind() + T.var
@@ -213,6 +224,10 @@ class CppTranspiler {
             }
             return "\(expr(idx.array))[\(expr(idx.index))]"
         } else if let binaryOp = node as? BinaryOp {
+            // Use fmod for float modulo
+            if binaryOp.op == "%" && (isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)) {
+                return "fmod(\(expr(binaryOp.left)), \(expr(binaryOp.right)))"
+            }
             return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"
         } else if let unaryOp = node as? UnaryOp {
             return "(\(unaryOp.op)\(expr(unaryOp.operand)))"
