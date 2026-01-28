@@ -149,7 +149,9 @@
       "Bash(/tmp/numbers)",
       "Bash(/tmp/numbers_py)",
       "Bash(for ex in fizzbuzz comparisons enums tuples dictionaries arrays variables)",
-      "Bash(/tmp/py_$ex)"
+      "Bash(/tmp/py_$ex)",
+      "Bash(/tmp/fizzbuzz_objc)",
+      "Bash(/tmp/fizzbuzz_objcpp)"
     ]
   }
 }

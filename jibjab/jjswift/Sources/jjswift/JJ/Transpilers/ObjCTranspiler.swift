@@ -133,6 +133,8 @@ class ObjCTranspiler {
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
         } else if let loopStmt = node as? LoopStmt {
+            // Track loop variable as int
+            intVars.insert(loopStmt.var)
             var header: String
             if loopStmt.start != nil {
                 header = ind() + T.forRange
