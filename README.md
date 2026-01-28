@@ -298,24 +298,41 @@ python3 jj.py transpile ../examples/fibonacci.jj applescript /tmp/fib.scpt && os
 
 ---
 
-## Test Results
+## Regression Test Results
 
-| Example | run | Mach-O | asm | py | js | c | cpp | swift | as | objc | objcpp |
-|---------|:---:|:------:|:---:|:--:|:--:|:-:|:---:|:-----:|:--:|:----:|:------:|
-| hello | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| comparisons | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| numbers | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| enums | ✅ | ✅ | ✅ | - | - | ✅ | ✅ | - | ✅ | ✅ | ✅ |
-| tuples | ✅ | ✅ | ✅ | ✅ | - | - | - | ✅ | - | - | - |
-| dictionaries | ✅ | ✅ | ✅ | ✅ | - | - | - | ✅ | - | - | - |
-| arrays | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+Run `bash regression.sh -vg` for verbose output with grid, `-v` for verbose only, `-g` for grid only.
 
-✅ = Working | - = Needs fix
+```
+[jjpy]
+              run  comp asm  py   js   c    cpp  swft objc ocpp
+              ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+variables     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+enums         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+dictionaries  ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+tuples        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+arrays        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 
-**Mach-O native compiler: 10/10 ✅** | **ASM transpiler: 10/10 ✅**
+[jjswift]
+              run  comp asm  py   js   c    cpp  swft objc ocpp
+              ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+variables     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+enums         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+dictionaries  ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+tuples        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+arrays        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+
+TOTAL: 340 passed, 0 failed
+```
 
 ---
 
