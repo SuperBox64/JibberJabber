@@ -4,18 +4,24 @@
 #        ./regression.sh -v        (verbose - line by line results)
 #        ./regression.sh -g        (grid - ASCII spreadsheet to file)
 #        ./regression.sh -vg       (both verbose + grid)
+#        ./regression.sh -v go     (run only the 'go' target)
+#        ./regression.sh -vg c     (grid + verbose for 'c' target only)
 set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RD="/tmp/jj_reg_$$"
 mkdir -p "$RD"
 TOTAL_P=0; TOTAL_F=0
 GRID="/tmp/jj_regression_grid.txt"
-VERBOSE=0; DOGRID=0
-case "$1" in
-    -vg|-gv) VERBOSE=1; DOGRID=1 ;;
-    -v)      VERBOSE=1 ;;
-    -g)      DOGRID=1 ;;
-esac
+VERBOSE=0; DOGRID=0; FILTER=""
+for arg in "$@"; do
+    case "$arg" in
+        -vg|-gv) VERBOSE=1; DOGRID=1 ;;
+        -v)      VERBOSE=1 ;;
+        -g)      DOGRID=1 ;;
+        -*)      ;;
+        *)       FILTER="$arg" ;;
+    esac
+done
 
 
 
@@ -29,16 +35,19 @@ fi
 for impl in jjpy jjswift; do
     [ "$VERBOSE" -eq 1 ] && echo "[$impl]"
     for ex in numbers fizzbuzz fibonacci variables enums dictionaries tuples arrays comparisons hello; do
-        for mode in run compile asm; do
-            if "$SCRIPT_DIR/test_example.sh" "$impl" "$mode" "$ex" "" >/dev/null 2>&1; then
-                echo "P" > "$RD/${impl}_${ex}_${mode}"
-                TOTAL_P=$((TOTAL_P + 1))
-            else
-                echo "F" > "$RD/${impl}_${ex}_${mode}"
-                TOTAL_F=$((TOTAL_F + 1))
-            fi
-        done
-        for tgt in py js c cpp swift objc objcpp; do
+        if [ -z "$FILTER" ]; then
+            for mode in run compile asm; do
+                if "$SCRIPT_DIR/test_example.sh" "$impl" "$mode" "$ex" "" >/dev/null 2>&1; then
+                    echo "P" > "$RD/${impl}_${ex}_${mode}"
+                    TOTAL_P=$((TOTAL_P + 1))
+                else
+                    echo "F" > "$RD/${impl}_${ex}_${mode}"
+                    TOTAL_F=$((TOTAL_F + 1))
+                fi
+            done
+        fi
+        for tgt in py js c cpp swift objc objcpp go; do
+            [ -n "$FILTER" ] && [ "$tgt" != "$FILTER" ] && continue
             if "$SCRIPT_DIR/test_example.sh" "$impl" "build" "$ex" "$tgt" >/dev/null 2>&1; then
                 echo "P" > "$RD/${impl}_${ex}_build_${tgt}"
                 TOTAL_P=$((TOTAL_P + 1))
@@ -81,8 +90,8 @@ if [ "$DOGRID" -eq 1 ]; then
     }
 
     # Columns: run, compile, asm, py, js, c, cpp, swift, objc, objcpp
-    HDR="              run  comp asm  py   js   c    cpp  swft objc ocpp"
-    SEP="              ---- ---- ---- ---- ---- ---- ---- ---- ---- ----"
+    HDR="              run  comp asm  py   js   c    cpp  swft objc ocpp go  "
+    SEP="              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----"
 
     {
     for impl in jjpy jjswift; do
@@ -95,7 +104,7 @@ if [ "$DOGRID" -eq 1 ]; then
             for m in run compile asm; do
                 row="$row $(sym "${impl}_${ex}_${m}")  "
             done
-            for tgt in py js c cpp swift objc objcpp; do
+            for tgt in py js c cpp swift objc objcpp go; do
                 row="$row $(sym "${impl}_${ex}_exec_${tgt}")  "
             done
             echo "$row"

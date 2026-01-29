@@ -31,6 +31,7 @@ python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
 python3 jj.py transpile ../examples/fibonacci.jj applescript # AppleScript
 python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
 python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+python3 jj.py transpile ../examples/fibonacci.jj go          # Go
 
 # Build (transpile + compile to binary)
 python3 jj.py build ../examples/fibonacci.jj c               # Build C binary
@@ -63,7 +64,8 @@ jjpy/
         ├── swift.py
         ├── applescript.py
         ├── objc.py
-        └── objcpp.py
+        ├── objcpp.py
+        └── go.py
 ```
 
 ## Pipeline

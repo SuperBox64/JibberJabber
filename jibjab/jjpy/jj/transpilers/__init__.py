@@ -11,6 +11,7 @@ from .applescript import AppleScriptTranspiler
 from .cpp import CppTranspiler
 from .objc import ObjCTranspiler
 from .objcpp import ObjCppTranspiler
+from .go import GoTranspiler
 
 __all__ = [
     'PythonTranspiler',
@@ -22,4 +23,5 @@ __all__ = [
     'CppTranspiler',
     'ObjCTranspiler',
     'ObjCppTranspiler',
+    'GoTranspiler',
 ]

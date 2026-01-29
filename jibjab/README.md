@@ -34,7 +34,8 @@ jibjab/
 │               ├── SwiftTranspiler.swift
 │               ├── AppleScriptTranspiler.swift
 │               ├── ObjCTranspiler.swift
-│               └── ObjCppTranspiler.swift
+│               ├── ObjCppTranspiler.swift
+│               └── GoTranspiler.swift
 │
 ├── jjpy/                    # Python implementation
 │   ├── jj.py                # CLI entry point
@@ -56,7 +57,8 @@ jibjab/
 │           ├── swift.py
 │           ├── applescript.py
 │           ├── objc.py
-│           └── objcpp.py
+│           ├── objcpp.py
+│           └── go.py
 │
 ├── examples/                # Example JJ programs
 │   ├── hello.jj
@@ -127,6 +129,7 @@ swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
 swift run jjswift transpile ../examples/fibonacci.jj applescript fib.scpt # AppleScript (compiled)
 swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
 swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+swift run jjswift transpile ../examples/fibonacci.jj go          # Go
 
 # Build (transpile + compile to binary)
 swift run jjswift build ../examples/fibonacci.jj c               # Build C binary
@@ -159,6 +162,7 @@ python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
 python3 jj.py transpile ../examples/fibonacci.jj applescript fib.scpt # AppleScript (compiled)
 python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
 python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+python3 jj.py transpile ../examples/fibonacci.jj go          # Go
 
 # Build (transpile + compile to binary)
 python3 jj.py build ../examples/fibonacci.jj c               # Build C binary
@@ -222,6 +226,7 @@ Convert JJ to other languages - outputs source code or compiled binaries:
 | `objc` | Source | `clang -framework Foundation fib.m -o fib` | `./fib` |
 | `objcpp` | Source | `clang++ -framework Foundation fib.mm -o fib` | `./fib` |
 | `asm` | Source | `as fib.s -o fib.o && ld ...` | `./fib` |
+| `go` | Source | `go build -o fib fib.go` | `./fib` |
 | `applescript` | **Binary** | (automatic via osacompile) | `osascript fib.scpt` |
 
 ```bash
@@ -346,20 +351,20 @@ Source → Lexer → Tokens → Parser → AST → Interpreter (run)
 Run `bash regression.sh -vg` from the project root for full results.
 
 ```
-              run  comp asm  py   js   c    cpp  swft objc ocpp
-              ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-variables     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-enums         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-dictionaries  ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-tuples        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-arrays        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+              run  comp asm  py   js   c    cpp  swft objc ocpp go
+              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+variables     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+enums         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+dictionaries  ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+tuples        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+arrays        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 
-TOTAL: 340 passed, 0 failed (both jjpy and jjswift)
+TOTAL: 380 passed, 0 failed (both jjpy and jjswift)
 ```
 
 ---
@@ -377,6 +382,7 @@ Binary sizes by target:
 | Objective-C | ~33KB | clang |
 | Objective-C++ | ~33KB | clang++ |
 | Swift | ~100KB | swiftc |
+| Go | ~1.2MB | go build |
 | AppleScript | ~1.5KB | osacompile (built-in) |
 | JavaScript | ~722KB | QuickJS |
 | Python | ~3.4MB | PyInstaller |

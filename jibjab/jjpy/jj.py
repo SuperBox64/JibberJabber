@@ -12,7 +12,8 @@ import subprocess
 from jj import (
     Lexer, Parser, Interpreter, NativeCompiler,
     PythonTranspiler, JavaScriptTranspiler, CTranspiler, AssemblyTranspiler, SwiftTranspiler,
-    AppleScriptTranspiler, CppTranspiler, ObjCTranspiler, ObjCppTranspiler
+    AppleScriptTranspiler, CppTranspiler, ObjCTranspiler, ObjCppTranspiler,
+    GoTranspiler
 )
 from jj.lexer import load_target_config
 
@@ -22,6 +23,7 @@ TRANSPILERS = {
     'swift': SwiftTranspiler, 'objc': ObjCTranspiler,
     'objcpp': ObjCppTranspiler, 'asm': AssemblyTranspiler,
     'applescript': AppleScriptTranspiler,
+    'go': GoTranspiler,
 }
 
 

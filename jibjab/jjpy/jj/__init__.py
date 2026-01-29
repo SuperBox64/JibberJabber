@@ -20,7 +20,8 @@ from .transpilers import (
     AppleScriptTranspiler,
     CppTranspiler,
     ObjCTranspiler,
-    ObjCppTranspiler
+    ObjCppTranspiler,
+    GoTranspiler
 )
 from .native_compiler import NativeCompiler
 
@@ -48,4 +49,5 @@ __all__ = [
     'CppTranspiler',
     'ObjCTranspiler',
     'ObjCppTranspiler',
+    'GoTranspiler',
 ]

@@ -16,6 +16,7 @@ func getTranspiler(_ target: String) -> Any? {
     case "objcpp": return ObjCppTranspiler()
     case "asm": return AssemblyTranspiler()
     case "applescript": return AppleScriptTranspiler()
+    case "go": return GoTranspiler()
     default: return nil
     }
 }
@@ -23,7 +24,7 @@ func getTranspiler(_ target: String) -> Any? {
 func transpileCode(_ target: String, _ program: Program) -> String? {
     guard let t = getTranspiler(target) else {
         print("Unknown target: \(target)")
-        print("Valid targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp")
+        print("Valid targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp, go")
         return nil
     }
     if let cfamily = t as? CFamilyTranspiler { return cfamily.transpile(program) }
@@ -111,7 +112,7 @@ func main() {
         print("  jjswift build <file.jj> <target> [output] - Transpile + compile")
         print("  jjswift exec <file.jj> <target>      - Transpile + compile + run")
         print("")
-        print("Targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp")
+        print("Targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp, go")
         exit(1)
     }
 

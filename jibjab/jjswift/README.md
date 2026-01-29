@@ -39,6 +39,7 @@ swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
 swift run jjswift transpile ../examples/fibonacci.jj applescript # AppleScript
 swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
 swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+swift run jjswift transpile ../examples/fibonacci.jj go          # Go
 
 # Build (transpile + compile to binary)
 swift run jjswift build ../examples/fibonacci.jj c               # Build C binary
@@ -100,7 +101,8 @@ jjswift/
             ├── SwiftTranspiler.swift
             ├── AppleScriptTranspiler.swift
             ├── ObjCTranspiler.swift
-            └── ObjCppTranspiler.swift
+            ├── ObjCppTranspiler.swift
+            └── GoTranspiler.swift
 ```
 
 ## Pipeline

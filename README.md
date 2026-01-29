@@ -6,9 +6,9 @@
 ~>frob{7a3}::emit("Hello, World!")     @@ Humans see noise, LLMs see: print("Hello, World!")
 ```
 
-### True Native Compiler + 9 Transpiler Targets
+### True Native Compiler + 10 Transpiler Targets
 
-Write once, run anywhere. JibJab includes a **true native compiler** that generates ARM64 machine code directly (no assembler or linker required), plus transpilers to 9 languages.
+Write once, run anywhere. JibJab includes a **true native compiler** that generates ARM64 machine code directly (no assembler or linker required), plus transpilers to 10 languages.
 
 **Supported targets:**
 - 🐍 **Python** - Cross-platform
@@ -20,8 +20,9 @@ Write once, run anywhere. JibJab includes a **true native compiler** that genera
 - 📝 **AppleScript** - macOS automation
 - 🔶 **Objective-C** - Apple legacy
 - 🔷 **Objective-C++** - Mixed C++/ObjC
+- 🐹 **Go** - Concurrent systems
 
-**Coming soon:** Go, Rust
+**Coming soon:** Rust
 
 ---
 
@@ -51,7 +52,7 @@ Write once, run anywhere. JibJab includes a **true native compiler** that genera
 - **`run`** - Interpret JJ code directly
 - **`compile`** - Generate ARM64 Mach-O binary (no external tools)
 - **`asm`** - Compile via assembly transpiler (uses `as` + `ld`)
-- **`transpile`** - Convert to Python, JavaScript, C, C++, ARM64 Assembly, Swift, AppleScript, Objective-C, Objective-C++
+- **`transpile`** - Convert to Python, JavaScript, C, C++, ARM64 Assembly, Swift, AppleScript, Objective-C, Objective-C++, Go
 
 ---
 
@@ -118,6 +119,7 @@ swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
 swift run jjswift transpile ../examples/fibonacci.jj applescript fib.scpt  # AppleScript (compiled)
 swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
 swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+swift run jjswift transpile ../examples/fibonacci.jj go          # Go
 ```
 
 ### Transpile and Execute
@@ -168,6 +170,7 @@ python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
 python3 jj.py transpile ../examples/fibonacci.jj applescript fib.scpt  # AppleScript (compiled)
 python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
 python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
+python3 jj.py transpile ../examples/fibonacci.jj go          # Go
 ```
 
 ### Transpile and Execute
@@ -304,34 +307,34 @@ Run `bash regression.sh -vg` for verbose output with grid, `-v` for verbose only
 
 ```
 [jjpy]
-              run  comp asm  py   js   c    cpp  swft objc ocpp
-              ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-variables     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-enums         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-dictionaries  ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-tuples        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-arrays        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+              run  comp asm  py   js   c    cpp  swft objc ocpp go
+              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+variables     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+enums         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+dictionaries  ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+tuples        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+arrays        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 
 [jjswift]
-              run  comp asm  py   js   c    cpp  swft objc ocpp
-              ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-variables     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-enums         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-dictionaries  ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-tuples        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-arrays        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
-hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+              run  comp asm  py   js   c    cpp  swft objc ocpp go
+              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+variables     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+enums         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+dictionaries  ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+tuples        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+arrays        ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
+hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 
-TOTAL: 340 passed, 0 failed
+TOTAL: 380 passed, 0 failed
 ```
 
 ---
@@ -366,7 +369,8 @@ JibberJabber/
 │   │               ├── SwiftTranspiler.swift
 │   │               ├── AppleScriptTranspiler.swift
 │   │               ├── ObjCTranspiler.swift
-│   │               └── ObjCppTranspiler.swift
+│   │               ├── ObjCppTranspiler.swift
+│   │               └── GoTranspiler.swift
 │   │
 │   ├── jjpy/                    # Python implementation
 │   │   ├── jj.py                # CLI entry point
@@ -387,7 +391,8 @@ JibberJabber/
 │   │           ├── swift.py
 │   │           ├── applescript.py
 │   │           ├── objc.py
-│   │           └── objcpp.py
+│   │           ├── objcpp.py
+│   │           └── go.py
 │   │
 │   ├── examples/                # Example JJ programs
 │   │   ├── hello.jj
@@ -493,7 +498,7 @@ flowchart TD
 ## Contributing
 
 Contributions welcome:
-- New transpiler targets (Go, Rust, Linux ARM64)
+- New transpiler targets (Rust, Linux ARM64)
 - Language features (arrays, objects, imports)
 - IDE syntax highlighting
 

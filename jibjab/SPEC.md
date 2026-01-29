@@ -195,6 +195,7 @@ JibJab can be transpiled to the following languages:
 | AppleScript | `.applescript` | `applescript` | macOS automation |
 | Objective-C | `.m` | `objc` | Apple legacy development |
 | Objective-C++ | `.mm` | `objcpp` | Mixed C++/Objective-C |
+| Go | `.go` | `go` | Concurrent systems programming |
 
 ## Why LLMs Understand This
 
