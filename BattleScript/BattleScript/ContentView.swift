@@ -98,25 +98,32 @@ struct ContentView: View {
         isRunning = true
         runOutput = ""
 
+        let tab = selectedTab
+        let code: String
+        if tab == "jj" {
+            code = sourceCode
+        } else {
+            code = transpiledOutputs[tab] ?? ""
+        }
+
         DispatchQueue.global(qos: .userInitiated).async {
             let result: String
-            do {
-                let program = try JJEngine.parse(sourceCode)
-                if selectedTab == "jj" {
+            if tab == "jj" {
+                do {
+                    let program = try JJEngine.parse(code)
                     result = JJEngine.interpret(program)
-                } else {
-                    guard let code = JJEngine.transpile(program, target: selectedTab) else {
-                        result = "Transpilation failed for target: \(selectedTab)"
-                        DispatchQueue.main.async {
-                            runOutput = result
-                            isRunning = false
-                        }
-                        return
-                    }
-                    result = JJEngine.compileAndRun(code, target: selectedTab)
+                } catch {
+                    result = "Parse error: \(error)"
                 }
-            } catch {
-                result = "Parse error: \(error)"
+                DispatchQueue.main.async {
+                    updateTranspilation()
+                }
+            } else {
+                if code.isEmpty {
+                    result = "No code to run for target: \(tab)"
+                } else {
+                    result = JJEngine.compileAndRun(code, target: tab)
+                }
             }
             DispatchQueue.main.async {
                 runOutput = result
