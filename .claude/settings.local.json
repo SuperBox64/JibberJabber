@@ -193,7 +193,12 @@
       "Bash(/tmp/dict_swift)",
       "Bash(/tmp/tuple_swift)",
       "Bash(jibjab/jjswift/.build/debug/jjswift exec:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(sort:*)",
+      "Bash(tree:*)",
+      "Bash(head:*)",
+      "Bash(wc:*)",
+      "Bash(xcodebuild:*)"
     ]
   }
 }
