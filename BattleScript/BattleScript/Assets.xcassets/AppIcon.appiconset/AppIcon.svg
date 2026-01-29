@@ -5,13 +5,13 @@
   <!-- Dark gray circle -->
   <circle cx="512" cy="380" r="340" fill="#323041"/>
 
-  <!-- Left antenna - blue, lower and longer -->
-  <line x1="150" y1="160" x2="420" y2="230" stroke="#50A0FF" stroke-width="24" stroke-linecap="round"/>
-  <circle cx="150" cy="160" r="12" fill="#50A0FF"/>
+  <!-- Left antenna - blue, high angle -->
+  <line x1="130" y1="40" x2="390" y2="200" stroke="#50A0FF" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="130" cy="40" r="12" fill="#50A0FF"/>
 
-  <!-- Right antenna - purple, lower and longer -->
-  <line x1="874" y1="160" x2="604" y2="230" stroke="#A064FF" stroke-width="24" stroke-linecap="round"/>
-  <circle cx="874" cy="160" r="12" fill="#A064FF"/>
+  <!-- Right antenna - purple, high angle -->
+  <line x1="894" y1="40" x2="634" y2="200" stroke="#A064FF" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="894" cy="40" r="12" fill="#A064FF"/>
 
   <!-- </> code symbol -->
   <text x="512" y="420" font-family="Menlo, monospace" font-size="310" fill="#64C8FF" text-anchor="middle" dominant-baseline="central">&lt;/&gt;</text>
