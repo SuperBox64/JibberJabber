@@ -2,7 +2,7 @@
   <img src="battlescript.png" width="256" alt="BattleScript Icon">
 </p>
   
-# JibberJabber 1.0 JibJab (JJ) Programming Language
+# JibberJabber JibJab (JJ) AI Programming Language 1.0 Pre-Release
 
 **AI-first syntax** - looks like noise to humans, but LLMs parse it naturally.
 
