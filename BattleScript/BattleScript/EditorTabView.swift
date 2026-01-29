@@ -4,6 +4,7 @@ import AppKit
 /// NSViewRepresentable wrapping NSTextView with smart quotes disabled and JJ syntax highlighting
 struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
+    let showLineNumbers: Bool
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -42,10 +43,18 @@ struct CodeEditor: NSViewRepresentable {
         scrollView.hasHorizontalScroller = false
         scrollView.documentView = textView
         scrollView.drawsBackground = false
+
+        let ruler = LineNumberRulerView(textView: textView)
+        scrollView.verticalRulerView = ruler
+        scrollView.hasVerticalRuler = true
+        scrollView.rulersVisible = showLineNumbers
+
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        scrollView.rulersVisible = showLineNumbers
+        scrollView.verticalRulerView?.needsDisplay = true
         guard let textView = scrollView.documentView as? NSTextView else { return }
         if textView.string != text {
             let sel = textView.selectedRange()
@@ -102,6 +111,7 @@ struct EditorTabView: View {
     @Binding var transpiledOutputs: [String: String]
     let onRun: () -> Void
     @AppStorage("highlighterStyle") private var highlighterStyle = "Xcode"
+    @AppStorage("showLineNumbers") private var showLineNumbers = true
     @State private var refreshID = UUID()
 
     private let tabColors: [String: Color] = [
@@ -156,14 +166,15 @@ struct EditorTabView: View {
             // Content area
             Group {
                 if selectedTab == "jj" {
-                    CodeEditor(text: $sourceCode)
+                    CodeEditor(text: $sourceCode, showLineNumbers: showLineNumbers)
                 } else {
                     HighlightedTextView(
                         text: Binding(
                             get: { transpiledOutputs[selectedTab] ?? "// No output" },
                             set: { transpiledOutputs[selectedTab] = $0 }
                         ),
-                        language: selectedTab
+                        language: selectedTab,
+                        showLineNumbers: showLineNumbers
                     )
                 }
             }
