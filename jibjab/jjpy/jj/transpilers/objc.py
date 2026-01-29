@@ -28,23 +28,23 @@ class ObjCTranspiler(CFamilyTranspiler):
     def _print_stmt(self, node: PrintStmt) -> str:
         expr_node = node.expr
         if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
-            return self.ind() + f'NSLog(@"%@", @{self.expr(expr_node)});'
+            return self.ind() + f'printf("%s\\n", {self.expr(expr_node)});'
         if isinstance(expr_node, VarRef):
             if expr_node.name in self.enums:
-                return self.ind() + f'NSLog(@"%@", @"enum {expr_node.name}");'
+                return self.ind() + f'printf("enum {expr_node.name}\\n");'
             if expr_node.name in self.double_vars:
-                return self.ind() + f'NSLog(@"%f", {self.expr(expr_node)});'
+                return self.ind() + f'printf("%f\\n", {self.expr(expr_node)});'
             if expr_node.name in self.int_vars:
-                return self.ind() + f'NSLog(@"%ld", (long){self.expr(expr_node)});'
-            return self.ind() + f'NSLog(@"%@", {self.expr(expr_node)});'
+                return self.ind() + f'printf("%ld\\n", (long){self.expr(expr_node)});'
+            return self.ind() + self.T['printInt'].replace('{expr}', self.expr(expr_node))
         if isinstance(expr_node, ArrayLiteral):
-            return self.ind() + f'NSLog(@"%@", {self.expr(expr_node)});'
+            return self.ind() + self.T['printInt'].replace('{expr}', self.expr(expr_node))
         if isinstance(expr_node, IndexAccess):
             if isinstance(expr_node.array, VarRef) and expr_node.array.name in self.enums:
-                return self.ind() + f'NSLog(@"%ld", (long){self.expr(expr_node)});'
-            return self.ind() + f'NSLog(@"%@", {self.expr(expr_node)});'
+                return self.ind() + f'printf("%ld\\n", (long){self.expr(expr_node)});'
+            return self.ind() + self.T['printInt'].replace('{expr}', self.expr(expr_node))
         if self.is_float_expr(expr_node):
-            return self.ind() + f'NSLog(@"%f", {self.expr(expr_node)});'
+            return self.ind() + f'printf("%f\\n", {self.expr(expr_node)});'
         return self.ind() + self.T['printInt'].replace('{expr}', self.expr(expr_node))
 
     def _var_dict(self, node: VarDecl) -> str:

@@ -119,6 +119,11 @@ struct JJEngine {
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.arguments = args
         }
+        // Augment PATH so Homebrew tools (qjsc, go, etc.) are found from Xcode
+        var env = ProcessInfo.processInfo.environment
+        let extra = "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin"
+        env["PATH"] = extra + ":" + (env["PATH"] ?? "/usr/bin:/bin")
+        process.environment = env
         let pipe = Pipe()
         let errPipe = Pipe()
         process.standardOutput = pipe
