@@ -2,13 +2,24 @@ import SwiftUI
 import AppKit
 
 struct HighlightedTextView: NSViewRepresentable {
-    let text: String
+    @Binding var text: String
     let language: String
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
 
     func makeNSView(context: Context) -> NSScrollView {
         let textView = NSTextView()
-        textView.isEditable = false
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.isAutomaticTextReplacementEnabled = false
+        textView.isAutomaticSpellingCorrectionEnabled = false
+        textView.isContinuousSpellCheckingEnabled = false
+        textView.isGrammarCheckingEnabled = false
+        textView.isAutomaticLinkDetectionEnabled = false
+        textView.isAutomaticDataDetectionEnabled = false
+        textView.isEditable = true
         textView.isSelectable = true
+        textView.allowsUndo = true
         textView.isRichText = false
         textView.font = SyntaxTheme.font
         textView.textColor = .textColor
@@ -18,6 +29,12 @@ struct HighlightedTextView: NSViewRepresentable {
         textView.autoresizingMask = [.width]
         textView.textContainer?.widthTracksTextView = true
         textView.textContainerInset = NSSize(width: 4, height: 4)
+        textView.delegate = context.coordinator
+        textView.string = text
+
+        if let ts = textView.textStorage {
+            context.coordinator.applyHighlighting(ts)
+        }
 
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
@@ -29,12 +46,52 @@ struct HighlightedTextView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
-        guard let textStorage = textView.textStorage else { return }
+
+        // Update language if tab changed
+        context.coordinator.updateLanguage(language)
 
         if textView.string != text {
+            let sel = textView.selectedRange()
             textView.string = text
-            if let highlighter = SyntaxHighlighterFactory.highlighter(for: language) {
-                highlighter.highlight(textStorage)
+            if let ts = textView.textStorage {
+                context.coordinator.applyHighlighting(ts)
+            }
+            let safeSel = NSRange(
+                location: min(sel.location, textView.string.count),
+                length: 0
+            )
+            textView.setSelectedRange(safeSel)
+        }
+    }
+
+    class Coordinator: NSObject, NSTextViewDelegate {
+        var parent: HighlightedTextView
+        private var currentLanguage: String
+        private var highlighter: SyntaxHighlighting?
+
+        init(_ parent: HighlightedTextView) {
+            self.parent = parent
+            self.currentLanguage = parent.language
+            self.highlighter = SyntaxHighlighterFactory.highlighter(for: parent.language)
+        }
+
+        func updateLanguage(_ language: String) {
+            if language != currentLanguage {
+                currentLanguage = language
+                highlighter = SyntaxHighlighterFactory.highlighter(for: language)
+            }
+        }
+
+        func applyHighlighting(_ textStorage: NSTextStorage) {
+            highlighter?.highlight(textStorage)
+        }
+
+        func textDidChange(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            parent.text = textView.string
+
+            if let ts = textView.textStorage {
+                applyHighlighting(ts)
             }
         }
     }

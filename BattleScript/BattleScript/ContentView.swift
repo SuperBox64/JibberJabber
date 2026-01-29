@@ -46,20 +46,18 @@ struct ContentView: View {
             // Main content
             VSplitView {
                 // Top: editor + transpiled tabs
-                VStack(spacing: 0) {
-                    EditorTabView(
-                        selectedTab: $selectedTab,
-                        targets: targets,
-                        sourceCode: $sourceCode,
-                        transpiledOutputs: transpiledOutputs,
-                        onRun: runCurrentTab
-                    )
-                }
-                .frame(minHeight: 300)
+                EditorTabView(
+                    selectedTab: $selectedTab,
+                    targets: targets,
+                    sourceCode: $sourceCode,
+                    transpiledOutputs: $transpiledOutputs,
+                    onRun: runCurrentTab
+                )
+                .frame(minHeight: 150)
 
                 // Bottom: output pane
                 OutputView(output: runOutput, isRunning: isRunning)
-                    .frame(minHeight: 120, idealHeight: 180)
+                    .frame(minHeight: 80)
             }
         }
         .frame(minWidth: 900, minHeight: 600)

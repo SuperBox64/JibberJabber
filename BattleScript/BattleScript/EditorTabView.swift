@@ -82,7 +82,7 @@ struct EditorTabView: View {
     @Binding var selectedTab: String
     let targets: [String]
     @Binding var sourceCode: String
-    let transpiledOutputs: [String: String]
+    @Binding var transpiledOutputs: [String: String]
     let onRun: () -> Void
 
     private let tabColors: [String: Color] = [
@@ -138,7 +138,10 @@ struct EditorTabView: View {
                 CodeEditor(text: $sourceCode)
             } else {
                 HighlightedTextView(
-                    text: transpiledOutputs[selectedTab] ?? "// No output",
+                    text: Binding(
+                        get: { transpiledOutputs[selectedTab] ?? "// No output" },
+                        set: { transpiledOutputs[selectedTab] = $0 }
+                    ),
                     language: selectedTab
                 )
             }
