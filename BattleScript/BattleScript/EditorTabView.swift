@@ -183,7 +183,6 @@ struct EditorTabView: View {
             HStack(spacing: 0) {
                 Button(action: {
                     showLineNumbers.toggle()
-                    refreshID = UUID()
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: showLineNumbers ? "number.square.fill" : "number.square")
