@@ -1,5 +1,26 @@
 import SwiftUI
+import AppKit
 import JJLib
+
+/// Sets autosaveName on the nearest parent NSSplitView so divider positions persist
+struct SplitViewAutosave: NSViewRepresentable {
+    let name: String
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            var current: NSView? = view
+            while let next = current?.superview {
+                if let splitView = next as? NSSplitView {
+                    splitView.autosaveName = name
+                    break
+                }
+                current = next
+            }
+        }
+        return view
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
 
 struct ContentView: View {
     @State private var sourceCode = ""
@@ -27,6 +48,7 @@ struct ContentView: View {
         HSplitView {
             // Left sidebar - example selector
             VStack(alignment: .leading, spacing: 0) {
+                SplitViewAutosave(name: "HorizontalSplit").frame(width: 0, height: 0)
                 Text("Examples")
                     .font(.headline)
                     .padding(.horizontal, 12)
@@ -46,6 +68,7 @@ struct ContentView: View {
             // Main content
             VSplitView {
                 // Top: editor + transpiled tabs
+                SplitViewAutosave(name: "VerticalSplit").frame(width: 0, height: 0)
                 EditorTabView(
                     selectedTab: $selectedTab,
                     targets: targets,
