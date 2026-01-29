@@ -61,7 +61,7 @@ struct ContentView: View {
                     }
                 )
                 .fraction(FractionHolder.usingUserDefaults(0.7, key: "editorFraction"))
-                .constraints(minPFraction: 0.3, minSFraction: 0.1)
+                .constraints(minPFraction: 0.1, minSFraction: 0.1)
                 .styling(color: .clear, visibleThickness: 0)
             }
         )
