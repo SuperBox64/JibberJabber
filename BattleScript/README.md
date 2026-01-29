@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../battlescript.png" width="128" alt="BattleScript Icon">
+</p>
+
 # BattleScript
 
 A native macOS IDE for the JibJab programming language. Write JJ code and instantly see it transpiled to 10 target languages, then compile and run any target with one click.
