@@ -274,3 +274,21 @@ public func loadTarget(_ name: String) -> TargetConfig {
     }
     fatalError("Could not find common/targets/\(name).json")
 }
+
+/// Re-escape a string value for code emission.
+/// The lexer converts \n to actual newline, etc. — this converts back
+/// so transpiled source contains the escape sequences.
+public func escapeString(_ s: String) -> String {
+    var result = ""
+    for ch in s {
+        switch ch {
+        case "\\": result += "\\\\"
+        case "\"": result += "\\\""
+        case "\n": result += "\\n"
+        case "\t": result += "\\t"
+        case "\r": result += "\\r"
+        default: result.append(ch)
+        }
+    }
+    return result
+}

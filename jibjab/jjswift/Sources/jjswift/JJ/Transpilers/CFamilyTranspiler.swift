@@ -237,7 +237,7 @@ public class CFamilyTranspiler {
 
     func expr(_ node: ASTNode) -> String {
         if let literal = node as? Literal {
-            if let str = literal.value as? String { return "\"\(str)\"" }
+            if let str = literal.value as? String { return "\"\(escapeString(str))\"" }
             else if literal.value == nil { return T.nil }
             else if let bool = literal.value as? Bool { return bool ? T.true : T.false }
             else if let int = literal.value as? Int { return String(int) }

@@ -101,7 +101,7 @@ public class AppleScriptTranspiler {
     private func expr(_ node: ASTNode) -> String {
         if let literal = node as? Literal {
             if let str = literal.value as? String {
-                return "\"\(str.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\""))\""
+                return "\"\(escapeString(str))\""
             } else if literal.value == nil {
                 return T.nil
             } else if let bool = literal.value as? Bool {
