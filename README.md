@@ -1,8 +1,8 @@
 <p align="center">
   <img src="battlescript.png" width="256" alt="BattleScript Icon">
-  <span align="center">BattleScript.app</span>
 </p>
-
+  <b align="center">BattleScript.app</b>
+  
 # JibberJabber 1.0 JibJab (JJ) Programming Language
 
 **AI-first syntax** - looks like noise to humans, but LLMs parse it naturally.
