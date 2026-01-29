@@ -60,8 +60,8 @@ class LineNumberRulerView: NSRulerView {
         let textContainerInset = tv.textContainerInset
         while idx <= NSMaxRange(visibleCharRange) {
             let lineRange = text.lineRange(for: NSRange(location: idx, length: 0))
-            let glyphRange = lm.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
-            var lineRect = lm.boundingRect(forGlyphRange: glyphRange, in: tc)
+            let glyphIdx = lm.glyphIndexForCharacter(at: idx)
+            var lineRect = lm.lineFragmentRect(forGlyphAt: glyphIdx, effectiveRange: nil)
             lineRect.origin.y += textContainerInset.height
             lineRect.origin.y -= visibleRect.origin.y
 
