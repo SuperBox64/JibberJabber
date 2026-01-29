@@ -132,7 +132,8 @@ struct JJEngine {
         let out = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
         let err = String(data: errPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
         let ok = process.terminationStatus == 0
-        return (ok, ok ? out : (err + out))
+        let combined = (out + err).trimmingCharacters(in: .whitespacesAndNewlines)
+        return (ok, ok ? (combined.isEmpty ? out : combined) : (err + out))
     }
 
     private static func getTranspiler(_ target: String) -> Any? {
