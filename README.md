@@ -1,7 +1,7 @@
 <p align="center">
   <img src="battlescript.png" width="256" alt="BattleScript Icon">
 </p>
-  <p align="center" style="margin-top:-20px">BattleScript.app</p>
+  <p align="center" style="padding:100px">BattleScript.app</p>
   
 # JibberJabber 1.0 JibJab (JJ) Programming Language
 
