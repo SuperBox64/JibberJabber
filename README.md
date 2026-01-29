@@ -41,6 +41,7 @@ Write once, run anywhere. JibJab includes a **true native compiler** that genera
 |----------------|----------|----------|----------|
 | **jjswift** | Swift | `jibjab/jjswift/` | Native macOS, ARM64 compilation |
 | **jjpy** | Python | `jibjab/jjpy/` | Cross-platform |
+| **BattleScript** | SwiftUI | `BattleScript/` | Visual IDE for JibJab |
 
 ### Capabilities
 
@@ -48,6 +49,7 @@ Write once, run anywhere. JibJab includes a **true native compiler** that genera
 |----------------|:-----:|:---------:|:-----:|:-----------:|
 | **jjswift** | ✅ | ✅ | ✅ | ✅ |
 | **jjpy** | ✅ | ✅ | ✅ | ✅ |
+| **BattleScript** | ✅ | - | - | ✅ |
 
 - **`run`** - Interpret JJ code directly
 - **`compile`** - Generate ARM64 Mach-O binary (no external tools)
@@ -339,10 +341,27 @@ TOTAL: 380 passed, 0 failed
 
 ---
 
+## BattleScript IDE
+
+BattleScript is a native macOS app that provides a visual IDE for JibJab. Write JJ code and instantly see it transpiled to all 10 target languages, then compile and run any target with one click.
+
+See [BattleScript/README.md](BattleScript/README.md) for details.
+
+---
+
 ## Project Structure
 
 ```
 JibberJabber/
+├── BattleScript/               # macOS IDE app
+│   ├── BattleScript.xcodeproj
+│   └── BattleScript/
+│       ├── BattleScriptApp.swift
+│       ├── ContentView.swift
+│       ├── EditorTabView.swift
+│       ├── OutputView.swift
+│       └── JJEngine.swift
+│
 ├── jibjab/
 │   ├── common/
 │   │   ├── jj.json              # Shared language definition
@@ -489,6 +508,7 @@ flowchart TD
 
 | Document | Description |
 |----------|-------------|
+| [BattleScript/README.md](BattleScript/README.md) | BattleScript IDE docs |
 | [jibjab/README.md](jibjab/README.md) | Detailed implementation docs |
 | [jibjab/SPEC.md](jibjab/SPEC.md) | Complete language specification |
 | [jibjab/common/jj.json](jibjab/common/jj.json) | Shared language definition |
