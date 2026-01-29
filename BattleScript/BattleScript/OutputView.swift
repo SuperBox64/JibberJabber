@@ -6,7 +6,7 @@ struct OutputView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Color(nsColor: .separatorColor)
+            Color.black.opacity(0.6)
                 .frame(height: 1)
             HStack {
                 Text("Output")
@@ -22,7 +22,8 @@ struct OutputView: View {
             .padding(.vertical, 4)
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.7))
 
-            Divider()
+            Color.black.opacity(0.6)
+                .frame(height: 1)
 
             ScrollView {
                 Text(output.isEmpty ? "Press Run to execute..." : output)
