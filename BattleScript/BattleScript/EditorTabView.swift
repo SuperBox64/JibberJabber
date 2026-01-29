@@ -111,6 +111,7 @@ struct EditorTabView: View {
     @Binding var transpiledOutputs: [String: String]
     let onRun: () -> Void
     @AppStorage("highlighterStyle") private var highlighterStyle = "Xcode"
+    @AppStorage("showLineNumbers") private var showLineNumbers = true
     @State private var refreshID = UUID()
 
     private let tabColors: [String: Color] = [
@@ -178,8 +179,23 @@ struct EditorTabView: View {
             }
             .id(refreshID)
 
-            // Bottom bar with style picker
+            // Bottom bar with line numbers toggle + style picker
             HStack(spacing: 0) {
+                Button(action: { showLineNumbers.toggle() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: showLineNumbers ? "number.square.fill" : "number.square")
+                            .font(.system(.caption))
+                        Text("Lines")
+                            .font(.system(.caption, design: .monospaced))
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(showLineNumbers ? Color.blue.opacity(0.3) : Color.clear)
+                    .foregroundColor(showLineNumbers ? Color.white.opacity(0.85) : .secondary)
+                    .cornerRadius(4)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 4)
                 Spacer()
                 ForEach(HighlighterStyle.allCases, id: \.rawValue) { style in
                     Button(action: {
