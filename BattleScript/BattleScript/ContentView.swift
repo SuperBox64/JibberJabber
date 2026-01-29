@@ -1,6 +1,21 @@
 import SwiftUI
 import JJLib
 
+/// Reads the size of a view and writes it to a binding
+struct SizeReader: View {
+    let onChange: (CGSize) -> Void
+    var body: some View {
+        GeometryReader { geo in
+            Color.clear.preference(key: SizeKey.self, value: geo.size)
+        }
+        .onPreferenceChange(SizeKey.self) { onChange($0) }
+    }
+    private struct SizeKey: PreferenceKey {
+        static var defaultValue = CGSize.zero
+        static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
+    }
+}
+
 struct ContentView: View {
     @State private var sourceCode = ""
     @State private var selectedExample = ""
@@ -8,6 +23,8 @@ struct ContentView: View {
     @State private var transpiledOutputs: [String: String] = [:]
     @State private var runOutput = ""
     @State private var isRunning = false
+    @AppStorage("sidebarWidth") private var sidebarWidth: Double = 180
+    @AppStorage("editorHeight") private var editorHeight: Double = 400
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -41,7 +58,10 @@ struct ContentView: View {
                     loadExample(newValue)
                 }
             }
-            .frame(minWidth: 150, idealWidth: 180, maxWidth: 220)
+            .frame(minWidth: 120, idealWidth: sidebarWidth, maxWidth: 300)
+            .background(SizeReader { size in
+                if size.width > 0 { sidebarWidth = size.width }
+            })
 
             // Main content
             VSplitView {
@@ -53,12 +73,14 @@ struct ContentView: View {
                     transpiledOutputs: $transpiledOutputs,
                     onRun: runCurrentTab
                 )
-                .frame(minHeight: 150)
-                .layoutPriority(1)
+                .frame(minHeight: 150, idealHeight: editorHeight)
+                .background(SizeReader { size in
+                    if size.height > 0 { editorHeight = size.height }
+                })
 
-                // Bottom: output pane (absorbs window resize)
+                // Bottom: output pane
                 OutputView(output: runOutput, isRunning: isRunning)
-                    .frame(minHeight: 80, maxHeight: .infinity)
+                    .frame(minHeight: 80)
             }
         }
         .frame(minWidth: 900, minHeight: 600)
