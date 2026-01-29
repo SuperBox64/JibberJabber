@@ -62,12 +62,12 @@ struct ContentView: View {
                 )
                 .fraction(FractionHolder.usingUserDefaults(0.7, key: "editorFraction"))
                 .constraints(minPFraction: 0.3, minSFraction: 0.1)
-                .styling(color: .gray, visibleThickness: 3)
+                .styling(color: .clear, visibleThickness: 0)
             }
         )
         .fraction(FractionHolder.usingUserDefaults(0.15, key: "sidebarFraction"))
         .constraints(minPFraction: 0.1, minSFraction: 0.5)
-        .styling(color: .gray, visibleThickness: 3)
+        .styling(color: .clear, visibleThickness: 0)
         .frame(minWidth: 900, minHeight: 600)
         .onChange(of: sourceCode) { _, _ in
             updateTranspilation()
