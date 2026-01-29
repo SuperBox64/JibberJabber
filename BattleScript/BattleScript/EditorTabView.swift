@@ -181,7 +181,10 @@ struct EditorTabView: View {
 
             // Bottom bar with line numbers toggle + style picker
             HStack(spacing: 0) {
-                Button(action: { showLineNumbers.toggle() }) {
+                Button(action: {
+                    showLineNumbers.toggle()
+                    refreshID = UUID()
+                }) {
                     HStack(spacing: 4) {
                         Image(systemName: showLineNumbers ? "number.square.fill" : "number.square")
                             .font(.system(.caption))
