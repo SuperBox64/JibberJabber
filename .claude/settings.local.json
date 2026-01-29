@@ -198,7 +198,9 @@
       "Bash(tree:*)",
       "Bash(head:*)",
       "Bash(wc:*)",
-      "Bash(xcodebuild:*)"
+      "Bash(xcodebuild:*)",
+      "Bash(printf:*)",
+      "mcp__xcf-server__list_projects"
     ]
   }
 }
