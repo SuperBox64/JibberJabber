@@ -129,8 +129,8 @@ struct EditorTabView: View {
                             .fontWeight(selectedTab == target ? .bold : .regular)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 6)
-                            .background(selectedTab == target ? (tabColors[target] ?? .gray).opacity(0.2) : Color.clear)
-                            .foregroundColor(selectedTab == target ? (tabColors[target] ?? .primary) : .secondary)
+                            .background(selectedTab == target ? (tabColors[target] ?? .gray).opacity(0.3) : Color.clear)
+                            .foregroundColor(selectedTab == target ? .white : .secondary)
                     }
                     .buttonStyle(.plain)
                 }
@@ -181,8 +181,8 @@ struct EditorTabView: View {
                             .fontWeight(highlighterStyle == style.rawValue ? .bold : .regular)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)
-                            .background(highlighterStyle == style.rawValue ? Color.purple.opacity(0.2) : Color.clear)
-                            .foregroundColor(highlighterStyle == style.rawValue ? .purple : .secondary)
+                            .background(highlighterStyle == style.rawValue ? Color.purple.opacity(0.3) : Color.clear)
+                            .foregroundColor(highlighterStyle == style.rawValue ? .white : .secondary)
                             .cornerRadius(4)
                     }
                     .buttonStyle(.plain)
