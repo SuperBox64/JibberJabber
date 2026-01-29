@@ -256,7 +256,7 @@ public class AssemblyTranspiler {
             asmLines.append("    adrp x0, \(strLabel)@PAGE")
             asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
             asmLines.append("    bl _printf")
-        } else if let varRef = node.expr as? VarRef, let enumInfo = enumVarLabels[varRef.name] {
+        } else if let varRef = node.expr as? VarRef, let _ = enumVarLabels[varRef.name] {
             // Print enum variable by name (stored as string pointer)
             if let offset = variables[varRef.name] {
                 asmLines.append("    ldur x0, [x29, #-\(offset + 16)]")
@@ -370,7 +370,7 @@ public class AssemblyTranspiler {
         } else if let idx = node.expr as? IndexAccess,
                   let outerIdx = idx.array as? IndexAccess,
                   let varRef = outerIdx.array as? VarRef,
-                  let dictInfo = dicts[varRef.name] {
+                  let _ = dicts[varRef.name] {
             // Nested dict access: data["items"][0]
             if let keyLit = outerIdx.index as? Literal, let keyStr = keyLit.value as? String {
                 let syntheticName = "\(varRef.name).\(keyStr)"
@@ -691,7 +691,7 @@ public class AssemblyTranspiler {
                     asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
                     asmLines.append("    stur x0, [x29, #-\(stackOffset + 16)]")
                     elemTypes.append(.string)
-                } else if let intVal = lit.value as? Int {
+                } else if lit.value is Int {
                     genExpr(elem)
                     asmLines.append("    stur w0, [x29, #-\(stackOffset + 16)]")
                     elemTypes.append(.int)
@@ -797,7 +797,7 @@ public class AssemblyTranspiler {
                     asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
                     asmLines.append("    stur x0, [x29, #-\(valOffset + 16)]")
                     valueTypes.append(.string)
-                } else if let intVal = lit.value as? Int {
+                } else if lit.value is Int {
                     genExpr(pair.value)
                     asmLines.append("    stur w0, [x29, #-\(valOffset + 16)]")
                     valueTypes.append(.int)

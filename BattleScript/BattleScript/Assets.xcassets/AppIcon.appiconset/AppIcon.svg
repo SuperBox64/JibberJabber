@@ -19,6 +19,6 @@
   <!-- JJ badge - purple rounded rectangle -->
   <rect x="302" y="800" width="420" height="150" rx="30" ry="30" fill="#8C5AC8"/>
 
-  <!-- JJ text -->
-  <text x="512" y="890" font-family="Helvetica, Arial, sans-serif" font-size="130" fill="white" text-anchor="middle" dominant-baseline="central" font-weight="bold">JJ</text>
+  <!-- JJ text - bold with letter spacing -->
+  <text x="512" y="890" font-family="Helvetica, Arial, sans-serif" font-size="130" fill="white" text-anchor="middle" dominant-baseline="central" font-weight="bold" letter-spacing="20">JJ</text>
 </svg>
