@@ -25,31 +25,31 @@ public class ObjCTranspiler: CFamilyTranspiler {
     override func printStmtToString(_ node: PrintStmt) -> String {
         let e = node.expr
         if let lit = e as? Literal, lit.value is String {
-            return ind() + "NSLog(@\"%@\", @\(expr(e)));"
+            return ind() + "printf(\"%s\\n\", \(expr(e)));"
         }
         if let varRef = e as? VarRef {
             if enums.contains(varRef.name) {
-                return ind() + "NSLog(@\"%@\", @\"enum \(varRef.name)\");"
+                return ind() + "printf(\"enum \(varRef.name)\\n\");"
             }
             if doubleVars.contains(varRef.name) {
-                return ind() + "NSLog(@\"%f\", \(expr(e)));"
+                return ind() + "printf(\"%f\\n\", \(expr(e)));"
             }
             if intVars.contains(varRef.name) {
-                return ind() + "NSLog(@\"%ld\", (long)\(expr(e)));"
+                return ind() + "printf(\"%ld\\n\", (long)\(expr(e)));"
             }
-            return ind() + "NSLog(@\"%@\", \(expr(e)));"
+            return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if e is ArrayLiteral {
-            return ind() + "NSLog(@\"%@\", \(expr(e)));"
+            return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if let idx = e as? IndexAccess {
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
-                return ind() + "NSLog(@\"%ld\", (long)\(expr(e)));"
+                return ind() + "printf(\"%ld\\n\", (long)\(expr(e)));"
             }
-            return ind() + "NSLog(@\"%@\", \(expr(e)));"
+            return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if isFloatExpr(e) {
-            return ind() + "NSLog(@\"%f\", \(expr(e)));"
+            return ind() + "printf(\"%f\\n\", \(expr(e)));"
         }
         return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
     }
