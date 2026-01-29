@@ -18,7 +18,7 @@ struct OutputView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color(nsColor: .controlBackgroundColor))
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
 
             Divider()
 
@@ -30,7 +30,7 @@ struct OutputView: View {
                     .padding(8)
                     .textSelection(.enabled)
             }
-            .background(Color(nsColor: .textBackgroundColor))
+            .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
         }
     }
 }
