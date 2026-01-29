@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Background - full bleed dark navy -->
+  <rect width="1024" height="1024" fill="#14122D"/>
+
+  <!-- Dark gray circle -->
+  <circle cx="512" cy="380" r="340" fill="#323041"/>
+
+  <!-- Left antenna - blue, lower and longer -->
+  <line x1="150" y1="160" x2="420" y2="230" stroke="#50A0FF" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="150" cy="160" r="12" fill="#50A0FF"/>
+
+  <!-- Right antenna - purple, lower and longer -->
+  <line x1="874" y1="160" x2="604" y2="230" stroke="#A064FF" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="874" cy="160" r="12" fill="#A064FF"/>
+
+  <!-- </> code symbol -->
+  <text x="512" y="420" font-family="Menlo, monospace" font-size="310" fill="#64C8FF" text-anchor="middle" dominant-baseline="central">&lt;/&gt;</text>
+
+  <!-- JJ badge - purple rounded rectangle -->
+  <rect x="302" y="800" width="420" height="150" rx="30" ry="30" fill="#8C5AC8"/>
+
+  <!-- JJ text -->
+  <text x="512" y="890" font-family="Helvetica, Arial, sans-serif" font-size="130" fill="white" text-anchor="middle" dominant-baseline="central" font-weight="bold">JJ</text>
+</svg>
