@@ -44,18 +44,31 @@ struct HighlightedTextView: NSViewRepresentable {
         scrollView.documentView = textView
         scrollView.drawsBackground = false
 
-        let ruler = LineNumberRulerView(textView: textView)
-        scrollView.verticalRulerView = ruler
-        scrollView.hasVerticalRuler = true
-        scrollView.rulersVisible = showLineNumbers
+        if showLineNumbers {
+            let ruler = LineNumberRulerView(textView: textView)
+            scrollView.verticalRulerView = ruler
+            scrollView.hasVerticalRuler = true
+            scrollView.rulersVisible = true
+        }
 
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
-        scrollView.rulersVisible = showLineNumbers
-        scrollView.verticalRulerView?.needsDisplay = true
         guard let textView = scrollView.documentView as? NSTextView else { return }
+
+        // Toggle line number ruler
+        if showLineNumbers {
+            if scrollView.verticalRulerView == nil {
+                let ruler = LineNumberRulerView(textView: textView)
+                scrollView.verticalRulerView = ruler
+                scrollView.hasVerticalRuler = true
+            }
+            scrollView.rulersVisible = true
+            scrollView.verticalRulerView?.needsDisplay = true
+        } else {
+            scrollView.rulersVisible = false
+        }
 
         // Update language if tab changed
         context.coordinator.updateLanguage(language)

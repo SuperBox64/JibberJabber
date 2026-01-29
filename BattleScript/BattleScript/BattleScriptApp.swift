@@ -15,7 +15,7 @@ struct BattleScriptApp: App {
         }
         .windowStyle(.titleBar)
         .commands {
-            CommandGroup(after: .toolbar) {
+            CommandMenu("Editor") {
                 Toggle("Show Line Numbers", isOn: $showLineNumbers)
                     .keyboardShortcut("l", modifiers: [.command, .shift])
             }
