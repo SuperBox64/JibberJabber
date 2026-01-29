@@ -338,8 +338,8 @@ Run `bash regression.sh -vg` for verbose output with grid, `-v` for verbose only
 
 ```
 [jjpy]
-              run  comp asm  py   js   c    cpp  swft objc ocpp go
-              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+              run  comp  asm  py   js   c     cpp  swft objc ocpp  go
+              ---- ----  ---- ---- ---- ----  ---- ---- ---- ----  ----
 numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
@@ -352,8 +352,8 @@ comparisons   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 hello         ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 
 [jjswift]
-              run  comp asm  py   js   c    cpp  swft objc ocpp go
-              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+              run  comp  asm  py   js   c     cpp  swft objc ocpp  go
+              ---- ----  ---- ---- ---- ----  ---- ---- ---- ----  ----
 numbers       ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 fizzbuzz      ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
 fibonacci     ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅   ✅
