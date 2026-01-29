@@ -130,7 +130,8 @@ struct EditorTabView: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 6)
                             .background(selectedTab == target ? (tabColors[target] ?? .gray).opacity(0.3) : Color.clear)
-                            .foregroundColor(selectedTab == target ? .white : .secondary)
+                            .foregroundColor(selectedTab == target ? Color.white.opacity(0.85) : .secondary)
+                            .cornerRadius(6)
                     }
                     .buttonStyle(.plain)
                 }
