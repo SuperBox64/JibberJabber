@@ -20,6 +20,8 @@ struct SyntaxTheme {
     }
 
     // Style-aware fonts
+    // Xcode: bold keywords/types/attributes, regular comments
+    // VSCode: italic comments, regular keywords/types/attributes
     static var keywordFont: NSFont {
         currentStyle == .xcode ? boldFont : font
     }
@@ -36,78 +38,74 @@ struct SyntaxTheme {
     private static var isDark: Bool {
         NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
     }
+    private static var isXcode: Bool { currentStyle == .xcode }
 
-    // Appearance-aware colors
+    // Helper to pick from 4 variants: (xcode dark, xcode light, vscode dark, vscode light)
+    private static func color(xd: UInt32, xl: UInt32, vd: UInt32, vl: UInt32) -> NSColor {
+        let hex = isXcode ? (isDark ? xd : xl) : (isDark ? vd : vl)
+        return NSColor(
+            red: CGFloat((hex >> 16) & 0xFF) / 255.0,
+            green: CGFloat((hex >> 8) & 0xFF) / 255.0,
+            blue: CGFloat(hex & 0xFF) / 255.0,
+            alpha: 1.0
+        )
+    }
+
+    // MARK: - Syntax Colors
+
     static var keyword: NSColor {
-        isDark ? NSColor(red: 0.78, green: 0.46, blue: 0.96, alpha: 1.0)       // Purple (dark)
-               : NSColor(red: 0.61, green: 0.10, blue: 0.87, alpha: 1.0)       // Purple (light)
+        //        Xcode Dark     Xcode Light    VSCode Dark    VSCode Light
+        color(xd: 0xFF7AB2, xl: 0xAD3DA4, vd: 0xC586C0, vl: 0xAF00DB)
     }
     static var block: NSColor {
-        isDark ? NSColor(red: 1.0, green: 0.62, blue: 0.04, alpha: 1.0)        // Orange (dark)
-               : NSColor(red: 0.80, green: 0.40, blue: 0.0, alpha: 1.0)        // Orange (light)
+        color(xd: 0xFF7AB2, xl: 0xAD3DA4, vd: 0xC586C0, vl: 0xAF00DB)
     }
     static var `operator`: NSColor {
-        isDark ? NSColor(red: 0.35, green: 0.82, blue: 0.95, alpha: 1.0)       // Cyan (dark)
-               : NSColor(red: 0.0, green: 0.50, blue: 0.65, alpha: 1.0)        // Teal (light)
+        color(xd: 0xA3B1BF, xl: 0x262626, vd: 0xD4D4D4, vl: 0x000000)
     }
     static var string: NSColor {
-        isDark ? NSColor(red: 0.99, green: 0.42, blue: 0.42, alpha: 1.0)       // Red (dark)
-               : NSColor(red: 0.77, green: 0.10, blue: 0.09, alpha: 1.0)       // Red (light)
+        color(xd: 0xFC6A5D, xl: 0xD12F1B, vd: 0xCE9178, vl: 0xA31515)
     }
     static var number: NSColor {
-        isDark ? NSColor(red: 0.95, green: 0.80, blue: 0.30, alpha: 1.0)       // Gold (dark)
-               : NSColor(red: 0.11, green: 0.00, blue: 0.81, alpha: 1.0)       // Blue (light - Xcode style)
+        color(xd: 0xD9C97C, xl: 0x272AD8, vd: 0xB5CEA8, vl: 0x098658)
     }
     static var comment: NSColor {
-        isDark ? NSColor(red: 0.55, green: 0.58, blue: 0.60, alpha: 1.0)       // Gray (dark)
-               : NSColor(red: 0.38, green: 0.45, blue: 0.38, alpha: 1.0)       // Green-gray (light)
+        color(xd: 0x7F8C99, xl: 0x536579, vd: 0x6A9955, vl: 0x008000)
     }
     static var specialValue: NSColor {
-        isDark ? NSColor(red: 0.40, green: 0.85, blue: 0.55, alpha: 1.0)       // Green (dark)
-               : NSColor(red: 0.15, green: 0.55, blue: 0.25, alpha: 1.0)       // Green (light)
+        color(xd: 0x78C2B3, xl: 0x3E8087, vd: 0x569CD6, vl: 0x0000FF)
     }
     static var action: NSColor {
-        isDark ? NSColor(red: 0.40, green: 0.65, blue: 1.0, alpha: 1.0)        // Blue (dark)
-               : NSColor(red: 0.15, green: 0.35, blue: 0.80, alpha: 1.0)       // Blue (light)
+        color(xd: 0xB281EB, xl: 0x804FB8, vd: 0xDCDCAA, vl: 0x795E26)
     }
     static var preprocessor: NSColor {
-        isDark ? NSColor(red: 1.0, green: 0.62, blue: 0.04, alpha: 1.0)        // Orange (dark)
-               : NSColor(red: 0.43, green: 0.30, blue: 0.15, alpha: 1.0)       // Brown (light)
+        color(xd: 0xFFA14F, xl: 0x78492A, vd: 0xC586C0, vl: 0xAF00DB)
     }
     static var type: NSColor {
-        isDark ? NSColor(red: 0.30, green: 0.80, blue: 0.77, alpha: 1.0)       // Teal (dark)
-               : NSColor(red: 0.11, green: 0.43, blue: 0.55, alpha: 1.0)       // Dark teal (light)
+        color(xd: 0x4EB0CC, xl: 0x3E8087, vd: 0x4EC9B0, vl: 0x267F99)
     }
     static var defaultText: NSColor {
-        isDark ? NSColor(red: 0.87, green: 0.87, blue: 0.87, alpha: 1.0)       // Light gray (dark)
-               : NSColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)          // Black (light)
+        color(xd: 0xDFDFE0, xl: 0x000000, vd: 0xD4D4D4, vl: 0x000000)
     }
     static var register: NSColor {
-        isDark ? NSColor(red: 0.65, green: 0.55, blue: 0.95, alpha: 1.0)       // Light purple (dark)
-               : NSColor(red: 0.40, green: 0.20, blue: 0.75, alpha: 1.0)       // Purple (light)
+        color(xd: 0xD0A8FF, xl: 0x713DA9, vd: 0x9CDCFE, vl: 0x001080)
     }
     static var directive: NSColor {
-        isDark ? NSColor(red: 0.85, green: 0.65, blue: 0.40, alpha: 1.0)       // Brown/tan (dark)
-               : NSColor(red: 0.50, green: 0.35, blue: 0.15, alpha: 1.0)       // Brown (light)
+        color(xd: 0xFFA14F, xl: 0x78492A, vd: 0xC586C0, vl: 0xAF00DB)
     }
     static var objcDirective: NSColor {
-        isDark ? NSColor(red: 0.90, green: 0.50, blue: 0.30, alpha: 1.0)       // Warm orange (dark)
-               : NSColor(red: 0.65, green: 0.30, blue: 0.10, alpha: 1.0)       // Dark orange (light)
+        color(xd: 0xFD8F3F, xl: 0x643820, vd: 0xC586C0, vl: 0xAF00DB)
     }
     static var functionCall: NSColor {
-        isDark ? NSColor(red: 0.40, green: 0.75, blue: 0.95, alpha: 1.0)       // Light blue (dark)
-               : NSColor(red: 0.15, green: 0.40, blue: 0.70, alpha: 1.0)       // Dark blue (light)
+        color(xd: 0xB281EB, xl: 0x804FB8, vd: 0xDCDCAA, vl: 0x795E26)
     }
     static var attribute: NSColor {
-        isDark ? NSColor(red: 0.90, green: 0.50, blue: 0.30, alpha: 1.0)       // Warm orange (dark)
-               : NSColor(red: 0.60, green: 0.30, blue: 0.05, alpha: 1.0)       // Brown (light)
+        color(xd: 0xFD8F3F, xl: 0x643820, vd: 0xDCDCAA, vl: 0x795E26)
     }
     static var selfKeyword: NSColor {
-        isDark ? NSColor(red: 0.99, green: 0.42, blue: 0.56, alpha: 1.0)       // Pink (dark)
-               : NSColor(red: 0.75, green: 0.10, blue: 0.35, alpha: 1.0)       // Dark pink (light)
+        color(xd: 0xFF7AB2, xl: 0xAD3DA4, vd: 0x569CD6, vl: 0x0000FF)
     }
     static var property: NSColor {
-        isDark ? NSColor(red: 0.55, green: 0.82, blue: 0.95, alpha: 1.0)       // Pale blue (dark)
-               : NSColor(red: 0.20, green: 0.45, blue: 0.60, alpha: 1.0)       // Steel blue (light)
+        color(xd: 0x4EB0CC, xl: 0x3E8087, vd: 0x9CDCFE, vl: 0x001080)
     }
 }
