@@ -6,6 +6,8 @@ struct OutputView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            Color(nsColor: .separatorColor)
+                .frame(height: 1)
             HStack {
                 Text("Output")
                     .font(.system(.caption, design: .monospaced))
@@ -18,7 +20,7 @@ struct OutputView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.7))
 
             Divider()
 
@@ -30,7 +32,7 @@ struct OutputView: View {
                     .padding(8)
                     .textSelection(.enabled)
             }
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
+            .background(Color(nsColor: .windowBackgroundColor).opacity(0.4))
         }
     }
 }
