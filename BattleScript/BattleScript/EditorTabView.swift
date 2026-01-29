@@ -220,7 +220,7 @@ struct EditorTabView: View {
                 .padding(.trailing, 4)
             }
             .padding(.vertical, 2)
-            .background(Color.black.opacity(0.3))
+            .background(Color.black.opacity(0.5))
         }
     }
 }
