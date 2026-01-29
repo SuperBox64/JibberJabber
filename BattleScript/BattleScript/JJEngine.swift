@@ -110,8 +110,15 @@ struct JJEngine {
 
     private static func runProcess(_ args: [String]) -> (Bool, String) {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: args[0])
-        process.arguments = Array(args.dropFirst())
+        // If the first arg is already an absolute path, use it directly.
+        // Otherwise use /usr/bin/env to resolve it (like the CLI does).
+        if args[0].hasPrefix("/") {
+            process.executableURL = URL(fileURLWithPath: args[0])
+            process.arguments = Array(args.dropFirst())
+        } else {
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.arguments = args
+        }
         let pipe = Pipe()
         let errPipe = Pipe()
         process.standardOutput = pipe
