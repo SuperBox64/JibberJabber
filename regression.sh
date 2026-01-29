@@ -1,29 +1,46 @@
 #!/usr/bin/env bash
 # JibJab Full Regression Test Suite
-# Usage: ./regression.sh           (just runs tests, prints total)
-#        ./regression.sh -v        (verbose - line by line results)
-#        ./regression.sh -g        (grid - ASCII spreadsheet to file)
-#        ./regression.sh -vg       (both verbose + grid)
-#        ./regression.sh -v go     (run only the 'go' target)
-#        ./regression.sh -vg c     (grid + verbose for 'c' target only)
+# Usage: ./regression.sh                    (runs everything)
+#        ./regression.sh -v                 (verbose)
+#        ./regression.sh -g                 (grid)
+#        ./regression.sh -vg                (both)
+#
+# Filters (mix and match any combination):
+#   base               = run, compile, asm
+#   <target>            = build + exec for that target
+#                         (py js c cpp swift objc objcpp go)
+#   (no filters)        = everything
+#
+# Examples:
+#        ./regression.sh -vg go             (go only)
+#        ./regression.sh -vg base           (run, compile, asm only)
+#        ./regression.sh -vg base go        (run, compile, asm, go)
+#        ./regression.sh -vg c go swift     (c, go, swift)
 set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RD="/tmp/jj_reg_$$"
 mkdir -p "$RD"
 TOTAL_P=0; TOTAL_F=0
 GRID="/tmp/jj_regression_grid.txt"
-VERBOSE=0; DOGRID=0; FILTER=""
+VERBOSE=0; DOGRID=0
+FILTERS=()
 for arg in "$@"; do
     case "$arg" in
         -vg|-gv) VERBOSE=1; DOGRID=1 ;;
         -v)      VERBOSE=1 ;;
         -g)      DOGRID=1 ;;
         -*)      ;;
-        *)       FILTER="$arg" ;;
+        *)       FILTERS+=("$arg") ;;
     esac
 done
 
-
+in_filters() {
+    [ ${#FILTERS[@]} -eq 0 ] && return 0
+    for f in "${FILTERS[@]}"; do
+        [ "$f" = "$1" ] && return 0
+    done
+    return 1
+}
 
 if [ "$VERBOSE" -eq 1 ]; then
     echo ""
@@ -35,7 +52,7 @@ fi
 for impl in jjpy jjswift; do
     [ "$VERBOSE" -eq 1 ] && echo "[$impl]"
     for ex in numbers fizzbuzz fibonacci variables enums dictionaries tuples arrays comparisons hello; do
-        if [ -z "$FILTER" ]; then
+        if in_filters "base"; then
             for mode in run compile asm; do
                 if "$SCRIPT_DIR/test_example.sh" "$impl" "$mode" "$ex" "" >/dev/null 2>&1; then
                     echo "P" > "$RD/${impl}_${ex}_${mode}"
@@ -47,7 +64,7 @@ for impl in jjpy jjswift; do
             done
         fi
         for tgt in py js c cpp swift objc objcpp go; do
-            [ -n "$FILTER" ] && [ "$tgt" != "$FILTER" ] && continue
+            in_filters "$tgt" || continue
             if "$SCRIPT_DIR/test_example.sh" "$impl" "build" "$ex" "$tgt" >/dev/null 2>&1; then
                 echo "P" > "$RD/${impl}_${ex}_build_${tgt}"
                 TOTAL_P=$((TOTAL_P + 1))
