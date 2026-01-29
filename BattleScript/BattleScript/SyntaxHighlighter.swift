@@ -20,12 +20,20 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
     var blockCommentStart: String? { "/*" }
     var blockCommentEnd: String? { "*/" }
     var extraPatterns: [(NSRegularExpression, NSColor)] { [] }
+    var selfKeywords: [String] { [] }
+    var operatorPattern: NSRegularExpression? { nil }
+    var attributePattern: NSRegularExpression? { nil }
+    var highlightFunctionCalls: Bool { true }
+    var highlightPropertyAccess: Bool { true }
 
     // Precomputed
     private var _keywordSet: Set<String>?
     private var _typeSet: Set<String>?
+    private var _selfSet: Set<String>?
     private var _stringRegex: NSRegularExpression?
     private var _numberRegex: NSRegularExpression?
+    private static let _funcCallRegex = try! NSRegularExpression(pattern: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()")
+    private static let _propertyRegex = try! NSRegularExpression(pattern: "\\.([a-zA-Z_][a-zA-Z0-9_]*)")
 
     func highlight(_ textStorage: NSTextStorage) {
         let fullRange = NSRange(location: 0, length: textStorage.length)
@@ -41,11 +49,42 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
             .font: font
         ], range: fullRange)
 
+        // Apply function calls early (keywords/types override known ones)
+        if highlightFunctionCalls {
+            applyFunctionCalls(textStorage, text: text, range: fullRange)
+        }
+
+        // Apply property access
+        if highlightPropertyAccess {
+            applyPropertyAccess(textStorage, text: text, range: fullRange)
+        }
+
         // Apply keywords
         applyKeywords(textStorage, text: nsText, range: fullRange)
 
         // Apply type keywords
         applyTypes(textStorage, text: nsText, range: fullRange)
+
+        // Apply self/this keywords
+        applySelfKeywords(textStorage, text: nsText, range: fullRange)
+
+        // Apply operators
+        if let opRegex = operatorPattern {
+            opRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
+                if let r = match?.range {
+                    textStorage.addAttribute(.foregroundColor, value: SyntaxTheme.`operator`, range: r)
+                }
+            }
+        }
+
+        // Apply attributes/decorators
+        if let attrRegex = attributePattern {
+            attrRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
+                if let r = match?.range {
+                    textStorage.addAttribute(.foregroundColor, value: SyntaxTheme.attribute, range: r)
+                }
+            }
+        }
 
         // Apply extra patterns (language-specific)
         for (regex, color) in extraPatterns {
@@ -88,6 +127,35 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
             let word = text.substring(with: r)
             if tSet.contains(word) {
                 ts.addAttribute(.foregroundColor, value: SyntaxTheme.type, range: r)
+            }
+        }
+    }
+
+    private func applySelfKeywords(_ ts: NSTextStorage, text: NSString, range: NSRange) {
+        if _selfSet == nil { _selfSet = Set(selfKeywords) }
+        guard let sSet = _selfSet, !sSet.isEmpty else { return }
+        let pattern = try! NSRegularExpression(pattern: "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b")
+        pattern.enumerateMatches(in: text as String, range: range) { match, _, _ in
+            guard let r = match?.range else { return }
+            let word = text.substring(with: r)
+            if sSet.contains(word) {
+                ts.addAttribute(.foregroundColor, value: SyntaxTheme.selfKeyword, range: r)
+            }
+        }
+    }
+
+    private func applyFunctionCalls(_ ts: NSTextStorage, text: String, range: NSRange) {
+        Self._funcCallRegex.enumerateMatches(in: text, range: range) { match, _, _ in
+            if let r = match?.range(at: 1) {
+                ts.addAttribute(.foregroundColor, value: SyntaxTheme.functionCall, range: r)
+            }
+        }
+    }
+
+    private func applyPropertyAccess(_ ts: NSTextStorage, text: String, range: NSRange) {
+        Self._propertyRegex.enumerateMatches(in: text, range: range) { match, _, _ in
+            if let r = match?.range(at: 1) {
+                ts.addAttribute(.foregroundColor, value: SyntaxTheme.property, range: r)
             }
         }
     }
@@ -243,19 +311,26 @@ class PythonHighlighter: BaseSyntaxHighlighter {
         ["and", "as", "assert", "async", "await", "break", "class", "continue", "def", "del",
          "elif", "else", "except", "finally", "for", "from", "global", "if", "import", "in",
          "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while",
-         "with", "yield", "print"]
+         "with", "yield"]
     }
     override var typeKeywords: [String] {
         ["int", "float", "str", "bool", "list", "dict", "tuple", "set", "None", "True", "False",
-         "range", "len", "type", "object", "Exception"]
+         "range", "len", "type", "object", "Exception", "ValueError", "TypeError", "KeyError",
+         "IndexError", "RuntimeError", "StopIteration", "super"]
     }
+    override var selfKeywords: [String] { ["self", "cls"] }
     override var singleLineCommentPrefix: String? { "#" }
     override var blockCommentStart: String? { nil }
     override var blockCommentEnd: String? { nil }
 
+    private static let _opRegex = try! NSRegularExpression(pattern: "->|==|!=|<=|>=|\\*\\*|//|<<|>>|[+\\-*/%<>&|^~]|\\b(?:and|or|not|in|is)\\b")
+    override var operatorPattern: NSRegularExpression? { Self._opRegex }
+
+    private static let _attrRegex = try! NSRegularExpression(pattern: "@[a-zA-Z_][a-zA-Z0-9_.]*")
+    override var attributePattern: NSRegularExpression? { Self._attrRegex }
+
     override func applyStrings(_ ts: NSTextStorage, text: String, range: NSRange) {
-        // Python supports both ' and " strings
-        let regex = try! NSRegularExpression(pattern: "\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*'")
+        let regex = try! NSRegularExpression(pattern: "\"\"\"[\\s\\S]*?\"\"\"|'''[\\s\\S]*?'''|\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*'", options: .dotMatchesLineSeparators)
         regex.enumerateMatches(in: text, range: range) { match, _, _ in
             if let r = match?.range {
                 ts.addAttribute(.foregroundColor, value: SyntaxTheme.string, range: r)
@@ -270,14 +345,19 @@ class JavaScriptHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
         ["function", "var", "let", "const", "if", "else", "for", "while", "do", "return",
          "break", "continue", "switch", "case", "default", "try", "catch", "finally",
-         "throw", "new", "this", "class", "extends", "static", "async", "await",
+         "throw", "new", "class", "extends", "static", "async", "await",
          "import", "export", "from", "typeof", "instanceof", "in", "of", "delete", "void",
-         "yield", "console", "log"]
+         "yield", "super"]
     }
     override var typeKeywords: [String] {
         ["true", "false", "null", "undefined", "NaN", "Infinity",
-         "Array", "Object", "String", "Number", "Boolean", "Map", "Set", "Promise"]
+         "Array", "Object", "String", "Number", "Boolean", "Map", "Set", "Promise",
+         "Date", "RegExp", "Error", "Symbol", "BigInt", "JSON", "Math", "console"]
     }
+    override var selfKeywords: [String] { ["this"] }
+
+    private static let _opRegex = try! NSRegularExpression(pattern: "=>|===|!==|==|!=|<=|>=|&&|\\|\\||\\?\\?|\\?\\.|\\.\\.\\.|\\.\\.|\\*\\*|<<|>>>|>>|[+\\-*/%<>&|^~!]")
+    override var operatorPattern: NSRegularExpression? { Self._opRegex }
 
     override func applyStrings(_ ts: NSTextStorage, text: String, range: NSRange) {
         let regex = try! NSRegularExpression(pattern: "\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*'|`(?:\\\\.|[^`\\\\])*`")
@@ -295,15 +375,16 @@ class CHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
         ["auto", "break", "case", "const", "continue", "default", "do", "else", "enum",
          "extern", "for", "goto", "if", "inline", "register", "return", "sizeof",
-         "static", "struct", "switch", "typedef", "union", "volatile", "while",
-         "printf", "scanf", "malloc", "free", "NULL", "main"]
+         "static", "struct", "switch", "typedef", "union", "volatile", "while", "main"]
     }
     override var typeKeywords: [String] {
         ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
-         "size_t", "bool", "FILE"]
+         "size_t", "bool", "FILE", "NULL", "true", "false"]
     }
 
     private static let preprocessorRegex = try! NSRegularExpression(pattern: "^\\s*#\\s*\\w+.*$", options: .anchorsMatchLines)
+    private static let _opRegex = try! NSRegularExpression(pattern: "->|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^~!]")
+    override var operatorPattern: NSRegularExpression? { Self._opRegex }
 
     override var extraPatterns: [(NSRegularExpression, NSColor)] {
         [(Self.preprocessorRegex, SyntaxTheme.preprocessor)]
@@ -319,17 +400,19 @@ class CppHighlighter: BaseSyntaxHighlighter {
          "final", "for", "friend", "goto", "if", "inline", "mutable", "namespace",
          "new", "noexcept", "operator", "override", "private", "protected", "public",
          "register", "return", "sizeof", "static", "static_cast", "struct", "switch",
-         "template", "this", "throw", "try", "typedef", "typeid", "typename",
-         "union", "using", "virtual", "volatile", "while",
-         "cout", "cin", "endl", "cerr", "printf", "main", "nullptr"]
+         "template", "throw", "try", "typedef", "typeid", "typename",
+         "union", "using", "virtual", "volatile", "while", "main", "nullptr"]
     }
     override var typeKeywords: [String] {
         ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
          "bool", "string", "vector", "map", "set", "pair", "size_t",
-         "true", "false", "NULL"]
+         "true", "false", "NULL", "cout", "cin", "endl", "cerr"]
     }
+    override var selfKeywords: [String] { ["this"] }
 
     private static let preprocessorRegex = try! NSRegularExpression(pattern: "^\\s*#\\s*\\w+.*$", options: .anchorsMatchLines)
+    private static let _opRegex = try! NSRegularExpression(pattern: "->|::|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^~!]")
+    override var operatorPattern: NSRegularExpression? { Self._opRegex }
 
     override var extraPatterns: [(NSRegularExpression, NSColor)] {
         [(Self.preprocessorRegex, SyntaxTheme.preprocessor)]
@@ -343,16 +426,28 @@ class SwiftHighlighter: BaseSyntaxHighlighter {
         ["func", "var", "let", "class", "struct", "enum", "extension", "protocol",
          "mutating", "inout", "if", "else", "guard", "for", "while", "repeat",
          "switch", "case", "default", "break", "continue", "return", "defer",
-         "do", "try", "catch", "throw", "throws", "import", "public", "private",
+         "do", "try", "catch", "throw", "throws", "rethrows", "import", "public", "private",
          "internal", "fileprivate", "open", "final", "required", "convenience",
          "static", "subscript", "init", "deinit", "override", "where", "as", "is",
-         "in", "self", "Self", "super", "print", "typealias", "associatedtype"]
+         "in", "super", "typealias", "associatedtype", "some", "any",
+         "async", "await", "actor", "nonisolated", "isolated", "sending",
+         "weak", "unowned", "lazy", "dynamic", "indirect", "consuming", "borrowing"]
     }
     override var typeKeywords: [String] {
-        ["Int", "String", "Double", "Float", "Bool", "Character", "Array", "Dictionary",
-         "Set", "Optional", "Any", "AnyObject", "Void", "Error",
+        ["Int", "Int8", "Int16", "Int32", "Int64", "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
+         "String", "Double", "Float", "Bool", "Character", "Array", "Dictionary",
+         "Set", "Optional", "Any", "AnyObject", "Void", "Error", "Result",
+         "Codable", "Encodable", "Decodable", "Hashable", "Equatable", "Comparable",
+         "Identifiable", "Sendable", "CustomStringConvertible",
          "true", "false", "nil"]
     }
+    override var selfKeywords: [String] { ["self", "Self"] }
+
+    private static let _opRegex = try! NSRegularExpression(pattern: "->|==|!=|<=|>=|&&|\\|\\||\\?\\.|\\.\\.<|\\.\\.\\.|\\?\\?|[+\\-*/%<>&|^~!?]")
+    override var operatorPattern: NSRegularExpression? { Self._opRegex }
+
+    private static let _attrRegex = try! NSRegularExpression(pattern: "@[a-zA-Z_][a-zA-Z0-9_]*")
+    override var attributePattern: NSRegularExpression? { Self._attrRegex }
 }
 
 // MARK: - Objective-C Highlighter
@@ -362,9 +457,13 @@ class ObjCHighlighter: BaseSyntaxHighlighter {
         ["auto", "break", "case", "const", "continue", "default", "do", "else", "enum",
          "extern", "for", "goto", "if", "inline", "register", "return", "sizeof",
          "static", "struct", "switch", "typedef", "union", "volatile", "while",
-         "self", "super", "nil", "Nil", "YES", "NO", "NULL",
+         "super", "nil", "Nil", "YES", "NO", "NULL",
          "printf", "main", "NSLog"]
     }
+    override var selfKeywords: [String] { ["self"] }
+
+    private static let _opRegex = try! NSRegularExpression(pattern: "->|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^~!]")
+    override var operatorPattern: NSRegularExpression? { Self._opRegex }
     override var typeKeywords: [String] {
         ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
          "id", "BOOL", "NSString", "NSArray", "NSDictionary", "NSNumber", "NSObject",
@@ -402,11 +501,15 @@ class ObjCppHighlighter: BaseSyntaxHighlighter {
          "final", "for", "friend", "goto", "if", "inline", "mutable", "namespace",
          "new", "noexcept", "operator", "override", "private", "protected", "public",
          "register", "return", "sizeof", "static", "struct", "switch",
-         "template", "this", "throw", "try", "typedef", "typename",
+         "template", "throw", "try", "typedef", "typename",
          "union", "using", "virtual", "volatile", "while",
-         "self", "super", "nil", "Nil", "YES", "NO", "NULL", "nullptr",
+         "super", "nil", "Nil", "YES", "NO", "NULL", "nullptr",
          "printf", "cout", "main", "NSLog"]
     }
+    override var selfKeywords: [String] { ["self", "this"] }
+
+    private static let _opRegex = try! NSRegularExpression(pattern: "->|::|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^~!]")
+    override var operatorPattern: NSRegularExpression? { Self._opRegex }
     override var typeKeywords: [String] {
         ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
          "bool", "string", "vector", "id", "BOOL",
@@ -441,15 +544,19 @@ class GoHighlighter: BaseSyntaxHighlighter {
         ["func", "var", "const", "package", "import", "if", "else", "for", "range",
          "switch", "case", "default", "break", "continue", "return", "defer",
          "go", "chan", "select", "type", "struct", "interface", "map",
-         "fallthrough", "goto", "fmt", "Println", "Printf", "Sprintf", "main"]
+         "fallthrough", "goto", "main"]
     }
     override var typeKeywords: [String] {
         ["int", "int8", "int16", "int32", "int64",
          "uint", "uint8", "uint16", "uint32", "uint64",
          "float32", "float64", "complex64", "complex128",
          "string", "bool", "byte", "rune", "error", "any",
-         "true", "false", "nil", "iota"]
+         "true", "false", "nil", "iota",
+         "fmt", "Println", "Printf", "Sprintf", "Fprintf"]
     }
+
+    private static let _opRegex = try! NSRegularExpression(pattern: ":=|<-|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^!]")
+    override var operatorPattern: NSRegularExpression? { Self._opRegex }
 
     override func applyStrings(_ ts: NSTextStorage, text: String, range: NSRange) {
         let regex = try! NSRegularExpression(pattern: "\"(?:\\\\.|[^\"\\\\])*\"|`[^`]*`")

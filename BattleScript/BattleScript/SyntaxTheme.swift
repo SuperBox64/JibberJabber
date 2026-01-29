@@ -19,4 +19,8 @@ struct SyntaxTheme {
     static let register = NSColor(red: 0.65, green: 0.55, blue: 0.95, alpha: 1.0)       // Light purple
     static let directive = NSColor(red: 0.85, green: 0.65, blue: 0.40, alpha: 1.0)      // Brown/tan
     static let objcDirective = NSColor(red: 0.90, green: 0.50, blue: 0.30, alpha: 1.0)  // Warm orange
+    static let functionCall = NSColor(red: 0.40, green: 0.75, blue: 0.95, alpha: 1.0)   // Light blue
+    static let attribute = NSColor(red: 0.90, green: 0.50, blue: 0.30, alpha: 1.0)      // Warm orange
+    static let selfKeyword = NSColor(red: 0.99, green: 0.42, blue: 0.56, alpha: 1.0)    // Pink
+    static let property = NSColor(red: 0.55, green: 0.82, blue: 0.95, alpha: 1.0)       // Pale blue
 }
