@@ -18,13 +18,14 @@ private func safeName(_ name: String) -> String {
     return name
 }
 
-class AppleScriptTranspiler {
+public class AppleScriptTranspiler {
+    public init() {}
     private var indentLevel = 0
     private let T = loadTarget("applescript")
     private let OP = JJ.operators
     private var enums: [String: [String]] = [:]  // Track enum name -> cases
 
-    func transpile(_ program: Program) -> String {
+    public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
         for s in program.statements {
             lines.append(stmtToString(s))

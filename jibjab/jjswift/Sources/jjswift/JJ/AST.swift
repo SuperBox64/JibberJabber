@@ -1,40 +1,40 @@
 /// JibJab AST - Abstract Syntax Tree node definitions
 /// Schema: ../../../common/ast.json
 
-protocol ASTNode {}
+public protocol ASTNode {}
 
-struct Program: ASTNode {
-    let statements: [ASTNode]
+public struct Program: ASTNode {
+    public let statements: [ASTNode]
 }
 
-struct PrintStmt: ASTNode {
-    let expr: ASTNode
+public struct PrintStmt: ASTNode {
+    public let expr: ASTNode
 }
 
-struct InputExpr: ASTNode {
-    let prompt: ASTNode
+public struct InputExpr: ASTNode {
+    public let prompt: ASTNode
 }
 
-struct VarDecl: ASTNode {
-    let name: String
-    let value: ASTNode
+public struct VarDecl: ASTNode {
+    public let name: String
+    public let value: ASTNode
 }
 
-struct VarRef: ASTNode {
-    let name: String
+public struct VarRef: ASTNode {
+    public let name: String
 }
 
-struct Literal: ASTNode {
-    let value: Any?
-    let numericType: NumericType?
+public struct Literal: ASTNode {
+    public let value: Any?
+    public let numericType: NumericType?
 
-    init(value: Any?, numericType: NumericType? = nil) {
+    public init(value: Any?, numericType: NumericType? = nil) {
         self.value = value
         self.numericType = numericType
     }
 }
 
-enum NumericType: String {
+public enum NumericType: String {
     case int = "Int"
     case int8 = "Int8"
     case int16 = "Int16"
@@ -49,65 +49,65 @@ enum NumericType: String {
     case double = "Double"
 }
 
-struct BinaryOp: ASTNode {
-    let left: ASTNode
-    let op: String
-    let right: ASTNode
+public struct BinaryOp: ASTNode {
+    public let left: ASTNode
+    public let op: String
+    public let right: ASTNode
 }
 
-struct UnaryOp: ASTNode {
-    let op: String
-    let operand: ASTNode
+public struct UnaryOp: ASTNode {
+    public let op: String
+    public let operand: ASTNode
 }
 
-struct LoopStmt: ASTNode {
-    let `var`: String
-    let start: ASTNode?
-    let end: ASTNode?
-    let collection: ASTNode?
-    let condition: ASTNode?
-    let body: [ASTNode]
+public struct LoopStmt: ASTNode {
+    public let `var`: String
+    public let start: ASTNode?
+    public let end: ASTNode?
+    public let collection: ASTNode?
+    public let condition: ASTNode?
+    public let body: [ASTNode]
 }
 
-struct IfStmt: ASTNode {
-    let condition: ASTNode
-    let thenBody: [ASTNode]
-    let elseBody: [ASTNode]?
+public struct IfStmt: ASTNode {
+    public let condition: ASTNode
+    public let thenBody: [ASTNode]
+    public let elseBody: [ASTNode]?
 }
 
-struct FuncDef: ASTNode {
-    let name: String
-    let params: [String]
-    let body: [ASTNode]
+public struct FuncDef: ASTNode {
+    public let name: String
+    public let params: [String]
+    public let body: [ASTNode]
 }
 
-struct FuncCall: ASTNode {
-    let name: String
-    let args: [ASTNode]
+public struct FuncCall: ASTNode {
+    public let name: String
+    public let args: [ASTNode]
 }
 
-struct ReturnStmt: ASTNode {
-    let value: ASTNode
+public struct ReturnStmt: ASTNode {
+    public let value: ASTNode
 }
 
-struct EnumDef: ASTNode {
-    let name: String
-    let cases: [String]
+public struct EnumDef: ASTNode {
+    public let name: String
+    public let cases: [String]
 }
 
-struct ArrayLiteral: ASTNode {
-    let elements: [ASTNode]
+public struct ArrayLiteral: ASTNode {
+    public let elements: [ASTNode]
 }
 
-struct DictLiteral: ASTNode {
-    let pairs: [(key: ASTNode, value: ASTNode)]
+public struct DictLiteral: ASTNode {
+    public let pairs: [(key: ASTNode, value: ASTNode)]
 }
 
-struct TupleLiteral: ASTNode {
-    let elements: [ASTNode]
+public struct TupleLiteral: ASTNode {
+    public let elements: [ASTNode]
 }
 
-struct IndexAccess: ASTNode {
-    let array: ASTNode
-    let index: ASTNode
+public struct IndexAccess: ASTNode {
+    public let array: ASTNode
+    public let index: ASTNode
 }

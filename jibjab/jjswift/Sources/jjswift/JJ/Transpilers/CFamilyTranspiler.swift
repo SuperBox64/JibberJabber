@@ -2,7 +2,7 @@
 /// Shared logic for C, C++, Objective-C, and Objective-C++ transpilers.
 /// Subclasses override specific methods for target-specific behavior.
 
-class CFamilyTranspiler {
+public class CFamilyTranspiler {
     var indentLevel = 0
     let T: TargetConfig
     var enums = Set<String>()
@@ -11,7 +11,7 @@ class CFamilyTranspiler {
     var dictVars = Set<String>()
     var tupleVars = Set<String>()
 
-    init(target: String) {
+    public init(target: String) {
         T = loadTarget(target)
     }
 
@@ -40,7 +40,7 @@ class CFamilyTranspiler {
         return false
     }
 
-    func transpile(_ program: Program) -> String {
+    public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines), ""]
 
         let funcs = program.statements.compactMap { $0 as? FuncDef }

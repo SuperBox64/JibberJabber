@@ -4,14 +4,14 @@
 /// Dictionaries: expanded to individual variables (person_name, person_age, etc.)
 /// Tuples: stored as numbered variables (_0, _1, _2)
 
-class GoTranspiler: CFamilyTranspiler {
+public class GoTranspiler: CFamilyTranspiler {
     var dictFields: [String: [String: (String, String)]] = [:]  // dict_name -> {key: (go_var, type)}
     var tupleFields: [String: [(String, String)]] = [:]          // tuple_name -> [(go_var, type)]
     var needsMath = false
 
-    init() { super.init(target: "go") }
+    public override init(target: String = "go") { super.init(target: target) }
 
-    override func transpile(_ program: Program) -> String {
+    public override func transpile(_ program: Program) -> String {
         var lines: [String] = []
 
         let funcs = program.statements.compactMap { $0 as? FuncDef }

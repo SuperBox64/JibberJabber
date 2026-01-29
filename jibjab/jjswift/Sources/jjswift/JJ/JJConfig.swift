@@ -4,111 +4,111 @@
 import Foundation
 
 // Core config from jj.json (no targets)
-struct JJCoreConfig: Codable {
-    let version: String
-    let keywords: Keywords
-    let blocks: Blocks
-    let blockSuffix: String
-    let operators: Operators
-    let structure: Structure
-    let syntax: Syntax
-    let literals: Literals
+public struct JJCoreConfig: Codable {
+    public let version: String
+    public let keywords: Keywords
+    public let blocks: Blocks
+    public let blockSuffix: String
+    public let operators: Operators
+    public let structure: Structure
+    public let syntax: Syntax
+    public let literals: Literals
 
-    struct Keywords: Codable {
-        let print: String
-        let input: String
-        let yeet: String
-        let snag: String
-        let invoke: String
-        let `enum`: String
-        let `nil`: String
-        let `true`: String
-        let `false`: String
+    public struct Keywords: Codable {
+        public let print: String
+        public let input: String
+        public let yeet: String
+        public let snag: String
+        public let invoke: String
+        public let `enum`: String
+        public let `nil`: String
+        public let `true`: String
+        public let `false`: String
     }
 
-    struct Blocks: Codable {
-        let loop: String
-        let when: String
-        let `else`: String
-        let morph: String
-        let `try`: String
-        let oops: String
-        let end: String
+    public struct Blocks: Codable {
+        public let loop: String
+        public let when: String
+        public let `else`: String
+        public let morph: String
+        public let `try`: String
+        public let oops: String
+        public let end: String
     }
 
-    struct Operator: Codable {
-        let symbol: String
-        let emit: String
+    public struct Operator: Codable {
+        public let symbol: String
+        public let emit: String
     }
 
-    struct Operators: Codable {
-        let add: Operator
-        let sub: Operator
-        let mul: Operator
-        let div: Operator
-        let mod: Operator
-        let eq: Operator
-        let neq: Operator
-        let lt: Operator
-        let lte: Operator
-        let gt: Operator
-        let gte: Operator
-        let and: Operator
-        let or: Operator
-        let not: Operator
+    public struct Operators: Codable {
+        public let add: Operator
+        public let sub: Operator
+        public let mul: Operator
+        public let div: Operator
+        public let mod: Operator
+        public let eq: Operator
+        public let neq: Operator
+        public let lt: Operator
+        public let lte: Operator
+        public let gt: Operator
+        public let gte: Operator
+        public let and: Operator
+        public let or: Operator
+        public let not: Operator
     }
 
-    struct Structure: Codable {
-        let action: String
-        let range: String
-        let colon: String
+    public struct Structure: Codable {
+        public let action: String
+        public let range: String
+        public let colon: String
     }
 
-    struct Syntax: Codable {
-        let emit: String
-        let grab: String
-        let val: String
-        let with: String
-        let cases: String
+    public struct Syntax: Codable {
+        public let emit: String
+        public let grab: String
+        public let val: String
+        public let with: String
+        public let cases: String
     }
 
-    struct Literals: Codable {
-        let numberPrefix: String
-        let stringDelim: String
-        let comment: String
+    public struct Literals: Codable {
+        public let numberPrefix: String
+        public let stringDelim: String
+        public let comment: String
     }
 }
 
 // Generic target config loaded from targets/*.json
-struct TargetConfig: Codable {
-    let name: String
-    let ext: String
-    let header: String
+public struct TargetConfig: Codable {
+    public let name: String
+    public let ext: String
+    public let header: String
     private let _print: String?
     private let _printInt: String?
     private let _printStr: String?
     private let _printFloat: String?
     private let _printDouble: String?
-    let `var`: String
-    let varInfer: String?
-    let varAuto: String?
-    let forRange: String
+    public let `var`: String
+    public let varInfer: String?
+    public let varAuto: String?
+    public let forRange: String
     private let _forIn: String?
-    let `while`: String
-    let `if`: String
-    let `else`: String
-    let `func`: String
+    public let `while`: String
+    public let `if`: String
+    public let `else`: String
+    public let `func`: String
     private let _funcDecl: String?
-    let `return`: String
-    let call: String
+    public let `return`: String
+    public let call: String
     private let _blockEnd: String?
-    let blockEndRepeat: String?
-    let blockEndIf: String?
-    let blockEndFunc: String?
-    let indent: String
-    let `true`: String
-    let `false`: String
-    let `nil`: String
+    public let blockEndRepeat: String?
+    public let blockEndIf: String?
+    public let blockEndFunc: String?
+    public let indent: String
+    public let `true`: String
+    public let `false`: String
+    public let `nil`: String
     private let _and: String?
     private let _or: String?
     private let _not: String?
@@ -117,10 +117,10 @@ struct TargetConfig: Codable {
     private let _lte: String?
     private let _gte: String?
     private let _mod: String?
-    let main: String?
-    let compile: [String]?
-    let run: [String]?
-    let types: [String: String]?
+    public let main: String?
+    public let compile: [String]?
+    public let run: [String]?
+    public let types: [String: String]?
 
     enum CodingKeys: String, CodingKey {
         case name, ext, header, `var`, varInfer, varAuto, forRange, `while`, `if`, `else`, `func`, `return`, call, indent, main, compile, run, types
@@ -144,7 +144,7 @@ struct TargetConfig: Codable {
         // true/false/nil handled specially
     }
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         name = try container.decode(String.self, forKey: .name)
         ext = try container.decode(String.self, forKey: .ext)
@@ -198,32 +198,44 @@ struct TargetConfig: Codable {
     }
 
     // Safe accessors with defaults
-    var print: String { _print ?? _printInt ?? "" }
-    var printInt: String { _printInt ?? _print ?? "" }
-    var printStr: String { _printStr ?? _print ?? "" }
-    var printFloat: String { _printFloat ?? _printInt ?? "" }
-    var printDouble: String { _printDouble ?? _printInt ?? "" }
-    var forIn: String { _forIn ?? forRange }
-    var funcDecl: String { _funcDecl ?? `func` }
-    var blockEnd: String { _blockEnd ?? "" }
-    var and: String { _and ?? "&&" }
-    var or: String { _or ?? "||" }
-    var not: String { _not ?? "!" }
-    var eq: String { _eq ?? "==" }
-    var neq: String { _neq ?? "!=" }
-    var lte: String { _lte ?? "<=" }
-    var gte: String { _gte ?? ">=" }
-    var mod: String { _mod ?? "%" }
+    public var print: String { _print ?? _printInt ?? "" }
+    public var printInt: String { _printInt ?? _print ?? "" }
+    public var printStr: String { _printStr ?? _print ?? "" }
+    public var printFloat: String { _printFloat ?? _printInt ?? "" }
+    public var printDouble: String { _printDouble ?? _printInt ?? "" }
+    public var forIn: String { _forIn ?? forRange }
+    public var funcDecl: String { _funcDecl ?? `func` }
+    public var blockEnd: String { _blockEnd ?? "" }
+    public var and: String { _and ?? "&&" }
+    public var or: String { _or ?? "||" }
+    public var not: String { _not ?? "!" }
+    public var eq: String { _eq ?? "==" }
+    public var neq: String { _neq ?? "!=" }
+    public var lte: String { _lte ?? "<=" }
+    public var gte: String { _gte ?? ">=" }
+    public var mod: String { _mod ?? "%" }
+}
+
+/// Environment overrides for JJLib
+public enum JJEnv {
+    /// Override base path for config files. When set, JJLib loads from this path
+    /// instead of searching relative to cwd. Set to the directory containing jj.json.
+    public static var basePath: String?
 }
 
 /// Global JJ core configuration
-let JJ: JJCoreConfig = {
-    let cwd = FileManager.default.currentDirectoryPath
-    let possiblePaths = [
-        cwd + "/common/jj.json",
-        cwd + "/../common/jj.json",
-        cwd + "/../../common/jj.json",
-    ]
+public let JJ: JJCoreConfig = {
+    var possiblePaths: [String]
+    if let base = JJEnv.basePath {
+        possiblePaths = [base + "/jj.json"]
+    } else {
+        let cwd = FileManager.default.currentDirectoryPath
+        possiblePaths = [
+            cwd + "/common/jj.json",
+            cwd + "/../common/jj.json",
+            cwd + "/../../common/jj.json",
+        ]
+    }
     for path in possiblePaths {
         if FileManager.default.fileExists(atPath: path) {
             do {
@@ -238,13 +250,18 @@ let JJ: JJCoreConfig = {
 }()
 
 /// Load target config from common/targets/{name}.json
-func loadTarget(_ name: String) -> TargetConfig {
-    let cwd = FileManager.default.currentDirectoryPath
-    let possiblePaths = [
-        cwd + "/common/targets/\(name).json",
-        cwd + "/../common/targets/\(name).json",
-        cwd + "/../../common/targets/\(name).json",
-    ]
+public func loadTarget(_ name: String) -> TargetConfig {
+    var possiblePaths: [String]
+    if let base = JJEnv.basePath {
+        possiblePaths = [base + "/targets/\(name).json"]
+    } else {
+        let cwd = FileManager.default.currentDirectoryPath
+        possiblePaths = [
+            cwd + "/common/targets/\(name).json",
+            cwd + "/../common/targets/\(name).json",
+            cwd + "/../../common/targets/\(name).json",
+        ]
+    }
     for path in possiblePaths {
         if FileManager.default.fileExists(atPath: path) {
             do {

@@ -1,12 +1,13 @@
 /// JibJab JavaScript Transpiler - Converts JJ to JavaScript
 /// Uses shared config from common/jj.json
 
-class JavaScriptTranspiler {
+public class JavaScriptTranspiler {
+    public init() {}
     private var indentLevel = 0
     private let T = loadTarget("js")
     private var enums = Set<String>()
 
-    func transpile(_ program: Program) -> String {
+    public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
         for s in program.statements {
             lines.append(stmtToString(s))

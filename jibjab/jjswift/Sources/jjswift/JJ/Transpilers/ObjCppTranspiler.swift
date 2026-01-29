@@ -1,8 +1,8 @@
 /// JibJab Objective-C++ Transpiler - Converts JJ to Objective-C++
 /// Uses shared C-family base from CFamilyTranspiler.swift
 
-class ObjCppTranspiler: CFamilyTranspiler {
-    init() { super.init(target: "objcpp") }
+public class ObjCppTranspiler: CFamilyTranspiler {
+    public override init(target: String = "objcpp") { super.init(target: target) }
 
     override func emitMain(_ lines: inout [String], _ program: Program) {
         let mainStmts = program.statements.filter { !($0 is FuncDef) }

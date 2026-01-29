@@ -4,6 +4,7 @@
 /// This is the CLI entry point. The implementation is in the JJ/ directory.
 
 import Foundation
+import JJLib
 
 func getTranspiler(_ target: String) -> Any? {
     switch target {

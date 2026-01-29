@@ -4,13 +4,13 @@
 /// Dictionaries: expanded to individual variables (person_name, person_age, etc.)
 /// Tuples: stored as numbered variables (_0, _1, _2) with cout for printing
 
-class CppTranspiler: CFamilyTranspiler {
+public class CppTranspiler: CFamilyTranspiler {
     var dictFields: [String: [String: (String, String)]] = [:]  // dict_name -> {key: (cpp_var, type)}
     var tupleFields: [String: [(String, String)]] = [:]          // tuple_name -> [(cpp_var, type)]
 
-    init() { super.init(target: "cpp") }
+    public override init(target: String = "cpp") { super.init(target: target) }
 
-    override func transpile(_ program: Program) -> String {
+    public override func transpile(_ program: Program) -> String {
         var code = super.transpile(program)
         // Add <string> include if any string fields are used
         var needsString = false

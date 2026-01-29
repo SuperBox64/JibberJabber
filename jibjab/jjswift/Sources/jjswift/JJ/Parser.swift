@@ -2,11 +2,11 @@
 /// Uses emit values from common/jj.json via JJConfig
 import Foundation
 
-class Parser {
+public class Parser {
     private var tokens: [Token]
     private var pos: Int = 0
 
-    init(tokens: [Token]) {
+    public init(tokens: [Token]) {
         // Filter out newlines
         self.tokens = tokens.filter { $0.type != .newline }
     }
@@ -39,7 +39,7 @@ class Parser {
         throw ParserError.unexpectedToken(expected: type, got: peek().type, line: peek().line)
     }
 
-    func parse() throws -> Program {
+    public func parse() throws -> Program {
         var statements: [ASTNode] = []
         while peek().type != .eof {
             if let stmt = try parseStatement() {
@@ -427,11 +427,11 @@ class Parser {
     }
 }
 
-enum ParserError: Error, CustomStringConvertible {
+public enum ParserError: Error, CustomStringConvertible {
     case unexpectedToken(expected: TokenType, got: TokenType, line: Int)
     case invalidFunctionSignature(String)
 
-    var description: String {
+    public var description: String {
         switch self {
         case .unexpectedToken(let expected, let got, let line):
             return "Expected \(expected), got \(got) at line \(line)"

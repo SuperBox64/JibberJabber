@@ -3,7 +3,8 @@
 
 import Foundation
 
-class NativeCompiler {
+public class NativeCompiler {
+    public init() {}
     private var code: [UInt8] = []
     private var data: [UInt8] = []
     private var variables: [String: Int] = [:]
@@ -30,7 +31,7 @@ class NativeCompiler {
 
     enum BranchType { case b, beq, bne, bge, ble, bgt, blt, bl }
 
-    func compile(_ program: Program, outputPath: String) throws {
+    public func compile(_ program: Program, outputPath: String) throws {
         code = []
         data = []
         variables = [:]

@@ -4,11 +4,11 @@
 /// Dictionaries: expanded to individual variables (person_name, person_age, etc.)
 /// Tuples: stored as numbered variables (_0, _1, _2)
 
-class CTranspiler: CFamilyTranspiler {
+public class CTranspiler: CFamilyTranspiler {
     var dictFields: [String: [String: (String, String)]] = [:]  // dict_name -> {key: (c_var, type)}
     var tupleFields: [String: [(String, String)]] = [:]           // tuple_name -> [(c_var, type)]
 
-    init() { super.init(target: "c") }
+    public override init(target: String = "c") { super.init(target: target) }
 
     override func varDictToString(_ node: VarDecl) -> String {
         guard let dict = node.value as? DictLiteral else { return "" }

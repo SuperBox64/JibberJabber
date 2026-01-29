@@ -1,6 +1,6 @@
 /// JibJab Token Types and Token structure
 
-enum TokenType {
+public enum TokenType {
     // Keywords
     case print      // ~>frob{7a3}
     case input      // ~>slurp{9f2}
@@ -65,14 +65,14 @@ enum TokenType {
     case eof
 }
 
-struct Token {
-    let type: TokenType
-    let value: Any?
-    let line: Int
-    let col: Int
-    let numericType: String?
+public struct Token {
+    public let type: TokenType
+    public let value: Any?
+    public let line: Int
+    public let col: Int
+    public let numericType: String?
 
-    init(type: TokenType, value: Any?, line: Int, col: Int, numericType: String? = nil) {
+    public init(type: TokenType, value: Any?, line: Int, col: Int, numericType: String? = nil) {
         self.type = type
         self.value = value
         self.line = line

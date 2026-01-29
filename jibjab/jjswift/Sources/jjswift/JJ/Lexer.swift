@@ -2,14 +2,14 @@
 /// Uses shared language definition from common/jj.json via JJConfig
 import Foundation
 
-class Lexer {
+public class Lexer {
     private let source: String
     private var pos: String.Index
     private var line: Int = 1
     private var col: Int = 1
     private var tokens: [Token] = []
 
-    init(source: String) {
+    public init(source: String) {
         self.source = source
         self.pos = source.startIndex
     }
@@ -62,7 +62,7 @@ class Lexer {
         tokens.append(Token(type: type, value: value, line: line, col: col, numericType: numericType))
     }
 
-    func tokenize() -> [Token] {
+    public func tokenize() -> [Token] {
         while pos < source.endIndex {
             scanToken()
         }

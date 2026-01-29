@@ -1,7 +1,8 @@
 /// JibJab Swift Transpiler - Converts JJ to Swift
 /// Uses shared config from common/jj.json
 
-class SwiftTranspiler {
+public class SwiftTranspiler {
+    public init() {}
     private var indentLevel = 0
     private let T = loadTarget("swift")
     private var doubleVars = Set<String>()
@@ -24,7 +25,7 @@ class SwiftTranspiler {
         return "Int"
     }
 
-    func transpile(_ program: Program) -> String {
+    public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
         for s in program.statements {
             lines.append(stmtToString(s))

@@ -27,7 +27,8 @@ struct DictInfo {
     let valueTypes: [TupleElemType]  // Type of each value
 }
 
-class AssemblyTranspiler {
+public class AssemblyTranspiler {
+    public init() {}
     private var asmLines: [String] = []
     private var strings: [(label: String, value: String, addNewline: Bool)] = []
     private var doubles: [(label: String, value: Double)] = []  // Float constants in data section
@@ -44,7 +45,7 @@ class AssemblyTranspiler {
     private var tuples: [String: TupleInfo] = [:]     // Track tuple variables
     private var dicts: [String: DictInfo] = [:]       // Track dictionary variables
 
-    func transpile(_ program: Program) -> String {
+    public func transpile(_ program: Program) -> String {
         asmLines = []
         strings = []
         doubles = []

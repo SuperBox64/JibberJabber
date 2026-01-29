@@ -1,11 +1,12 @@
 /// JibJab Python Transpiler - Converts JJ to Python
 /// Uses shared config from common/jj.json
 
-class PythonTranspiler {
+public class PythonTranspiler {
+    public init() {}
     private var indentLevel = 0
     private let T = loadTarget("py")
 
-    func transpile(_ program: Program) -> String {
+    public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
         for s in program.statements {
             lines.append(stmtToString(s))

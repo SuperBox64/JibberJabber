@@ -4,12 +4,14 @@ import Foundation
 
 private let OP = JJ.operators
 
-class Interpreter {
+public class Interpreter {
     private var globals: [String: Any] = [:]
     private var locals: [[String: Any]] = [[:]]
     private var functions: [String: FuncDef] = [:]
 
-    func run(_ program: Program) {
+    public init() {}
+
+    public func run(_ program: Program) {
         for stmt in program.statements {
             _ = execute(stmt)
         }
