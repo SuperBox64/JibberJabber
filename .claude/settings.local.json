@@ -200,7 +200,8 @@
       "Bash(wc:*)",
       "Bash(xcodebuild:*)",
       "Bash(printf:*)",
-      "mcp__xcf-server__list_projects"
+      "mcp__xcf-server__list_projects",
+      "Bash(git log:*)"
     ]
   }
 }
