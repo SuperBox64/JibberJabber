@@ -114,6 +114,7 @@
 			name = BattleScript;
 			packageProductDependencies = (
 				A90001 /* JJLib */,
+				A90021 /* SplitView */,
 			);
 			productName = BattleScript;
 			productReference = A30001 /* BattleScript.app */;
@@ -146,6 +147,7 @@
 			productRefGroup = A50003 /* Products */;
 			packageReferences = (
 				A90010 /* XCLocalSwiftPackageReference "../jibjab/jjswift" */,
+				A90020 /* XCRemoteSwiftPackageReference "SplitView" */,
 			);
 			projectDirPath = "";
 			projectRoot = "";
@@ -385,11 +387,27 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		A90020 /* XCRemoteSwiftPackageReference "SplitView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stevengharris/SplitView.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		A90001 /* JJLib */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A90010 /* XCLocalSwiftPackageReference "../jibjab/jjswift" */;
 			productName = JJLib;
+		};
+		A90021 /* SplitView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A90020 /* XCRemoteSwiftPackageReference "SplitView" */;
+			productName = SplitView;
 		};
 /* End XCSwiftPackageProductDependency section */
 
