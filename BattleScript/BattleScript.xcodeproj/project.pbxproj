@@ -15,6 +15,7 @@
 		A10006 /* SyntaxTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20006 /* SyntaxTheme.swift */; };
 		A10007 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20007 /* SyntaxHighlighter.swift */; };
 		A10008 /* HighlightedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20008 /* HighlightedTextView.swift */; };
+		A10009 /* ReverseTranspiler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20009 /* ReverseTranspiler.swift */; };
 		A10010 /* common in Resources */ = {isa = PBXBuildFile; fileRef = A20010 /* common */; };
 		A10011 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A20011 /* examples */; };
 /* End PBXBuildFile section */
@@ -28,6 +29,7 @@
 		A20006 /* SyntaxTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxTheme.swift; sourceTree = "<group>"; };
 		A20007 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		A20008 /* HighlightedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightedTextView.swift; sourceTree = "<group>"; };
+		A20009 /* ReverseTranspiler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReverseTranspiler.swift; sourceTree = "<group>"; };
 		A20010 /* common */ = {isa = PBXFileReference; lastKnownFileType = folder; name = common; path = ../jibjab/common; sourceTree = SOURCE_ROOT; };
 		A20011 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../jibjab/examples; sourceTree = SOURCE_ROOT; };
 		A20020 /* jjswift */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = jjswift; path = ../jibjab/jjswift; sourceTree = SOURCE_ROOT; };
@@ -67,6 +69,7 @@
 				A20006 /* SyntaxTheme.swift */,
 				A20007 /* SyntaxHighlighter.swift */,
 				A20008 /* HighlightedTextView.swift */,
+				A20009 /* ReverseTranspiler.swift */,
 			);
 			path = BattleScript;
 			sourceTree = "<group>";
@@ -171,6 +174,7 @@
 				A10006 /* SyntaxTheme.swift in Sources */,
 				A10007 /* SyntaxHighlighter.swift in Sources */,
 				A10008 /* HighlightedTextView.swift in Sources */,
+				A10009 /* ReverseTranspiler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

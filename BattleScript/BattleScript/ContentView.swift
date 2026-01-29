@@ -123,6 +123,14 @@ struct ContentView: View {
                     result = "No code to run for target: \(tab)"
                 } else {
                     result = JJEngine.compileAndRun(code, target: tab)
+                    // Reverse transpile back to JJ on successful run
+                    if !result.contains("error") && !result.contains("Error") && !result.contains("failed"),
+                       let reverser = ReverseTranspilerFactory.transpiler(for: tab),
+                       let jjCode = reverser.reverseTranspile(code) {
+                        DispatchQueue.main.async {
+                            sourceCode = jjCode
+                        }
+                    }
                 }
             }
             DispatchQueue.main.async {
