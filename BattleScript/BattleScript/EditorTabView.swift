@@ -30,6 +30,7 @@ struct CodeEditor: NSViewRepresentable {
         textView.textContainer?.widthTracksTextView = true
         textView.delegate = context.coordinator
         textView.string = text
+        context.coordinator.setTextView(textView)
 
         // Apply initial highlighting
         if let ts = textView.textStorage {
@@ -63,14 +64,30 @@ struct CodeEditor: NSViewRepresentable {
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: CodeEditor
         let highlighter = JJHighlighter()
+        private var appearanceObservation: NSKeyValueObservation?
+        private weak var observedTextView: NSTextView?
 
-        init(_ parent: CodeEditor) { self.parent = parent }
+        init(_ parent: CodeEditor) {
+            self.parent = parent
+            super.init()
+            appearanceObservation = NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in
+                DispatchQueue.main.async { self?.rehighlight() }
+            }
+        }
+
+        deinit { appearanceObservation?.invalidate() }
+
+        func setTextView(_ tv: NSTextView) { observedTextView = tv }
+
+        private func rehighlight() {
+            guard let tv = observedTextView, let ts = tv.textStorage else { return }
+            highlighter.highlight(ts)
+        }
 
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
 
-            // Apply syntax highlighting after text changes
             if let ts = textView.textStorage {
                 highlighter.highlight(ts)
             }
@@ -118,17 +135,6 @@ struct EditorTabView: View {
                     .buttonStyle(.plain)
                 }
                 Spacer()
-                Picker("", selection: $highlighterStyle) {
-                    ForEach(HighlighterStyle.allCases, id: \.rawValue) { style in
-                        Text(style.rawValue).tag(style.rawValue)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 130)
-                .onChange(of: highlighterStyle) { _, _ in
-                    refreshID = UUID()
-                }
-                .padding(.trailing, 4)
                 Button(action: onRun) {
                     Label("Run", systemImage: "play.fill")
                         .font(.system(.caption, design: .monospaced))
@@ -161,6 +167,30 @@ struct EditorTabView: View {
                 }
             }
             .id(refreshID)
+
+            // Bottom bar with style picker
+            HStack {
+                Spacer()
+                ForEach(HighlighterStyle.allCases, id: \.rawValue) { style in
+                    Button(action: {
+                        highlighterStyle = style.rawValue
+                        refreshID = UUID()
+                    }) {
+                        Text(style.rawValue)
+                            .font(.system(.caption, design: .monospaced))
+                            .fontWeight(highlighterStyle == style.rawValue ? .bold : .regular)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(highlighterStyle == style.rawValue ? Color.purple.opacity(0.2) : Color.clear)
+                            .foregroundColor(highlighterStyle == style.rawValue ? .purple : .secondary)
+                            .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.trailing, 4)
+            }
+            .padding(.vertical, 2)
+            .background(Color(nsColor: .controlBackgroundColor))
         }
     }
 }

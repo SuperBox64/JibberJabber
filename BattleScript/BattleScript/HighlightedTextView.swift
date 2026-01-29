@@ -31,6 +31,7 @@ struct HighlightedTextView: NSViewRepresentable {
         textView.textContainerInset = NSSize(width: 4, height: 4)
         textView.delegate = context.coordinator
         textView.string = text
+        context.coordinator.setTextView(textView)
 
         if let ts = textView.textStorage {
             context.coordinator.applyHighlighting(ts)
@@ -68,11 +69,26 @@ struct HighlightedTextView: NSViewRepresentable {
         var parent: HighlightedTextView
         private var currentLanguage: String
         private var highlighter: SyntaxHighlighting?
+        private var appearanceObservation: NSKeyValueObservation?
+        private weak var observedTextView: NSTextView?
 
         init(_ parent: HighlightedTextView) {
             self.parent = parent
             self.currentLanguage = parent.language
             self.highlighter = SyntaxHighlighterFactory.highlighter(for: parent.language)
+            super.init()
+            appearanceObservation = NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in
+                DispatchQueue.main.async { self?.rehighlight() }
+            }
+        }
+
+        deinit { appearanceObservation?.invalidate() }
+
+        func setTextView(_ tv: NSTextView) { observedTextView = tv }
+
+        private func rehighlight() {
+            guard let tv = observedTextView, let ts = tv.textStorage else { return }
+            applyHighlighting(ts)
         }
 
         func updateLanguage(_ language: String) {
