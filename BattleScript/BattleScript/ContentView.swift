@@ -1,78 +1,6 @@
 import SwiftUI
 import JJLib
 
-/// Finds and configures NSSplitView from within the view hierarchy
-struct SplitViewConfigurator: NSViewRepresentable {
-    let sidebarWidth: Double
-    let editorHeight: Double
-    let onSidebarResize: (Double) -> Void
-    let onEditorResize: (Double) -> Void
-
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async {
-            context.coordinator.findAndConfigure(from: view)
-        }
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    class Coordinator: NSObject, NSSplitViewDelegate {
-        let parent: SplitViewConfigurator
-        private weak var hSplit: NSSplitView?
-        private weak var vSplit: NSSplitView?
-
-        init(_ parent: SplitViewConfigurator) {
-            self.parent = parent
-        }
-
-        func findAndConfigure(from view: NSView) {
-            // Walk up to find the HSplitView (outermost)
-            var splits: [NSSplitView] = []
-            var current: NSView? = view
-            while let next = current?.superview {
-                if let sv = next as? NSSplitView {
-                    splits.append(sv)
-                }
-                current = next
-            }
-
-            // outermost = HSplitView, inner = VSplitView
-            for sv in splits {
-                if sv.isVertical {
-                    hSplit = sv
-                    sv.delegate = self
-                    if parent.sidebarWidth > 0 {
-                        sv.setPosition(parent.sidebarWidth, ofDividerAt: 0)
-                    }
-                } else {
-                    vSplit = sv
-                    sv.delegate = self
-                    if parent.editorHeight > 0 {
-                        sv.setPosition(parent.editorHeight, ofDividerAt: 0)
-                    }
-                }
-            }
-        }
-
-        func splitViewDidResizeSubviews(_ notification: Notification) {
-            guard let sv = notification.object as? NSSplitView else { return }
-            if sv === hSplit, sv.subviews.count > 0 {
-                let w = sv.subviews[0].frame.width
-                if w > 0 { parent.onSidebarResize(w) }
-            } else if sv === vSplit, sv.subviews.count > 0 {
-                let h = sv.subviews[0].frame.height
-                if h > 0 { parent.onEditorResize(h) }
-            }
-        }
-    }
-}
-
 struct ContentView: View {
     @State private var sourceCode = ""
     @State private var selectedExample = ""
@@ -80,8 +8,6 @@ struct ContentView: View {
     @State private var transpiledOutputs: [String: String] = [:]
     @State private var runOutput = ""
     @State private var isRunning = false
-    @AppStorage("sidebarWidth") private var sidebarWidth: Double = 180
-    @AppStorage("editorHeight") private var editorHeight: Double = 400
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -101,14 +27,6 @@ struct ContentView: View {
         HSplitView {
             // Left sidebar - example selector
             VStack(alignment: .leading, spacing: 0) {
-                SplitViewConfigurator(
-                    sidebarWidth: sidebarWidth,
-                    editorHeight: editorHeight,
-                    onSidebarResize: { sidebarWidth = $0 },
-                    onEditorResize: { editorHeight = $0 }
-                )
-                .frame(width: 0, height: 0)
-
                 Text("Examples")
                     .font(.headline)
                     .padding(.horizontal, 12)
@@ -123,7 +41,7 @@ struct ContentView: View {
                     loadExample(newValue)
                 }
             }
-            .frame(minWidth: 120, maxWidth: 300)
+            .frame(minWidth: 150, idealWidth: 180, maxWidth: 220)
 
             // Main content
             VSplitView {
