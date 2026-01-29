@@ -169,7 +169,7 @@ struct EditorTabView: View {
             .id(refreshID)
 
             // Bottom bar with style picker
-            HStack {
+            HStack(spacing: 0) {
                 Spacer()
                 ForEach(HighlighterStyle.allCases, id: \.rawValue) { style in
                     Button(action: {
@@ -179,8 +179,8 @@ struct EditorTabView: View {
                         Text(style.rawValue)
                             .font(.system(.caption, design: .monospaced))
                             .fontWeight(highlighterStyle == style.rawValue ? .bold : .regular)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
                             .background(highlighterStyle == style.rawValue ? Color.purple.opacity(0.2) : Color.clear)
                             .foregroundColor(highlighterStyle == style.rawValue ? .purple : .secondary)
                             .cornerRadius(4)

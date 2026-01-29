@@ -2,7 +2,7 @@ import AppKit
 
 enum HighlighterStyle: String, CaseIterable {
     case xcode = "Xcode"
-    case vscode = "VS Code"
+    case vscode = "VSCode"
 }
 
 struct SyntaxTheme {
