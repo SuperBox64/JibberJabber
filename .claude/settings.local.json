@@ -210,7 +210,10 @@
       "WebFetch(domain:www.objc.io)",
       "WebFetch(domain:medium.com)",
       "WebFetch(domain:smittytone.net)",
-      "WebFetch(domain:www.programiz.com)"
+      "WebFetch(domain:www.programiz.com)",
+      "Bash(pkill:*)",
+      "mcp__xcf-server__select_project",
+      "mcp__xcf-server__run_project"
     ]
   }
 }
