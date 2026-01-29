@@ -18,6 +18,7 @@
 		A10009 /* ReverseTranspiler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20009 /* ReverseTranspiler.swift */; };
 		A10010 /* common in Resources */ = {isa = PBXBuildFile; fileRef = A20010 /* common */; };
 		A10011 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A20011 /* examples */; };
+		A1000A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000A /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		A20010 /* common */ = {isa = PBXFileReference; lastKnownFileType = folder; name = common; path = ../jibjab/common; sourceTree = SOURCE_ROOT; };
 		A20011 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../jibjab/examples; sourceTree = SOURCE_ROOT; };
 		A20020 /* jjswift */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = jjswift; path = ../jibjab/jjswift; sourceTree = SOURCE_ROOT; };
+		A2000A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A30001 /* BattleScript.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BattleScript.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -70,6 +72,7 @@
 				A20007 /* SyntaxHighlighter.swift */,
 				A20008 /* HighlightedTextView.swift */,
 				A20009 /* ReverseTranspiler.swift */,
+				A2000A /* Assets.xcassets */,
 			);
 			path = BattleScript;
 			sourceTree = "<group>";
@@ -156,6 +159,7 @@
 			files = (
 				A10010 /* common in Resources */,
 				A10011 /* examples in Resources */,
+				A1000A /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -298,6 +302,7 @@
 		B20001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -323,6 +328,7 @@
 		B20002 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
