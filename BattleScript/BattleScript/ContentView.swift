@@ -58,9 +58,11 @@ struct ContentView: View {
                     loadExample(newValue)
                 }
             }
-            .frame(minWidth: 120, idealWidth: sidebarWidth, maxWidth: 300)
+            .frame(width: sidebarWidth)
             .background(SizeReader { size in
-                if size.width > 0 { sidebarWidth = size.width }
+                if size.width > 0 && abs(size.width - sidebarWidth) > 1 {
+                    sidebarWidth = size.width
+                }
             })
 
             // Main content
@@ -73,9 +75,11 @@ struct ContentView: View {
                     transpiledOutputs: $transpiledOutputs,
                     onRun: runCurrentTab
                 )
-                .frame(minHeight: 150, idealHeight: editorHeight)
+                .frame(height: editorHeight)
                 .background(SizeReader { size in
-                    if size.height > 0 { editorHeight = size.height }
+                    if size.height > 0 && abs(size.height - editorHeight) > 1 {
+                        editorHeight = size.height
+                    }
                 })
 
                 // Bottom: output pane
