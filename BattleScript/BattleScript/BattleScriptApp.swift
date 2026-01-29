@@ -6,6 +6,7 @@ struct BattleScriptApp: App {
     @AppStorage("showLineNumbers") private var showLineNumbers = true
 
     init() {
+        UserDefaults.standard.register(defaults: ["showLineNumbers": true])
         JJEnv.basePath = Bundle.main.resourcePath! + "/common"
     }
 

@@ -4,7 +4,6 @@ import AppKit
 struct HighlightedTextView: NSViewRepresentable {
     @Binding var text: String
     let language: String
-    let showLineNumbers: Bool
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -44,31 +43,19 @@ struct HighlightedTextView: NSViewRepresentable {
         scrollView.documentView = textView
         scrollView.drawsBackground = false
 
-        if showLineNumbers {
-            let ruler = LineNumberRulerView(textView: textView)
-            scrollView.verticalRulerView = ruler
-            scrollView.hasVerticalRuler = true
-            scrollView.rulersVisible = true
-        }
+        let ruler = LineNumberRulerView(textView: textView)
+        scrollView.verticalRulerView = ruler
+        scrollView.hasVerticalRuler = true
+        scrollView.rulersVisible = UserDefaults.standard.bool(forKey: "showLineNumbers")
 
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
-
-        // Toggle line number ruler
-        if showLineNumbers {
-            if scrollView.verticalRulerView == nil {
-                let ruler = LineNumberRulerView(textView: textView)
-                scrollView.verticalRulerView = ruler
-                scrollView.hasVerticalRuler = true
-            }
-            scrollView.rulersVisible = true
-            scrollView.verticalRulerView?.needsDisplay = true
-        } else {
-            scrollView.rulersVisible = false
-        }
+        let show = UserDefaults.standard.bool(forKey: "showLineNumbers")
+        scrollView.rulersVisible = show
+        scrollView.verticalRulerView?.needsDisplay = true
 
         // Update language if tab changed
         context.coordinator.updateLanguage(language)

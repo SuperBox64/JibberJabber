@@ -4,7 +4,6 @@ import AppKit
 /// NSViewRepresentable wrapping NSTextView with smart quotes disabled and JJ syntax highlighting
 struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
-    let showLineNumbers: Bool
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -44,31 +43,19 @@ struct CodeEditor: NSViewRepresentable {
         scrollView.documentView = textView
         scrollView.drawsBackground = false
 
-        if showLineNumbers {
-            let ruler = LineNumberRulerView(textView: textView)
-            scrollView.verticalRulerView = ruler
-            scrollView.hasVerticalRuler = true
-            scrollView.rulersVisible = true
-        }
+        let ruler = LineNumberRulerView(textView: textView)
+        scrollView.verticalRulerView = ruler
+        scrollView.hasVerticalRuler = true
+        scrollView.rulersVisible = UserDefaults.standard.bool(forKey: "showLineNumbers")
 
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
-
-        // Toggle line number ruler
-        if showLineNumbers {
-            if scrollView.verticalRulerView == nil {
-                let ruler = LineNumberRulerView(textView: textView)
-                scrollView.verticalRulerView = ruler
-                scrollView.hasVerticalRuler = true
-            }
-            scrollView.rulersVisible = true
-            scrollView.verticalRulerView?.needsDisplay = true
-        } else {
-            scrollView.rulersVisible = false
-        }
+        let show = UserDefaults.standard.bool(forKey: "showLineNumbers")
+        scrollView.rulersVisible = show
+        scrollView.verticalRulerView?.needsDisplay = true
         if textView.string != text {
             let sel = textView.selectedRange()
             textView.string = text
@@ -124,7 +111,6 @@ struct EditorTabView: View {
     @Binding var transpiledOutputs: [String: String]
     let onRun: () -> Void
     @AppStorage("highlighterStyle") private var highlighterStyle = "Xcode"
-    @AppStorage("showLineNumbers") private var showLineNumbers = true
     @State private var refreshID = UUID()
 
     private let tabColors: [String: Color] = [
@@ -179,15 +165,14 @@ struct EditorTabView: View {
             // Content area
             Group {
                 if selectedTab == "jj" {
-                    CodeEditor(text: $sourceCode, showLineNumbers: showLineNumbers)
+                    CodeEditor(text: $sourceCode)
                 } else {
                     HighlightedTextView(
                         text: Binding(
                             get: { transpiledOutputs[selectedTab] ?? "// No output" },
                             set: { transpiledOutputs[selectedTab] = $0 }
                         ),
-                        language: selectedTab,
-                        showLineNumbers: showLineNumbers
+                        language: selectedTab
                     )
                 }
             }
