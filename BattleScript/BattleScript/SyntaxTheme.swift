@@ -1,8 +1,37 @@
 import AppKit
 
+enum HighlighterStyle: String, CaseIterable {
+    case xcode = "Xcode"
+    case vscode = "VS Code"
+}
+
 struct SyntaxTheme {
     static let font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
     static let boldFont = NSFont.monospacedSystemFont(ofSize: 13, weight: .bold)
+    static let italicFont: NSFont = {
+        NSFontManager.shared.convert(
+            NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
+            toHaveTrait: .italicFontMask
+        )
+    }()
+
+    static var currentStyle: HighlighterStyle {
+        HighlighterStyle(rawValue: UserDefaults.standard.string(forKey: "highlighterStyle") ?? "") ?? .xcode
+    }
+
+    // Style-aware fonts
+    static var keywordFont: NSFont {
+        currentStyle == .xcode ? boldFont : font
+    }
+    static var typeFont: NSFont {
+        currentStyle == .xcode ? boldFont : font
+    }
+    static var attributeFont: NSFont {
+        currentStyle == .xcode ? boldFont : font
+    }
+    static var commentFont: NSFont {
+        currentStyle == .vscode ? italicFont : font
+    }
 
     private static var isDark: Bool {
         NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua

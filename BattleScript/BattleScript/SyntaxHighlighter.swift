@@ -81,7 +81,7 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
         if let attrRegex = attributePattern {
             attrRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
                 if let r = match?.range {
-                    textStorage.addAttribute(.foregroundColor, value: SyntaxTheme.attribute, range: r)
+                    textStorage.addAttributes([.foregroundColor: SyntaxTheme.attribute, .font: SyntaxTheme.attributeFont], range: r)
                 }
             }
         }
@@ -113,7 +113,7 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
             guard let r = match?.range else { return }
             let word = text.substring(with: r)
             if kwSet.contains(word) {
-                ts.addAttribute(.foregroundColor, value: keywordColor, range: r)
+                ts.addAttributes([.foregroundColor: keywordColor, .font: SyntaxTheme.keywordFont], range: r)
             }
         }
     }
@@ -126,7 +126,7 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
             guard let r = match?.range else { return }
             let word = text.substring(with: r)
             if tSet.contains(word) {
-                ts.addAttribute(.foregroundColor, value: SyntaxTheme.type, range: r)
+                ts.addAttributes([.foregroundColor: SyntaxTheme.type, .font: SyntaxTheme.typeFont], range: r)
             }
         }
     }
@@ -192,7 +192,7 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
             if let regex = try? NSRegularExpression(pattern: "\(escaped1)[\\s\\S]*?\(escaped2)", options: .dotMatchesLineSeparators) {
                 regex.enumerateMatches(in: text, range: range) { match, _, _ in
                     if let r = match?.range {
-                        ts.addAttribute(.foregroundColor, value: SyntaxTheme.comment, range: r)
+                        ts.addAttributes([.foregroundColor: SyntaxTheme.comment, .font: SyntaxTheme.commentFont], range: r)
                     }
                 }
             }
@@ -203,7 +203,7 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
             if let regex = try? NSRegularExpression(pattern: "\(escaped).*$", options: .anchorsMatchLines) {
                 regex.enumerateMatches(in: text, range: range) { match, _, _ in
                     if let r = match?.range {
-                        ts.addAttribute(.foregroundColor, value: SyntaxTheme.comment, range: r)
+                        ts.addAttributes([.foregroundColor: SyntaxTheme.comment, .font: SyntaxTheme.commentFont], range: r)
                     }
                 }
             }
@@ -242,7 +242,7 @@ class JJHighlighter: SyntaxHighlighting {
         // Block structures (orange)
         Self.blockRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             if let r = match?.range {
-                textStorage.addAttribute(.foregroundColor, value: SyntaxTheme.block, range: r)
+                textStorage.addAttributes([.foregroundColor: SyntaxTheme.block, .font: SyntaxTheme.keywordFont], range: r)
             }
         }
 
@@ -263,7 +263,7 @@ class JJHighlighter: SyntaxHighlighting {
         // Keywords (purple)
         Self.keywordRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             if let r = match?.range {
-                textStorage.addAttribute(.foregroundColor, value: SyntaxTheme.keyword, range: r)
+                textStorage.addAttributes([.foregroundColor: SyntaxTheme.keyword, .font: SyntaxTheme.keywordFont], range: r)
             }
         }
 
@@ -298,7 +298,7 @@ class JJHighlighter: SyntaxHighlighting {
         // Comments (gray) - override everything
         Self.commentRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             if let r = match?.range {
-                textStorage.addAttribute(.foregroundColor, value: SyntaxTheme.comment, range: r)
+                textStorage.addAttributes([.foregroundColor: SyntaxTheme.comment, .font: SyntaxTheme.commentFont], range: r)
             }
         }
     }
@@ -605,7 +605,7 @@ class AsmHighlighter: SyntaxHighlighting {
         // Instructions
         Self.instructionRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             if let r = match?.range {
-                textStorage.addAttribute(.foregroundColor, value: SyntaxTheme.keyword, range: r)
+                textStorage.addAttributes([.foregroundColor: SyntaxTheme.keyword, .font: SyntaxTheme.keywordFont], range: r)
             }
         }
 
@@ -619,7 +619,7 @@ class AsmHighlighter: SyntaxHighlighting {
         // Labels
         Self.labelRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             if let r = match?.range {
-                textStorage.addAttribute(.foregroundColor, value: SyntaxTheme.type, range: r)
+                textStorage.addAttributes([.foregroundColor: SyntaxTheme.type, .font: SyntaxTheme.typeFont], range: r)
             }
         }
 
@@ -640,7 +640,7 @@ class AsmHighlighter: SyntaxHighlighting {
         // Comments (last)
         Self.commentRegex.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             if let r = match?.range {
-                textStorage.addAttribute(.foregroundColor, value: SyntaxTheme.comment, range: r)
+                textStorage.addAttributes([.foregroundColor: SyntaxTheme.comment, .font: SyntaxTheme.commentFont], range: r)
             }
         }
     }

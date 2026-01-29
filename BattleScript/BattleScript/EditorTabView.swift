@@ -84,6 +84,8 @@ struct EditorTabView: View {
     @Binding var sourceCode: String
     @Binding var transpiledOutputs: [String: String]
     let onRun: () -> Void
+    @AppStorage("highlighterStyle") private var highlighterStyle = "Xcode"
+    @State private var refreshID = UUID()
 
     private let tabColors: [String: Color] = [
         "jj": .purple,
@@ -116,6 +118,17 @@ struct EditorTabView: View {
                     .buttonStyle(.plain)
                 }
                 Spacer()
+                Picker("", selection: $highlighterStyle) {
+                    ForEach(HighlighterStyle.allCases, id: \.rawValue) { style in
+                        Text(style.rawValue).tag(style.rawValue)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 130)
+                .onChange(of: highlighterStyle) { _, _ in
+                    refreshID = UUID()
+                }
+                .padding(.trailing, 4)
                 Button(action: onRun) {
                     Label("Run", systemImage: "play.fill")
                         .font(.system(.caption, design: .monospaced))
@@ -134,17 +147,20 @@ struct EditorTabView: View {
             Divider()
 
             // Content area
-            if selectedTab == "jj" {
-                CodeEditor(text: $sourceCode)
-            } else {
-                HighlightedTextView(
-                    text: Binding(
-                        get: { transpiledOutputs[selectedTab] ?? "// No output" },
-                        set: { transpiledOutputs[selectedTab] = $0 }
-                    ),
-                    language: selectedTab
-                )
+            Group {
+                if selectedTab == "jj" {
+                    CodeEditor(text: $sourceCode)
+                } else {
+                    HighlightedTextView(
+                        text: Binding(
+                            get: { transpiledOutputs[selectedTab] ?? "// No output" },
+                            set: { transpiledOutputs[selectedTab] = $0 }
+                        ),
+                        language: selectedTab
+                    )
+                }
             }
+            .id(refreshID)
         }
     }
 }
