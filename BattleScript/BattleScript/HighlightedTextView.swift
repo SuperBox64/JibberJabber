@@ -29,7 +29,6 @@ struct HighlightedTextView: NSViewRepresentable {
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
         textView.textContainer?.widthTracksTextView = true
-        textView.textContainerInset = NSSize(width: 4, height: 4)
         textView.delegate = context.coordinator
         textView.string = text
         context.coordinator.setTextView(textView)
