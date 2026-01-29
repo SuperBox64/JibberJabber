@@ -12,6 +12,9 @@
 		A10003 /* JJEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20003 /* JJEngine.swift */; };
 		A10004 /* EditorTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20004 /* EditorTabView.swift */; };
 		A10005 /* OutputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20005 /* OutputView.swift */; };
+		A10006 /* SyntaxTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20006 /* SyntaxTheme.swift */; };
+		A10007 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20007 /* SyntaxHighlighter.swift */; };
+		A10008 /* HighlightedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20008 /* HighlightedTextView.swift */; };
 		A10010 /* common in Resources */ = {isa = PBXBuildFile; fileRef = A20010 /* common */; };
 		A10011 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A20011 /* examples */; };
 /* End PBXBuildFile section */
@@ -22,6 +25,9 @@
 		A20003 /* JJEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JJEngine.swift; sourceTree = "<group>"; };
 		A20004 /* EditorTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorTabView.swift; sourceTree = "<group>"; };
 		A20005 /* OutputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputView.swift; sourceTree = "<group>"; };
+		A20006 /* SyntaxTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxTheme.swift; sourceTree = "<group>"; };
+		A20007 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
+		A20008 /* HighlightedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightedTextView.swift; sourceTree = "<group>"; };
 		A20010 /* common */ = {isa = PBXFileReference; lastKnownFileType = folder; name = common; path = ../jibjab/common; sourceTree = SOURCE_ROOT; };
 		A20011 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../jibjab/examples; sourceTree = SOURCE_ROOT; };
 		A20020 /* jjswift */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = jjswift; path = ../jibjab/jjswift; sourceTree = SOURCE_ROOT; };
@@ -58,6 +64,9 @@
 				A20003 /* JJEngine.swift */,
 				A20004 /* EditorTabView.swift */,
 				A20005 /* OutputView.swift */,
+				A20006 /* SyntaxTheme.swift */,
+				A20007 /* SyntaxHighlighter.swift */,
+				A20008 /* HighlightedTextView.swift */,
 			);
 			path = BattleScript;
 			sourceTree = "<group>";
@@ -159,6 +168,9 @@
 				A10003 /* JJEngine.swift in Sources */,
 				A10004 /* EditorTabView.swift in Sources */,
 				A10005 /* OutputView.swift in Sources */,
+				A10006 /* SyntaxTheme.swift in Sources */,
+				A10007 /* SyntaxHighlighter.swift in Sources */,
+				A10008 /* HighlightedTextView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-/// NSViewRepresentable wrapping NSTextView with smart quotes disabled
+/// NSViewRepresentable wrapping NSTextView with smart quotes disabled and JJ syntax highlighting
 struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
 
@@ -17,7 +17,7 @@ struct CodeEditor: NSViewRepresentable {
         textView.isGrammarCheckingEnabled = false
         textView.isAutomaticLinkDetectionEnabled = false
         textView.isAutomaticDataDetectionEnabled = false
-        textView.font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+        textView.font = SyntaxTheme.font
         textView.textColor = .textColor
         textView.backgroundColor = .textBackgroundColor
         textView.isEditable = true
@@ -30,6 +30,11 @@ struct CodeEditor: NSViewRepresentable {
         textView.textContainer?.widthTracksTextView = true
         textView.delegate = context.coordinator
         textView.string = text
+
+        // Apply initial highlighting
+        if let ts = textView.textStorage {
+            context.coordinator.highlighter.highlight(ts)
+        }
 
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
@@ -44,17 +49,31 @@ struct CodeEditor: NSViewRepresentable {
         if textView.string != text {
             let sel = textView.selectedRange()
             textView.string = text
-            textView.setSelectedRange(sel)
+            if let ts = textView.textStorage {
+                context.coordinator.highlighter.highlight(ts)
+            }
+            let safeSel = NSRange(
+                location: min(sel.location, textView.string.count),
+                length: 0
+            )
+            textView.setSelectedRange(safeSel)
         }
     }
 
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: CodeEditor
+        let highlighter = JJHighlighter()
+
         init(_ parent: CodeEditor) { self.parent = parent }
 
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
+
+            // Apply syntax highlighting after text changes
+            if let ts = textView.textStorage {
+                highlighter.highlight(ts)
+            }
         }
     }
 }
@@ -118,15 +137,10 @@ struct EditorTabView: View {
             if selectedTab == "jj" {
                 CodeEditor(text: $sourceCode)
             } else {
-                ScrollView {
-                    Text(transpiledOutputs[selectedTab] ?? "// No output")
-                        .font(.system(.body, design: .monospaced))
-                        .foregroundColor(tabColors[selectedTab] ?? .primary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(8)
-                        .textSelection(.enabled)
-                }
-                .background(Color(nsColor: .textBackgroundColor))
+                HighlightedTextView(
+                    text: transpiledOutputs[selectedTab] ?? "// No output",
+                    language: selectedTab
+                )
             }
         }
     }
