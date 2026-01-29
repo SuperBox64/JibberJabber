@@ -13,12 +13,12 @@
   <line x1="894" y1="120" x2="634" y2="280" stroke="#A064FF" stroke-width="24" stroke-linecap="round"/>
   <circle cx="894" cy="120" r="12" fill="#A064FF"/>
 
-  <!-- </> code symbol -->
-  <text x="512" y="420" font-family="Menlo, monospace" font-size="310" fill="#64C8FF" text-anchor="middle" dominant-baseline="central">&lt;/&gt;</text>
+  <!-- </> code symbol - bold -->
+  <text x="512" y="420" font-family="Menlo, monospace" font-size="310" fill="#64C8FF" text-anchor="middle" dominant-baseline="central" font-weight="bold" stroke="#64C8FF" stroke-width="6">&lt;/&gt;</text>
 
-  <!-- JJ badge - purple rounded rectangle -->
-  <rect x="302" y="800" width="420" height="150" rx="30" ry="30" fill="#8C5AC8"/>
+  <!-- JJ pill badge - deeper purple -->
+  <rect x="87" y="620" width="850" height="290" rx="145" ry="145" fill="#6432AA"/>
 
   <!-- JJ text - bold with letter spacing -->
-  <text x="512" y="890" font-family="Helvetica, Arial, sans-serif" font-size="130" fill="white" text-anchor="middle" dominant-baseline="central" font-weight="bold" letter-spacing="20">JJ</text>
+  <text x="512" y="778" font-family="Helvetica, Arial, sans-serif" font-size="264" fill="white" text-anchor="middle" dominant-baseline="central" font-weight="bold" letter-spacing="40">JJ</text>
 </svg>
