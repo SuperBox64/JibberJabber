@@ -54,10 +54,11 @@ struct ContentView: View {
                     onRun: runCurrentTab
                 )
                 .frame(minHeight: 150)
+                .layoutPriority(1)
 
-                // Bottom: output pane
+                // Bottom: output pane (absorbs window resize)
                 OutputView(output: runOutput, isRunning: isRunning)
-                    .frame(minHeight: 80)
+                    .frame(minHeight: 80, maxHeight: .infinity)
             }
         }
         .frame(minWidth: 900, minHeight: 600)
