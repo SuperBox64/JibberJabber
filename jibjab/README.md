@@ -100,6 +100,23 @@ jibjab/
 
 ---
 
+## Installing External Dependencies
+
+Some transpile targets require external tools beyond Xcode Command Line Tools:
+
+```bash
+# Xcode Command Line Tools (C, C++, Swift, Assembly, ObjC, ObjC++)
+xcode-select --install
+
+# QuickJS - JavaScript runtime and compiler (for JS target)
+brew install quickjs
+
+# Go - Go compiler (for Go target)
+brew install go
+```
+
+---
+
 ## Quick Start
 
 ### Using Swift (`jjswift`)
@@ -439,6 +456,13 @@ swift run jjswift transpile ../examples/fibonacci.jj swift > fib.swift && swiftc
 ```bash
 brew install quickjs  # one time
 swift run jjswift transpile ../examples/fibonacci.jj js > fib.js && qjsc -o fib_qjs fib.js && ./fib_qjs
+```
+
+### Go
+
+```bash
+brew install go  # one time
+swift run jjswift transpile ../examples/fibonacci.jj go > fib.go && go build -o fib_go fib.go && ./fib_go
 ```
 
 ### AppleScript (osacompile)

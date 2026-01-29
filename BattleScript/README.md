@@ -20,18 +20,49 @@ A native macOS IDE for the JibJab programming language. Write JJ code and instan
 - Xcode 16.0+ (to build)
 - Swift 5.9+
 
-### Optional (for running transpiled targets)
+### Installing Dependencies
 
-| Target | Requirement |
-|--------|-------------|
-| Python | `python3` (pre-installed on macOS) |
-| JavaScript | `qjsc` / `qjs` (`brew install quickjs`) |
-| C / C++ | `clang` / `clang++` (Xcode Command Line Tools) |
-| Swift | `swiftc` (Xcode Command Line Tools) |
-| Objective-C / C++ | `clang` + Foundation framework |
-| Go | `go` (`brew install go`) |
-| ARM64 Assembly | `as` + `ld` (Xcode Command Line Tools) |
-| AppleScript | `osacompile` / `osascript` (pre-installed on macOS) |
+BattleScript can transpile and run code in 10 target languages. Some targets require external tools.
+
+#### Required
+
+```bash
+# Xcode Command Line Tools (provides clang, swiftc, as, ld)
+xcode-select --install
+```
+
+#### QuickJS (for JavaScript target)
+
+[QuickJS](https://bellard.org/quickjs/) is a small, embeddable JavaScript engine used to compile and run transpiled JavaScript code.
+
+```bash
+brew install quickjs
+```
+
+This installs `qjs` (interpreter) and `qjsc` (compiler) to `/opt/homebrew/bin/`.
+
+#### Go (for Go target)
+
+[Go](https://go.dev) is used to compile and run transpiled Go code.
+
+```bash
+brew install go
+```
+
+This installs the `go` toolchain to `/opt/homebrew/bin/`.
+
+#### Dependency Summary
+
+| Target | Tool | Install |
+|--------|------|---------|
+| Python | `python3` | Pre-installed on macOS |
+| JavaScript | `qjs` / `qjsc` | `brew install quickjs` |
+| C / C++ | `clang` / `clang++` | `xcode-select --install` |
+| Swift | `swiftc` | `xcode-select --install` |
+| Objective-C / C++ | `clang` + Foundation | `xcode-select --install` |
+| Go | `go` | `brew install go` |
+| ARM64 Assembly | `as` + `ld` | `xcode-select --install` |
+| AppleScript | `osascript` | Pre-installed on macOS |
 
 ---
 

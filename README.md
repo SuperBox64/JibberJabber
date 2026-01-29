@@ -64,8 +64,8 @@ Write once, run anywhere. JibJab includes a **true native compiler** that genera
 
 - **Swift implementation**: macOS 13+, Swift 5.9+
 - **Python implementation**: Python 3.8+
-- **For C compilation**: `clang` or `gcc`
-- **For Assembly**: macOS ARM64 (Apple Silicon)
+- **For C/C++/ObjC/ObjC++ compilation**: `clang` (Xcode Command Line Tools)
+- **For Assembly / Native compilation**: macOS ARM64 (Apple Silicon)
 
 ### Installation
 
@@ -73,6 +73,31 @@ Write once, run anywhere. JibJab includes a **true native compiler** that genera
 git clone https://github.com/user/JibberJabber.git
 cd JibberJabber/jibjab
 ```
+
+### Installing External Dependencies
+
+Some transpile targets require external tools. Install them via [Homebrew](https://brew.sh):
+
+```bash
+# Xcode Command Line Tools (C, C++, Swift, Assembly, ObjC, ObjC++)
+xcode-select --install
+
+# QuickJS - JavaScript runtime and compiler
+brew install quickjs
+
+# Go - Go compiler
+brew install go
+```
+
+| Tool | Used For | Install |
+|------|----------|---------|
+| `clang` / `clang++` | C, C++, ObjC, ObjC++ | `xcode-select --install` |
+| `swiftc` | Swift | `xcode-select --install` |
+| `as` + `ld` | ARM64 Assembly | `xcode-select --install` |
+| `python3` | Python | Pre-installed on macOS |
+| `osascript` | AppleScript | Pre-installed on macOS |
+| `qjs` / `qjsc` | JavaScript (QuickJS) | `brew install quickjs` |
+| `go` | Go | `brew install go` |
 
 ---
 
@@ -417,7 +442,13 @@ JibberJabber/
 │   │   ├── hello.jj
 │   │   ├── variables.jj
 │   │   ├── fibonacci.jj
-│   │   └── fizzbuzz.jj
+│   │   ├── fizzbuzz.jj
+│   │   ├── arrays.jj
+│   │   ├── comparisons.jj
+│   │   ├── dictionaries.jj
+│   │   ├── enums.jj
+│   │   ├── numbers.jj
+│   │   └── tuples.jj
 │   │
 │   ├── README.md                # Detailed docs
 │   └── SPEC.md                  # Language specification
@@ -519,7 +550,7 @@ flowchart TD
 
 Contributions welcome:
 - New transpiler targets (Rust, Linux ARM64)
-- Language features (arrays, objects, imports)
+- Language features (objects, imports)
 - IDE syntax highlighting
 
 ---
