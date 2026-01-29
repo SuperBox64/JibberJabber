@@ -89,9 +89,13 @@ if [ "$DOGRID" -eq 1 ]; then
         [ "$v" = "P" ] && echo -n "✅" || echo -n "❌"
     }
 
-    # Columns: run, compile, asm, py, js, c, cpp, swift, objc, objcpp
-    HDR="              run  comp asm  py   js   c    cpp  swft objc ocpp go  "
-    SEP="              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----"
+    if [ -n "$FILTER" ]; then
+        HDR="              $FILTER"
+        SEP="              ----"
+    else
+        HDR="              run  comp asm  py   js   c    cpp  swft objc ocpp go  "
+        SEP="              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----"
+    fi
 
     {
     for impl in jjpy jjswift; do
@@ -101,10 +105,13 @@ if [ "$DOGRID" -eq 1 ]; then
         for ex in numbers fizzbuzz fibonacci variables enums dictionaries tuples arrays comparisons hello; do
             pad="$(printf '%-13s' "$ex")"
             row="$pad"
-            for m in run compile asm; do
-                row="$row $(sym "${impl}_${ex}_${m}")  "
-            done
+            if [ -z "$FILTER" ]; then
+                for m in run compile asm; do
+                    row="$row $(sym "${impl}_${ex}_${m}")  "
+                done
+            fi
             for tgt in py js c cpp swift objc objcpp go; do
+                [ -n "$FILTER" ] && [ "$tgt" != "$FILTER" ] && continue
                 row="$row $(sym "${impl}_${ex}_exec_${tgt}")  "
             done
             echo "$row"
