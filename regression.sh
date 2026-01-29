@@ -85,17 +85,16 @@ echo "TOTAL: $TOTAL_P passed, $TOTAL_F failed"
 # Build ASCII grid (only with -g or -vg)
 if [ "$DOGRID" -eq 1 ]; then
     sym() {
+        if [ ! -f "$RD/$1" ]; then
+            echo -n "➖"
+            return
+        fi
         v=$(cat "$RD/$1" 2>/dev/null)
         [ "$v" = "P" ] && echo -n "✅" || echo -n "❌"
     }
 
-    if [ -n "$FILTER" ]; then
-        HDR="              $FILTER"
-        SEP="              ----"
-    else
-        HDR="              run  comp asm  py   js   c    cpp  swft objc ocpp go  "
-        SEP="              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----"
-    fi
+    HDR="              run  comp asm  py   js   c    cpp  swft objc ocpp go  "
+    SEP="              ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----"
 
     {
     for impl in jjpy jjswift; do
@@ -105,13 +104,10 @@ if [ "$DOGRID" -eq 1 ]; then
         for ex in numbers fizzbuzz fibonacci variables enums dictionaries tuples arrays comparisons hello; do
             pad="$(printf '%-13s' "$ex")"
             row="$pad"
-            if [ -z "$FILTER" ]; then
-                for m in run compile asm; do
-                    row="$row $(sym "${impl}_${ex}_${m}")  "
-                done
-            fi
+            for m in run compile asm; do
+                row="$row $(sym "${impl}_${ex}_${m}")  "
+            done
             for tgt in py js c cpp swift objc objcpp go; do
-                [ -n "$FILTER" ] && [ "$tgt" != "$FILTER" ] && continue
                 row="$row $(sym "${impl}_${ex}_exec_${tgt}")  "
             done
             echo "$row"
