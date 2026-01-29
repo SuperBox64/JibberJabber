@@ -22,8 +22,7 @@ struct OutputView: View {
             .padding(.vertical, 4)
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.7))
 
-            Color.black.opacity(0.6)
-                .frame(height: 1)
+            Divider()
 
             ScrollView {
                 Text(output.isEmpty ? "Press Run to execute..." : output)
