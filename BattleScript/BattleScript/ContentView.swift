@@ -13,9 +13,6 @@ struct ContentView: View {
     @State private var showDependencyCheck = true
     @State private var dependencyStatus: DependencyStatus?
 
-    @AppStorage("sidebarWidth") private var sidebarWidth: Double = 180
-    @AppStorage("editorHeight") private var editorHeight: Double = 400
-
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
         ("Hello World", "hello"),
@@ -31,7 +28,7 @@ struct ContentView: View {
     ]
 
     var body: some View {
-        HSplitView {
+        PersistentHSplitView(autosaveName: "MainHSplit", leftMinWidth: 150, leftMaxWidth: 220) {
             // Left sidebar - example selector
             VStack(alignment: .leading, spacing: 0) {
                 Text("Examples")
@@ -48,17 +45,9 @@ struct ContentView: View {
                     loadExample(newValue)
                 }
             }
-            .frame(minWidth: 150, idealWidth: sidebarWidth, maxWidth: 220)
-            .background(
-                GeometryReader { geo in
-                    Color.clear.onChange(of: geo.size.width) { _, newWidth in
-                        sidebarWidth = newWidth
-                    }
-                }
-            )
-
+        } right: {
             // Main content
-            VSplitView {
+            PersistentVSplitView(autosaveName: "MainVSplit", topMinHeight: 150, bottomMinHeight: 80) {
                 // Top: editor + transpiled tabs
                 EditorTabView(
                     selectedTab: $selectedTab,
@@ -67,18 +56,9 @@ struct ContentView: View {
                     transpiledOutputs: $transpiledOutputs,
                     onRun: runCurrentTab
                 )
-                .frame(minHeight: 150, idealHeight: editorHeight)
-                .background(
-                    GeometryReader { geo in
-                        Color.clear.onChange(of: geo.size.height) { _, newHeight in
-                            editorHeight = newHeight
-                        }
-                    }
-                )
-
+            } bottom: {
                 // Bottom: output pane
                 OutputView(output: runOutput, isRunning: isRunning)
-                    .frame(minHeight: 80)
             }
         }
         .frame(minWidth: 900, minHeight: 600)

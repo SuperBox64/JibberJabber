@@ -20,6 +20,7 @@
 		A1000B /* LineNumberRulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000B /* LineNumberRulerView.swift */; };
 		A1000C /* DependencyChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000C /* DependencyChecker.swift */; };
 		A1000D /* DependencyOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000D /* DependencyOverlay.swift */; };
+		A1000E /* PersistentSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000E /* PersistentSplitView.swift */; };
 		A10010 /* common in Resources */ = {isa = PBXBuildFile; fileRef = A20010 /* common */; };
 		A10011 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A20011 /* examples */; };
 		EAB9779F2F2BF231004582EA /* JJLib in Frameworks */ = {isa = PBXBuildFile; productRef = A90001 /* JJLib */; };
@@ -39,6 +40,7 @@
 		A2000B /* LineNumberRulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineNumberRulerView.swift; sourceTree = "<group>"; };
 		A2000C /* DependencyChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyChecker.swift; sourceTree = "<group>"; };
 		A2000D /* DependencyOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyOverlay.swift; sourceTree = "<group>"; };
+		A2000E /* PersistentSplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentSplitView.swift; sourceTree = "<group>"; };
 		A20010 /* common */ = {isa = PBXFileReference; lastKnownFileType = folder; name = common; path = ../jibjab/common; sourceTree = SOURCE_ROOT; };
 		A20011 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../jibjab/examples; sourceTree = SOURCE_ROOT; };
 		A20020 /* jjswift */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = jjswift; path = ../jibjab/jjswift; sourceTree = SOURCE_ROOT; };
@@ -83,6 +85,7 @@
 				A2000B /* LineNumberRulerView.swift */,
 				A2000C /* DependencyChecker.swift */,
 				A2000D /* DependencyOverlay.swift */,
+				A2000E /* PersistentSplitView.swift */,
 				A2000A /* Assets.xcassets */,
 			);
 			path = BattleScript;
@@ -193,6 +196,7 @@
 				A1000B /* LineNumberRulerView.swift in Sources */,
 				A1000C /* DependencyChecker.swift in Sources */,
 				A1000D /* DependencyOverlay.swift in Sources */,
+				A1000E /* PersistentSplitView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
