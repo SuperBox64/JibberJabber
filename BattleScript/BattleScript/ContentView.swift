@@ -63,12 +63,12 @@ struct ContentView: View {
                 )
                 .fraction(FractionHolder.usingUserDefaults(0.7, key: "editorFraction"))
                 .constraints(minPFraction: 0.1, minSFraction: 0.1)
-                .styling(color: .clear, visibleThickness: 0)
+                .styling(color: .clear, visibleThickness: 0, invisibleThickness: 6)
             }
         )
         .fraction(FractionHolder.usingUserDefaults(0.15, key: "sidebarFraction"))
         .constraints(minPFraction: 0.1, minSFraction: 0.5)
-        .styling(color: .clear, visibleThickness: 0)
+        .styling(color: .clear, visibleThickness: 0, invisibleThickness: 6)
         .frame(minWidth: 900, minHeight: 600)
         .onChange(of: sourceCode) { _, _ in
             userHasEdited = true
