@@ -12,10 +12,6 @@ struct OutputView: View {
                 Text("Output")
                     .font(.system(.caption, design: .monospaced))
                     .foregroundColor(.secondary)
-                if isRunning {
-                    ProgressView()
-                        .scaleEffect(0.5)
-                }
                 Spacer()
             }
             .padding(.horizontal, 8)
@@ -33,6 +29,13 @@ struct OutputView: View {
                     .textSelection(.enabled)
             }
             .background(Color(nsColor: .windowBackgroundColor).opacity(0.4))
+            .overlay(alignment: .bottomTrailing) {
+                if isRunning {
+                    ProgressView()
+                        .scaleEffect(0.5)
+                        .padding(8)
+                }
+            }
         }
     }
 }
