@@ -42,31 +42,32 @@ public class Parser {
     }
 
     static func tokenSymbol(_ type: TokenType) -> String {
+        let key = "\(type)"
+        // Check shared config first
+        if let symbols = JJ.tokenSymbols, let symbol = symbols[key] {
+            return symbol
+        }
+        // Operator symbols from config
         switch type {
-        case .action: return "::"
-        case .colon: return ":"
-        case .range: return ".."
-        case .lparen: return "("
-        case .rparen: return ")"
-        case .lbracket: return "["
-        case .rbracket: return "]"
-        case .lbrace: return "{"
-        case .rbrace: return "}"
+        case .add: return JJ.operators.add.symbol
+        case .sub: return JJ.operators.sub.symbol
+        case .mul: return JJ.operators.mul.symbol
+        case .div: return JJ.operators.div.symbol
+        case .mod: return JJ.operators.mod.symbol
+        case .eq: return JJ.operators.eq.symbol
+        case .neq: return JJ.operators.neq.symbol
+        case .lt: return JJ.operators.lt.symbol
+        case .lte: return JJ.operators.lte.symbol
+        case .gt: return JJ.operators.gt.symbol
+        case .gte: return JJ.operators.gte.symbol
+        case .and: return JJ.operators.and.symbol
+        case .or: return JJ.operators.or.symbol
+        case .not: return JJ.operators.not.symbol
         case .comma: return ","
-        case .add: return "<+>"
-        case .sub: return "<->"
-        case .mul: return "<*>"
-        case .div: return "</>"
-        case .mod: return "<%>"
-        case .eq: return "<=>"
-        case .neq: return "<!=>"; case .lt: return "<lt>"
-        case .lte: return "<lte>"; case .gt: return "<gt>"
-        case .gte: return "<gte>"; case .and: return "<&&>"
-        case .or: return "<||>"; case .not: return "<!>"
         case .eof: return "end of file"
         case .newline: return "newline"
-        case .blockEnd: return "<~>>"
-        default: return "\(type)"
+        case .blockEnd: return JJ.blocks.end
+        default: return key
         }
     }
 

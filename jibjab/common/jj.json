@@ -53,5 +53,20 @@
     "numberPrefix": "#",
     "stringDelim": "\"",
     "comment": "@@"
+  },
+  "validHashes": {
+    "frob": "7a3",
+    "slurp": "9f2"
+  },
+  "tokenSymbols": {
+    "action": "::",
+    "colon": ":",
+    "range": "..",
+    "lparen": "(",
+    "rparen": ")",
+    "lbracket": "[",
+    "rbracket": "]",
+    "lbrace": "{",
+    "rbrace": "}"
   }
 }

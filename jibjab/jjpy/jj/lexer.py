@@ -206,6 +206,24 @@ class Lexer:
             self.add_token(TokenType.FALSE)
             return
 
+        # Catch malformed JJ action keywords (e.g. ~>frob33333{7a3} or ~>fr999ob{7aww3})
+        # Must come after valid keyword checks. Consume the rest of the line.
+        if self.source[self.pos:].startswith('~>'):
+            m = self.match_regex(r'~>[a-zA-Z0-9]+\{[^}]*\}[^\n]*')
+            if m:
+                # Extract keyword and hash, validate each against known values
+                after_arrow = m[2:]  # remove "~>"
+                brace_idx = after_arrow.index('{')
+                keyword = after_arrow[:brace_idx]
+                hash_val = after_arrow[brace_idx+1:after_arrow.index('}')]
+                valid_hashes = JJ.get('validHashes', {})
+                if keyword in valid_hashes:
+                    msg = f"Invalid hash '{{{hash_val}}}' for keyword '~>{keyword}' (expected '{{{valid_hashes[keyword]}}}')"
+                else:
+                    msg = f"Unknown keyword '~>{keyword}{{{hash_val}}}'"
+                self.add_token(TokenType.IDENTIFIER, msg)
+                return
+
         # Block structures
         loop_prefix = JJ['blocks']['loop']
         when_prefix = JJ['blocks']['when']

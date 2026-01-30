@@ -77,6 +77,9 @@ public struct JJCoreConfig: Codable {
         public let stringDelim: String
         public let comment: String
     }
+
+    public let validHashes: [String: String]?
+    public let tokenSymbols: [String: String]?
 }
 
 // Generic target config loaded from targets/*.json

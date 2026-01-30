@@ -142,10 +142,7 @@ public class Lexer {
                 let hash = String(afterBrace.prefix(while: { $0 != "}" }))
 
                 // Known valid keyword{hash} pairs from jj.json
-                let validKeywords: [String: String] = [
-                    "frob": "7a3",
-                    "slurp": "9f2"
-                ]
+                let validKeywords = JJ.validHashes ?? [:]
 
                 let msg: String
                 if let expectedHash = validKeywords[keyword] {

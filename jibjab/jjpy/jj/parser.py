@@ -41,7 +41,32 @@ class Parser:
     def expect(self, type: TokenType) -> Token:
         if self.peek().type == type:
             return self.advance()
-        raise SyntaxError(f"Expected {type}, got {self.peek().type} at line {self.peek().line}")
+        token = self.peek()
+        got_value = str(token.value) if token.value is not None else self.token_symbol(token.type)
+        raise SyntaxError(f"Expected {type.name.lower()}, got '{got_value}' at line {token.line}")
+
+    @staticmethod
+    def token_symbol(token_type: TokenType) -> str:
+        symbols = JJ.get('tokenSymbols', {})
+        key = token_type.name.lower()
+        if key in symbols:
+            return symbols[key]
+        # Operator symbols from config
+        op_map = {
+            'ADD': 'add', 'SUB': 'sub', 'MUL': 'mul', 'DIV': 'div', 'MOD': 'mod',
+            'EQ': 'eq', 'NEQ': 'neq', 'LT': 'lt', 'LTE': 'lte', 'GT': 'gt',
+            'GTE': 'gte', 'AND': 'and', 'OR': 'or', 'NOT': 'not'
+        }
+        name = token_type.name
+        if name in op_map:
+            return JJ['operators'][op_map[name]]['symbol']
+        if token_type == TokenType.COMMA:
+            return ','
+        if token_type == TokenType.EOF:
+            return 'end of file'
+        if token_type == TokenType.BLOCK_END:
+            return JJ['blocks']['end']
+        return key
 
     def parse(self) -> Program:
         statements = []
@@ -49,6 +74,12 @@ class Parser:
             stmt = self.parse_statement()
             if stmt:
                 statements.append(stmt)
+            else:
+                bad = self.advance()
+                token_text = str(bad.value) if bad.value is not None else str(bad.type.name.lower())
+                if token_text.startswith("Unknown keyword") or token_text.startswith("Invalid hash"):
+                    raise SyntaxError(f"{token_text} at line {bad.line}")
+                raise SyntaxError(f"Unrecognized statement '{token_text}' at line {bad.line}")
         return Program(statements)
 
     def parse_statement(self) -> Optional[ASTNode]:
@@ -161,6 +192,12 @@ class Parser:
             stmt = self.parse_statement()
             if stmt:
                 statements.append(stmt)
+            else:
+                bad = self.advance()
+                token_text = str(bad.value) if bad.value is not None else str(bad.type.name.lower())
+                if token_text.startswith("Unknown keyword") or token_text.startswith("Invalid hash"):
+                    raise SyntaxError(f"{token_text} at line {bad.line}")
+                raise SyntaxError(f"Unrecognized statement '{token_text}' at line {bad.line}")
         if self.peek().type == TokenType.BLOCK_END:
             self.advance()
         return statements
@@ -329,7 +366,9 @@ class Parser:
         if token := self.match(TokenType.IDENTIFIER):
             return self.parse_postfix(VarRef(token.value))
 
-        raise SyntaxError(f"Unexpected token: {self.peek().type}")
+        token = self.peek()
+        token_text = str(token.value) if token.value is not None else self.token_symbol(token.type)
+        raise SyntaxError(f"Expected identifier, got '{token_text}' at line {token.line}")
 
     def parse_postfix(self, expr: ASTNode) -> ASTNode:
         """Parse postfix operations like array indexing"""
