@@ -36,7 +36,38 @@ public class Parser {
         if peek().type == type {
             return advance()
         }
-        throw ParserError.unexpectedToken(expected: type, got: peek().type, line: peek().line)
+        let token = peek()
+        let tokenText = token.value.map { "\($0)" } ?? Self.tokenSymbol(token.type)
+        throw ParserError.unexpectedToken(expected: type, got: token.type, gotValue: tokenText, line: token.line)
+    }
+
+    static func tokenSymbol(_ type: TokenType) -> String {
+        switch type {
+        case .action: return "::"
+        case .colon: return ":"
+        case .range: return ".."
+        case .lparen: return "("
+        case .rparen: return ")"
+        case .lbracket: return "["
+        case .rbracket: return "]"
+        case .lbrace: return "{"
+        case .rbrace: return "}"
+        case .comma: return ","
+        case .add: return "<+>"
+        case .sub: return "<->"
+        case .mul: return "<*>"
+        case .div: return "</>"
+        case .mod: return "<%>"
+        case .eq: return "<=>"
+        case .neq: return "<!=>"; case .lt: return "<lt>"
+        case .lte: return "<lte>"; case .gt: return "<gt>"
+        case .gte: return "<gte>"; case .and: return "<&&>"
+        case .or: return "<||>"; case .not: return "<!>"
+        case .eof: return "end of file"
+        case .newline: return "newline"
+        case .blockEnd: return "<~>>"
+        default: return "\(type)"
+        }
     }
 
     public func parse() throws -> Program {
@@ -413,7 +444,9 @@ public class Parser {
             return try parsePostfix(varRef)
         }
 
-        throw ParserError.unexpectedToken(expected: .identifier, got: peek().type, line: peek().line)
+        let token = peek()
+        let tokenText = token.value.map { "\($0)" } ?? "\(token.type)"
+        throw ParserError.unexpectedToken(expected: .identifier, got: token.type, gotValue: tokenText, line: token.line)
     }
 
     private func parsePostfix(_ expr: ASTNode) throws -> ASTNode {
@@ -436,14 +469,14 @@ public class Parser {
 }
 
 public enum ParserError: Error, CustomStringConvertible {
-    case unexpectedToken(expected: TokenType, got: TokenType, line: Int)
+    case unexpectedToken(expected: TokenType, got: TokenType, gotValue: String, line: Int)
     case invalidFunctionSignature(String)
     case unrecognizedStatement(token: String, line: Int)
 
     public var description: String {
         switch self {
-        case .unexpectedToken(let expected, let got, let line):
-            return "Expected \(expected), got \(got) at line \(line)"
+        case .unexpectedToken(let expected, _, let gotValue, let line):
+            return "Expected \(expected), got '\(gotValue)' at line \(line)"
         case .invalidFunctionSignature(let sig):
             return "Invalid function signature: \(sig)"
         case .unrecognizedStatement(let token, let line):
