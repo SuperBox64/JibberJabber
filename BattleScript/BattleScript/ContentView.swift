@@ -13,6 +13,9 @@ struct ContentView: View {
     @State private var showDependencyCheck = true
     @State private var dependencyStatus: DependencyStatus?
 
+    @AppStorage("sidebarWidth") private var sidebarWidth: Double = 180
+    @AppStorage("editorHeight") private var editorHeight: Double = 400
+
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
         ("Hello World", "hello"),
@@ -45,7 +48,14 @@ struct ContentView: View {
                     loadExample(newValue)
                 }
             }
-            .frame(minWidth: 150, idealWidth: 180, maxWidth: 220)
+            .frame(minWidth: 150, idealWidth: sidebarWidth, maxWidth: 220)
+            .background(
+                GeometryReader { geo in
+                    Color.clear.onChange(of: geo.size.width) { _, newWidth in
+                        sidebarWidth = newWidth
+                    }
+                }
+            )
 
             // Main content
             VSplitView {
@@ -57,7 +67,14 @@ struct ContentView: View {
                     transpiledOutputs: $transpiledOutputs,
                     onRun: runCurrentTab
                 )
-                .frame(minHeight: 150)
+                .frame(minHeight: 150, idealHeight: editorHeight)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.onChange(of: geo.size.height) { _, newHeight in
+                            editorHeight = newHeight
+                        }
+                    }
+                )
 
                 // Bottom: output pane
                 OutputView(output: runOutput, isRunning: isRunning)
