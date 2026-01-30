@@ -10,6 +10,8 @@ struct ContentView: View {
     @State private var isRunning = false
     @State private var userHasEdited = false
     @State private var transpileWork: DispatchWorkItem?
+    @State private var showDependencyCheck = true
+    @State private var dependencyStatus: DependencyStatus?
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -63,6 +65,17 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 900, minHeight: 600)
+        .overlay {
+            DependencyOverlay(status: dependencyStatus, isVisible: $showDependencyCheck)
+        }
+        .onAppear {
+            DispatchQueue.global(qos: .userInitiated).async {
+                let status = DependencyChecker.check()
+                DispatchQueue.main.async {
+                    dependencyStatus = status
+                }
+            }
+        }
         .onChange(of: sourceCode) { _, _ in
             userHasEdited = true
             updateTranspilation()
