@@ -10,6 +10,8 @@ public class CFamilyTranspiler {
     var intVars = Set<String>()
     var dictVars = Set<String>()
     var tupleVars = Set<String>()
+    var dictFields: [String: [String: (String, String)]] = [:]
+    var tupleFields: [String: [(String, String)]] = [:]
 
     public init(target: String) {
         T = loadTarget(target)
@@ -237,7 +239,35 @@ public class CFamilyTranspiler {
         return ind() + "enum \(node.name) { \(cases) };"
     }
 
+    func resolveAccess(_ node: IndexAccess) -> (String, String)? {
+        // Direct dict access: person["name"]
+        if let varRef = node.array as? VarRef, let fields = dictFields[varRef.name] {
+            if let lit = node.index as? Literal, let key = lit.value as? String {
+                if let result = fields[key] { return result }
+            }
+        }
+        // Direct tuple access: point[0]
+        if let varRef = node.array as? VarRef, let fields = tupleFields[varRef.name] {
+            if let lit = node.index as? Literal, let idx = lit.value as? Int {
+                if idx < fields.count { return fields[idx] }
+            }
+        }
+        // Nested: data["items"][0]
+        if let innerIdx = node.array as? IndexAccess {
+            if let parent = resolveAccess(innerIdx) {
+                let (cVar, typ) = parent
+                if typ == "array", let lit = node.index as? Literal, let idx = lit.value as? Int {
+                    return ("\(cVar)[\(idx)]", "int")
+                }
+            }
+        }
+        return nil
+    }
+
     func expr(_ node: ASTNode) -> String {
+        if let idx = node as? IndexAccess {
+            if let resolved = resolveAccess(idx) { return resolved.0 }
+        }
         if let literal = node as? Literal {
             if let str = literal.value as? String { return "\"\(escapeString(str))\"" }
             else if literal.value == nil { return T.nil }

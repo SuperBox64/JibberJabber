@@ -5,9 +5,6 @@
 /// Tuples: stored as numbered variables (_0, _1, _2) with cout for printing
 
 public class CppTranspiler: CFamilyTranspiler {
-    var dictFields: [String: [String: (String, String)]] = [:]  // dict_name -> {key: (cpp_var, type)}
-    var tupleFields: [String: [(String, String)]] = [:]          // tuple_name -> [(cpp_var, type)]
-
     public override init(target: String = "cpp") { super.init(target: target) }
 
     public override func transpile(_ program: Program) -> String {
@@ -171,35 +168,4 @@ public class CppTranspiler: CFamilyTranspiler {
         return ind() + "std::cout << \(parts.joined(separator: " << ")) << std::endl;"
     }
 
-    func resolveAccess(_ node: IndexAccess) -> (String, String)? {
-        // Direct dict access: person["name"]
-        if let varRef = node.array as? VarRef, let fields = dictFields[varRef.name] {
-            if let lit = node.index as? Literal, let key = lit.value as? String {
-                if let result = fields[key] { return result }
-            }
-        }
-        // Direct tuple access: point[0]
-        if let varRef = node.array as? VarRef, let fields = tupleFields[varRef.name] {
-            if let lit = node.index as? Literal, let idx = lit.value as? Int {
-                if idx < fields.count { return fields[idx] }
-            }
-        }
-        // Nested: data["items"][0]
-        if let innerIdx = node.array as? IndexAccess {
-            if let parent = resolveAccess(innerIdx) {
-                let (cppVar, typ) = parent
-                if typ == "array", let lit = node.index as? Literal, let idx = lit.value as? Int {
-                    return ("\(cppVar)[\(idx)]", "int")
-                }
-            }
-        }
-        return nil
-    }
-
-    override func expr(_ node: ASTNode) -> String {
-        if let idx = node as? IndexAccess {
-            if let resolved = resolveAccess(idx) { return resolved.0 }
-        }
-        return super.expr(node)
-    }
 }

@@ -5,8 +5,6 @@
 /// Tuples: stored as numbered variables (_0, _1, _2)
 
 public class GoTranspiler: CFamilyTranspiler {
-    var dictFields: [String: [String: (String, String)]] = [:]  // dict_name -> {key: (go_var, type)}
-    var tupleFields: [String: [(String, String)]] = [:]          // tuple_name -> [(go_var, type)]
     var needsMath = false
 
     public override init(target: String = "go") { super.init(target: target) }
@@ -249,31 +247,6 @@ public class GoTranspiler: CFamilyTranspiler {
         indentLevel -= 1
         lines.append(ind() + ")")
         return lines.joined(separator: "\n")
-    }
-
-    func resolveAccess(_ node: IndexAccess) -> (String, String)? {
-        // Direct dict access: person["name"]
-        if let varRef = node.array as? VarRef, let fields = dictFields[varRef.name] {
-            if let lit = node.index as? Literal, let key = lit.value as? String {
-                if let result = fields[key] { return result }
-            }
-        }
-        // Direct tuple access: point[0]
-        if let varRef = node.array as? VarRef, let fields = tupleFields[varRef.name] {
-            if let lit = node.index as? Literal, let idx = lit.value as? Int {
-                if idx < fields.count { return fields[idx] }
-            }
-        }
-        // Nested: data["items"][0]
-        if let innerIdx = node.array as? IndexAccess {
-            if let parent = resolveAccess(innerIdx) {
-                let (goVar, typ) = parent
-                if typ == "array", let lit = node.index as? Literal, let idx = lit.value as? Int {
-                    return ("\(goVar)[\(idx)]", "int")
-                }
-            }
-        }
-        return nil
     }
 
     override func expr(_ node: ASTNode) -> String {
