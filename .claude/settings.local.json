@@ -216,7 +216,8 @@
       "mcp__xcf-server__run_project",
       "WebFetch(domain:9to5mac.com)",
       "WebFetch(domain:www.sublimetext.com)",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "Bash(/tmp/battlescript_objcpp_out)"
     ]
   }
 }
