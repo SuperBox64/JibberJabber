@@ -146,21 +146,24 @@ struct ContentView: View {
         let work = DispatchWorkItem {
             let result: String
             if tab == "jj" {
-                do {
-                    let program = try JJEngine.parse(code)
-                    // Check if transpilation succeeds before running interpreter
-                    let testTranspile = JJEngine.transpile(program, target: "py")
-                    if testTranspile == nil || testTranspile == "// Transpilation failed" {
-                        result = "Error: invalid JJ code"
-                    } else {
-                        let output = JJEngine.interpret(program)
-                        result = output.isEmpty ? "Error: code produced no output" : output
+                // Check if transpilation already shows errors (computed on every keystroke)
+                let hasTranspileError = transpiledOutputs.values.contains { $0.hasPrefix("// Parse error") || $0.hasPrefix("// Transpilation failed") }
+                let allEmpty = transpiledOutputs.values.allSatisfy { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0 == "// Transpiled from JibJab\n" }
+
+                if hasTranspileError {
+                    result = transpiledOutputs.values.first { $0.hasPrefix("// Parse error") }?.replacingOccurrences(of: "// ", with: "") ?? "Error: invalid JJ code"
+                } else if allEmpty && !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    result = "Error: invalid JJ code"
+                } else {
+                    do {
+                        let program = try JJEngine.parse(code)
+                        result = JJEngine.interpret(program)
                         DispatchQueue.main.async {
                             updateTranspilation()
                         }
+                    } catch {
+                        result = "Parse error: \(error)"
                     }
-                } catch {
-                    result = "Parse error: \(error)"
                 }
             } else {
                 if code.isEmpty {
