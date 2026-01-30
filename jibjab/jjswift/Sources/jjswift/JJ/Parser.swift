@@ -46,7 +46,8 @@ public class Parser {
                 statements.append(stmt)
             } else {
                 let bad = advance()
-                throw ParserError.unexpectedToken(expected: .eof, got: bad.type, line: bad.line)
+                let tokenText = bad.value.map { "\($0)" } ?? "\(bad.type)"
+                throw ParserError.unrecognizedStatement(token: tokenText, line: bad.line)
             }
         }
         return Program(statements: statements)
@@ -433,6 +434,7 @@ public class Parser {
 public enum ParserError: Error, CustomStringConvertible {
     case unexpectedToken(expected: TokenType, got: TokenType, line: Int)
     case invalidFunctionSignature(String)
+    case unrecognizedStatement(token: String, line: Int)
 
     public var description: String {
         switch self {
@@ -440,6 +442,8 @@ public enum ParserError: Error, CustomStringConvertible {
             return "Expected \(expected), got \(got) at line \(line)"
         case .invalidFunctionSignature(let sig):
             return "Invalid function signature: \(sig)"
+        case .unrecognizedStatement(let token, let line):
+            return "Unrecognized statement '\(token)' at line \(line)"
         }
     }
 }
