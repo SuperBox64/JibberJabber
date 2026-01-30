@@ -207,62 +207,42 @@ public class Lexer {
             return
         }
 
-        // Operators (use .symbol for matching)
-        if match(JJ.operators.add.symbol) != nil {
-            addToken(.add)
-            return
-        }
-        if match(JJ.operators.sub.symbol) != nil {
-            addToken(.sub)
-            return
-        }
-        if match(JJ.operators.mul.symbol) != nil {
-            addToken(.mul)
-            return
-        }
-        if match(JJ.operators.div.symbol) != nil {
-            addToken(.div)
-            return
-        }
-        if match(JJ.operators.mod.symbol) != nil {
-            addToken(.mod)
-            return
-        }
-        if match(JJ.operators.neq.symbol) != nil {
-            addToken(.neq)
-            return
-        }
-        if match(JJ.operators.eq.symbol) != nil {
-            addToken(.eq)
-            return
-        }
-        if match(JJ.operators.lte.symbol) != nil {
-            addToken(.lte)
-            return
-        }
-        if match(JJ.operators.lt.symbol) != nil {
-            addToken(.lt)
-            return
-        }
-        if match(JJ.operators.gte.symbol) != nil {
-            addToken(.gte)
-            return
-        }
-        if match(JJ.operators.gt.symbol) != nil {
-            addToken(.gt)
-            return
-        }
-        if match(JJ.operators.and.symbol) != nil {
-            addToken(.and)
-            return
-        }
-        if match(JJ.operators.or.symbol) != nil {
-            addToken(.or)
-            return
-        }
-        if match(JJ.operators.not.symbol) != nil {
-            addToken(.not)
-            return
+        // Operators - match full <...> token first, then validate
+        if peek() == "<" {
+            if let m = matchRegex("<[^>]+>") {
+                // Check if it's a valid operator
+                let opMap: [String: TokenType] = [
+                    JJ.operators.add.symbol: .add,
+                    JJ.operators.sub.symbol: .sub,
+                    JJ.operators.mul.symbol: .mul,
+                    JJ.operators.div.symbol: .div,
+                    JJ.operators.mod.symbol: .mod,
+                    JJ.operators.neq.symbol: .neq,
+                    JJ.operators.eq.symbol: .eq,
+                    JJ.operators.lte.symbol: .lte,
+                    JJ.operators.lt.symbol: .lt,
+                    JJ.operators.gte.symbol: .gte,
+                    JJ.operators.gt.symbol: .gt,
+                    JJ.operators.and.symbol: .and,
+                    JJ.operators.or.symbol: .or,
+                    JJ.operators.not.symbol: .not,
+                ]
+                if let tokenType = opMap[m] {
+                    addToken(tokenType)
+                    return
+                }
+                // Not a valid operator — malformed
+                let validOps = Array(opMap.keys)
+                let suggestion = Lexer.closestMatch(to: m, from: validOps)
+                let msg: String
+                if let hint = suggestion {
+                    msg = "Unknown operator '\(m)', did you mean '\(hint)'?"
+                } else {
+                    msg = "Unknown operator '\(m)'"
+                }
+                addToken(.identifier, value: msg)
+                return
+            }
         }
 
         // Structure
@@ -395,7 +375,16 @@ public class Lexer {
             return
         }
 
-        // Unknown - skip
+        // Unknown character - collect consecutive non-whitespace/non-alphanumeric symbols
+        if let ch = peek(), !ch.isLetter && !ch.isNumber && ch != " " && ch != "\t" && ch != "\n" && ch != "\r" {
+            var bad = ""
+            while let c = peek(), !c.isLetter && !c.isNumber && c != " " && c != "\t" && c != "\n" && c != "\r"
+                    && c != "(" && c != ")" && c != "[" && c != "]" && c != "{" && c != "}" && c != "," && c != "\"" {
+                bad += advance()
+            }
+            addToken(.identifier, value: "Unexpected symbol '\(bad)' (operators must use <...> syntax)")
+            return
+        }
         _ = advance()
     }
 
@@ -417,6 +406,19 @@ public class Lexer {
         case "d": return "Double"
         default: return hasDecimal ? "Double" : "Int"
         }
+    }
+
+    /// All valid operator symbols from jj.json
+    static func allOperatorSymbols() -> [String] {
+        return [
+            JJ.operators.add.symbol, JJ.operators.sub.symbol,
+            JJ.operators.mul.symbol, JJ.operators.div.symbol,
+            JJ.operators.mod.symbol, JJ.operators.eq.symbol,
+            JJ.operators.neq.symbol, JJ.operators.lt.symbol,
+            JJ.operators.lte.symbol, JJ.operators.gt.symbol,
+            JJ.operators.gte.symbol, JJ.operators.and.symbol,
+            JJ.operators.or.symbol, JJ.operators.not.symbol
+        ]
     }
 
     /// Extract keyword names from jj.json keywords (e.g. "frob" from "~>frob{7a3}", "snag" from "~>snag")

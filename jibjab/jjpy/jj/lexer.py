@@ -139,6 +139,22 @@ def _closest_keyword(input_kw: str) -> Optional[str]:
     return best
 
 
+def _all_operator_symbols():
+    """Get all valid operator symbols from jj.json"""
+    return [op['symbol'] for op in JJ['operators'].values()]
+
+
+def _closest_operator(input_op: str, valid_ops: list) -> Optional[str]:
+    """Find the closest valid operator using longest common subsequence"""
+    best, best_score = None, 0
+    for op in valid_ops:
+        score = _lcs_length(input_op, op)
+        if score > best_score and score >= 2:
+            best_score = score
+            best = op
+    return best
+
+
 def load_target_config(target: str):
     """Load target config from common/targets/{target}.json"""
     target_paths = [
@@ -297,49 +313,37 @@ class Lexer:
             self.add_token(TokenType.BLOCK_END)
             return
 
-        # Operators (now have symbol/emit format)
-        if self.match(JJ['operators']['add']['symbol']):
-            self.add_token(TokenType.ADD)
-            return
-        if self.match(JJ['operators']['sub']['symbol']):
-            self.add_token(TokenType.SUB)
-            return
-        if self.match(JJ['operators']['mul']['symbol']):
-            self.add_token(TokenType.MUL)
-            return
-        if self.match(JJ['operators']['div']['symbol']):
-            self.add_token(TokenType.DIV)
-            return
-        if self.match(JJ['operators']['mod']['symbol']):
-            self.add_token(TokenType.MOD)
-            return
-        if self.match(JJ['operators']['neq']['symbol']):
-            self.add_token(TokenType.NEQ)
-            return
-        if self.match(JJ['operators']['eq']['symbol']):
-            self.add_token(TokenType.EQ)
-            return
-        if self.match(JJ['operators']['lte']['symbol']):
-            self.add_token(TokenType.LTE)
-            return
-        if self.match(JJ['operators']['lt']['symbol']):
-            self.add_token(TokenType.LT)
-            return
-        if self.match(JJ['operators']['gte']['symbol']):
-            self.add_token(TokenType.GTE)
-            return
-        if self.match(JJ['operators']['gt']['symbol']):
-            self.add_token(TokenType.GT)
-            return
-        if self.match(JJ['operators']['and']['symbol']):
-            self.add_token(TokenType.AND)
-            return
-        if self.match(JJ['operators']['or']['symbol']):
-            self.add_token(TokenType.OR)
-            return
-        if self.match(JJ['operators']['not']['symbol']):
-            self.add_token(TokenType.NOT)
-            return
+        # Operators - match full <...> token first, then validate
+        if self.peek() == '<':
+            m = self.match_regex(r'<[^>]+>')
+            if m:
+                op_map = {
+                    JJ['operators']['add']['symbol']: TokenType.ADD,
+                    JJ['operators']['sub']['symbol']: TokenType.SUB,
+                    JJ['operators']['mul']['symbol']: TokenType.MUL,
+                    JJ['operators']['div']['symbol']: TokenType.DIV,
+                    JJ['operators']['mod']['symbol']: TokenType.MOD,
+                    JJ['operators']['neq']['symbol']: TokenType.NEQ,
+                    JJ['operators']['eq']['symbol']: TokenType.EQ,
+                    JJ['operators']['lte']['symbol']: TokenType.LTE,
+                    JJ['operators']['lt']['symbol']: TokenType.LT,
+                    JJ['operators']['gte']['symbol']: TokenType.GTE,
+                    JJ['operators']['gt']['symbol']: TokenType.GT,
+                    JJ['operators']['and']['symbol']: TokenType.AND,
+                    JJ['operators']['or']['symbol']: TokenType.OR,
+                    JJ['operators']['not']['symbol']: TokenType.NOT,
+                }
+                if m in op_map:
+                    self.add_token(op_map[m])
+                    return
+                # Not a valid operator — malformed
+                hint = _closest_operator(m, list(op_map.keys()))
+                if hint:
+                    msg = f"Unknown operator '{m}', did you mean '{hint}'?"
+                else:
+                    msg = f"Unknown operator '{m}'"
+                self.add_token(TokenType.IDENTIFIER, msg)
+                return
 
         # Structure
         if self.match(JJ['structure']['action']):
@@ -425,5 +429,13 @@ class Lexer:
             self.add_token(TokenType.IDENTIFIER, m)
             return
 
-        # Unknown - skip
+        # Unknown character - collect consecutive symbols
+        skip_chars = set(' \t\n\r()[]{},"')
+        ch = self.peek()
+        if ch and not ch.isalpha() and not ch.isdigit() and ch not in skip_chars:
+            bad = ''
+            while self.peek() and not self.peek().isalpha() and not self.peek().isdigit() and self.peek() not in skip_chars:
+                bad += self.advance()
+            self.add_token(TokenType.IDENTIFIER, f"Unexpected symbol '{bad}' (operators must use <...> syntax)")
+            return
         self.advance()

@@ -441,8 +441,12 @@ public class Parser {
         }
 
         if let token = match(.identifier) {
-            let varRef = VarRef(name: token.value as! String)
-            return try parsePostfix(varRef)
+            let name = token.value as! String
+            // Check for error tokens from the lexer
+            if name.hasPrefix("Unknown ") || name.hasPrefix("Invalid ") || name.hasPrefix("Unexpected ") {
+                throw ParserError.unrecognizedStatement(token: name, line: token.line)
+            }
+            return try parsePostfix(VarRef(name: name))
         }
 
         let token = peek()
@@ -465,7 +469,17 @@ public class Parser {
         let lexer = Lexer(source: text)
         let tokens = lexer.tokenize()
         let parser = Parser(tokens: tokens)
-        return try parser.parseExpression()
+        let expr = try parser.parseExpression()
+        // Ensure all tokens were consumed
+        if parser.peek().type != .eof {
+            let leftover = parser.peek()
+            let tokenText = leftover.value.map { "\($0)" } ?? "\(leftover.type)"
+            if tokenText.hasPrefix("Unknown ") || tokenText.hasPrefix("Invalid ") {
+                throw ParserError.unrecognizedStatement(token: tokenText, line: leftover.line)
+            }
+            throw ParserError.unexpectedToken(expected: .eof, got: leftover.type, gotValue: tokenText, line: leftover.line)
+        }
+        return expr
     }
 }
 
@@ -477,11 +491,14 @@ public enum ParserError: Error, CustomStringConvertible {
     public var description: String {
         switch self {
         case .unexpectedToken(let expected, _, let gotValue, let line):
+            if gotValue.hasPrefix("Unknown operator") || gotValue.hasPrefix("Unexpected symbol") {
+                return "\(gotValue) at line \(line)"
+            }
             return "Expected \(expected), got '\(gotValue)' at line \(line)"
         case .invalidFunctionSignature(let sig):
             return "Invalid function signature: \(sig)"
         case .unrecognizedStatement(let token, let line):
-            if token.hasPrefix("Unknown keyword") || token.hasPrefix("Invalid hash") {
+            if token.hasPrefix("Unknown keyword") || token.hasPrefix("Invalid hash") || token.hasPrefix("Unknown operator") || token.hasPrefix("Unexpected symbol") {
                 return "\(token) at line \(line)"
             }
             return "Unrecognized statement '\(token)' at line \(line)"
