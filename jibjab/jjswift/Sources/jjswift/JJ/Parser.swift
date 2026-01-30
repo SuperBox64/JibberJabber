@@ -447,7 +447,7 @@ public enum ParserError: Error, CustomStringConvertible {
         case .invalidFunctionSignature(let sig):
             return "Invalid function signature: \(sig)"
         case .unrecognizedStatement(let token, let line):
-            if token.hasPrefix("Unknown keyword") {
+            if token.hasPrefix("Unknown keyword") || token.hasPrefix("Invalid hash") {
                 return "\(token) at line \(line)"
             }
             return "Unrecognized statement '\(token)' at line \(line)"

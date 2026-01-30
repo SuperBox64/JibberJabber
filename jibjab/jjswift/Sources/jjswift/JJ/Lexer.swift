@@ -135,12 +135,27 @@ public class Lexer {
         // Must come after valid keyword checks. Consume the rest of the line.
         if remaining().hasPrefix("~>") {
             if let m = matchRegex("~>[a-zA-Z0-9]+\\{[^}]*\\}[^\n]*") {
-                // Extract the bad keyword and hash between ~>keyword{hash}
-                let afterArrow = m.dropFirst(2) // remove "~>"
+                // Extract keyword and hash, validate each against known values
+                let afterArrow = m.dropFirst(2)
                 let keyword = String(afterArrow.prefix(while: { $0 != "{" }))
                 let afterBrace = afterArrow.drop(while: { $0 != "{" }).dropFirst()
                 let hash = String(afterBrace.prefix(while: { $0 != "}" }))
-                addToken(.identifier, value: "Unknown keyword '~>\(keyword)' with hash '{\(hash)}'")
+
+                // Known valid keyword{hash} pairs from jj.json
+                let validKeywords: [String: String] = [
+                    "frob": "7a3",
+                    "slurp": "9f2"
+                ]
+
+                let msg: String
+                if let expectedHash = validKeywords[keyword] {
+                    // Valid keyword but bad hash
+                    msg = "Invalid hash '{\(hash)}' for keyword '~>\(keyword)' (expected '{\(expectedHash)}')"
+                } else {
+                    // Unknown keyword entirely
+                    msg = "Unknown keyword '~>\(keyword){\(hash)}'"
+                }
+                addToken(.identifier, value: msg)
                 return
             }
         }
