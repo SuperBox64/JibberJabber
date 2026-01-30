@@ -32,18 +32,35 @@ struct JJEngine {
         return nil
     }
 
-    static func interpret(_ program: Program) -> String {
+    static func interpret(_ program: Program, timeout: TimeInterval = 10) -> String {
         let pipe = Pipe()
         let original = dup(STDOUT_FILENO)
         dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
-        let interpreter = Interpreter()
-        interpreter.run(program)
+
+        let semaphore = DispatchSemaphore(value: 0)
+        let thread = Thread {
+            let interpreter = Interpreter()
+            interpreter.run(program)
+            semaphore.signal()
+        }
+        thread.start()
+
+        let timedOut = semaphore.wait(timeout: .now() + timeout) == .timedOut
+        if timedOut {
+            thread.cancel()
+        }
+
         fflush(stdout)
         dup2(original, STDOUT_FILENO)
         close(original)
         pipe.fileHandleForWriting.closeFile()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8) ?? ""
+        let output = String(data: data, encoding: .utf8) ?? ""
+
+        if timedOut {
+            return output.isEmpty ? "Error: execution timed out" : output + "\n\nError: execution timed out"
+        }
+        return output
     }
 
     static func compileAndRun(_ code: String, target: String) -> String {
