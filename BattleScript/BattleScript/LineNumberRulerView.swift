@@ -43,6 +43,19 @@ class LineNumberRulerView: NSRulerView {
 
         let text = tv.string as NSString
         let visibleRect = scrollView!.contentView.bounds
+        let textContainerInset = tv.textContainerInset
+
+        // Handle empty text - still show line number 1
+        guard text.length > 0 else {
+            let numStr = "1" as NSString
+            let strSize = numStr.size(withAttributes: attrs)
+            let x = ruleThickness - strSize.width - 6
+            let lineHeight = lm.defaultLineHeight(for: gutterFont)
+            let y = textContainerInset.height - visibleRect.origin.y + (lineHeight - strSize.height) / 2.0
+            numStr.draw(at: NSPoint(x: x, y: y), withAttributes: attrs)
+            return
+        }
+
         let visibleGlyphRange = lm.glyphRange(forBoundingRect: visibleRect, in: tc)
         let visibleCharRange = lm.characterRange(forGlyphRange: visibleGlyphRange, actualGlyphRange: nil)
 
@@ -57,7 +70,6 @@ class LineNumberRulerView: NSRulerView {
 
         // Draw line numbers for visible lines
         idx = visibleCharRange.location
-        let textContainerInset = tv.textContainerInset
         while idx <= NSMaxRange(visibleCharRange) {
             let lineRange = text.lineRange(for: NSRange(location: idx, length: 0))
             let glyphIdx = lm.glyphIndexForCharacter(at: idx)
