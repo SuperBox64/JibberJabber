@@ -9,11 +9,21 @@ struct DependencyStatus {
 }
 
 struct DependencyChecker {
-    static func check() -> DependencyStatus {
+    private static let searchPaths = [
+        "/opt/homebrew/bin",
+        "/usr/local/bin",
+        "/opt/local/bin",
+    ]
+
+    private static func findTool(_ name: String) -> Bool {
         let fm = FileManager.default
-        let xcodeTools = fm.fileExists(atPath: "/usr/bin/clang")
-        let go = fm.fileExists(atPath: "/opt/homebrew/bin/go") || fm.fileExists(atPath: "/usr/local/bin/go")
-        let quickjs = fm.fileExists(atPath: "/opt/homebrew/bin/qjsc") || fm.fileExists(atPath: "/usr/local/bin/qjsc")
+        return searchPaths.contains { fm.fileExists(atPath: "\($0)/\(name)") }
+    }
+
+    static func check() -> DependencyStatus {
+        let xcodeTools = FileManager.default.fileExists(atPath: "/usr/bin/clang")
+        let go = findTool("go")
+        let quickjs = findTool("qjs") && findTool("qjsc")
         return DependencyStatus(xcodeTools: xcodeTools, go: go, quickjs: quickjs)
     }
 }
