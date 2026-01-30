@@ -233,7 +233,9 @@ public class AssemblyTranspiler {
             genIf(ifStmt)
         } else if let returnStmt = node as? ReturnStmt {
             genExpr(returnStmt.value)
-            asmLines.append("    b _\(currentFunc!)_ret")
+            if let funcName = currentFunc {
+                asmLines.append("    b _\(funcName)_ret")
+            }
         } else if let enumDef = node as? EnumDef {
             // Store enum case values (0, 1, 2, ...)
             var caseValues: [String: Int] = [:]

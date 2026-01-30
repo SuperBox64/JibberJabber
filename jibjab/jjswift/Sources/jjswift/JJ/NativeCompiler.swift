@@ -506,7 +506,9 @@ public class NativeCompiler {
             genIf(ifStmt)
         } else if let returnStmt = node as? ReturnStmt {
             genExpr(returnStmt.value)
-            addBranch(to: "_\(currentFunc!)_ret", type: .b)
+            if let funcName = currentFunc {
+                addBranch(to: "_\(funcName)_ret", type: .b)
+            }
         } else if let enumDef = node as? EnumDef {
             enums[enumDef.name] = enumDef.cases
             // Pre-add case name strings to data section
