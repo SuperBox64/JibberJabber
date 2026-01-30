@@ -527,7 +527,9 @@ public class NativeCompiler {
             emitWriteSyscall(dataOffset: strOff, length: strLen)
         } else if let varRef = node.expr as? VarRef, enumVarTypes[varRef.name] != nil {
             // Print enum variable (string pointer) + newline
-            emitLoadX(reg: 0, offset: variables[varRef.name]!)
+            if let offset = variables[varRef.name] {
+                emitLoadX(reg: 0, offset: offset)
+            }
             emitPrintCString()
         } else if let idx = node.expr as? IndexAccess, let ref = idx.array as? VarRef, enums[ref.name] != nil {
             // Print enum access: Color["Red"] -> print "Red"
@@ -670,8 +672,8 @@ public class NativeCompiler {
                         let fs = addString("false\n"); emitWriteSyscall(dataOffset: fs, length: 6)
                         labelOffsets[dl] = code.count
                     case .int:
-                        if let sub = entry.subArray, arrays[sub] != nil {
-                            emitPrintFullArray(name: sub, info: arrays[sub]!)
+                        if let sub = entry.subArray, let info = arrays[sub] {
+                            emitPrintFullArray(name: sub, info: info)
                         } else {
                             emitLoad(reg: 0, offset: entry.offset)
                             let delta2 = (printIntOffset - code.count) / 4
@@ -685,9 +687,9 @@ public class NativeCompiler {
                   let ref = innerIdx.array as? VarRef, let entries = dicts[ref.name] {
             // Nested: data["items"][0]
             if let keyLit = innerIdx.index as? Literal, let key = keyLit.value as? String {
-                if let entry = entries.first(where: { $0.key == key }), let sub = entry.subArray, arrays[sub] != nil {
-                    genArrayIndexLoad(name: sub, index: idx.index, isString: arrays[sub]!.elemType == .stringArray)
-                    if arrays[sub]!.elemType == .stringArray {
+                if let entry = entries.first(where: { $0.key == key }), let sub = entry.subArray, let arrInfo = arrays[sub] {
+                    genArrayIndexLoad(name: sub, index: idx.index, isString: arrInfo.elemType == .stringArray)
+                    if arrInfo.elemType == .stringArray {
                         emitPrintCString()
                     } else {
                         let delta2 = (printIntOffset - code.count) / 4
@@ -834,7 +836,9 @@ public class NativeCompiler {
                 stackOffset += 8
             }
             floatVars.insert(node.name)
-            emitStoreD(reg: 0, offset: variables[node.name]!)
+            if let offset = variables[node.name] {
+                emitStoreD(reg: 0, offset: offset)
+            }
             return
         }
 
@@ -844,7 +848,9 @@ public class NativeCompiler {
             stackOffset += 8
         }
         // Store x0 (pointer for enums, value for ints)
-        emitStoreX(reg: 0, offset: variables[node.name]!)
+        if let offset = variables[node.name] {
+            emitStoreX(reg: 0, offset: offset)
+        }
     }
 
     private func genArrayDecl(_ name: String, _ arrLit: ArrayLiteral) {
@@ -980,20 +986,20 @@ public class NativeCompiler {
     }
 
     private func genLoop(_ node: LoopStmt) {
-        guard node.start != nil, node.end != nil else { return }
+        guard let start = node.start, let end = node.end else { return }
 
         let loopLabel = "_L\(code.count)"
         let endLabel = "_E\(code.count)"
 
-        genExpr(node.start!)
+        genExpr(start)
         if variables[node.var] == nil {
             variables[node.var] = stackOffset
             stackOffset += 8
         }
-        let varOff = variables[node.var]!
+        guard let varOff = variables[node.var] else { return }
         emitStore(reg: 0, offset: varOff)
 
-        genExpr(node.end!)
+        genExpr(end)
         let endOff = stackOffset
         stackOffset += 8
         emitStore(reg: 0, offset: endOff)
@@ -1122,9 +1128,9 @@ public class NativeCompiler {
                 let strOff = addString(key)
                 emitAdrpAdd(reg: 0, dataOffset: strOff)
             }
-        } else if let idx = node as? IndexAccess, let ref = idx.array as? VarRef, arrays[ref.name] != nil {
+        } else if let idx = node as? IndexAccess, let ref = idx.array as? VarRef, let arrInfo = arrays[ref.name] {
             // Array index access
-            let isStr = arrays[ref.name]!.elemType == .stringArray
+            let isStr = arrInfo.elemType == .stringArray
             genArrayIndexLoad(name: ref.name, index: idx.index, isString: isStr)
         } else if let idx = node as? IndexAccess, let innerIdx = idx.array as? IndexAccess,
                   let ref = innerIdx.array as? VarRef, arrays[ref.name]?.elemType == .nestedArray {

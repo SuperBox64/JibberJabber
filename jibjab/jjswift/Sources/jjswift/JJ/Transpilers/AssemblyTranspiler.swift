@@ -845,39 +845,38 @@ public class AssemblyTranspiler {
     }
 
     private func genLoop(_ node: LoopStmt) {
-        if node.start != nil && node.end != nil {
-            let loopStart = newLabel(prefix: "loop")
-            let loopEnd = newLabel(prefix: "endloop")
+        guard let start = node.start, let end = node.end else { return }
+        let loopStart = newLabel(prefix: "loop")
+        let loopEnd = newLabel(prefix: "endloop")
 
-            genExpr(node.start!)
-            if variables[node.var] == nil {
-                variables[node.var] = stackOffset
-                stackOffset += 8
-            }
-            let varOffset = variables[node.var]!
-            asmLines.append("    stur w0, [x29, #-\(varOffset + 16)]")
-
-            genExpr(node.end!)
-            let endOffset = stackOffset
+        genExpr(start)
+        if variables[node.var] == nil {
+            variables[node.var] = stackOffset
             stackOffset += 8
-            asmLines.append("    stur w0, [x29, #-\(endOffset + 16)]")
-
-            asmLines.append("\(loopStart):")
-            asmLines.append("    ldur w0, [x29, #-\(varOffset + 16)]")
-            asmLines.append("    ldur w1, [x29, #-\(endOffset + 16)]")
-            asmLines.append("    cmp w0, w1")
-            asmLines.append("    b.ge \(loopEnd)")
-
-            for stmt in node.body {
-                genStmt(stmt)
-            }
-
-            asmLines.append("    ldur w0, [x29, #-\(varOffset + 16)]")
-            asmLines.append("    add w0, w0, #1")
-            asmLines.append("    stur w0, [x29, #-\(varOffset + 16)]")
-            asmLines.append("    b \(loopStart)")
-            asmLines.append("\(loopEnd):")
         }
+        guard let varOffset = variables[node.var] else { return }
+        asmLines.append("    stur w0, [x29, #-\(varOffset + 16)]")
+
+        genExpr(end)
+        let endOffset = stackOffset
+        stackOffset += 8
+        asmLines.append("    stur w0, [x29, #-\(endOffset + 16)]")
+
+        asmLines.append("\(loopStart):")
+        asmLines.append("    ldur w0, [x29, #-\(varOffset + 16)]")
+        asmLines.append("    ldur w1, [x29, #-\(endOffset + 16)]")
+        asmLines.append("    cmp w0, w1")
+        asmLines.append("    b.ge \(loopEnd)")
+
+        for stmt in node.body {
+            genStmt(stmt)
+        }
+
+        asmLines.append("    ldur w0, [x29, #-\(varOffset + 16)]")
+        asmLines.append("    add w0, w0, #1")
+        asmLines.append("    stur w0, [x29, #-\(varOffset + 16)]")
+        asmLines.append("    b \(loopStart)")
+        asmLines.append("\(loopEnd):")
     }
 
     private func genIf(_ node: IfStmt) {

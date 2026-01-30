@@ -165,21 +165,21 @@ public class GoTranspiler: CFamilyTranspiler {
             if let lit = e as? Literal {
                 if let strVal = lit.value as? String {
                     lines.append(ind() + "\(goVar) := \"\(strVal)\"")
-                    tupleFields[node.name]!.append((goVar, "str"))
+                    tupleFields[node.name]?.append((goVar, "str"))
                 } else if let boolVal = lit.value as? Bool {
                     let val = boolVal ? "true" : "false"
                     lines.append(ind() + "\(goVar) := \(val)")
-                    tupleFields[node.name]!.append((goVar, "bool"))
+                    tupleFields[node.name]?.append((goVar, "bool"))
                 } else if let intVal = lit.value as? Int {
                     lines.append(ind() + "\(goVar) := \(intVal)")
-                    tupleFields[node.name]!.append((goVar, "int"))
+                    tupleFields[node.name]?.append((goVar, "int"))
                 } else if let doubleVal = lit.value as? Double {
                     lines.append(ind() + "\(goVar) := \(doubleVal)")
-                    tupleFields[node.name]!.append((goVar, "double"))
+                    tupleFields[node.name]?.append((goVar, "double"))
                 }
             } else {
                 lines.append(ind() + "\(goVar) := \(expr(e))")
-                tupleFields[node.name]!.append((goVar, "int"))
+                tupleFields[node.name]?.append((goVar, "int"))
             }
         }
         return lines.joined(separator: "\n")

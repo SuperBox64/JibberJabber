@@ -97,21 +97,21 @@ public class CppTranspiler: CFamilyTranspiler {
             if let lit = e as? Literal {
                 if let strVal = lit.value as? String {
                     lines.append(ind() + "std::string \(cppVar) = \"\(strVal)\";")
-                    tupleFields[node.name]!.append((cppVar, "str"))
+                    tupleFields[node.name]?.append((cppVar, "str"))
                 } else if let boolVal = lit.value as? Bool {
                     let val = boolVal ? "true" : "false"
                     lines.append(ind() + "bool \(cppVar) = \(val);")
-                    tupleFields[node.name]!.append((cppVar, "bool"))
+                    tupleFields[node.name]?.append((cppVar, "bool"))
                 } else if let intVal = lit.value as? Int {
                     lines.append(ind() + "int \(cppVar) = \(intVal);")
-                    tupleFields[node.name]!.append((cppVar, "int"))
+                    tupleFields[node.name]?.append((cppVar, "int"))
                 } else if let doubleVal = lit.value as? Double {
                     lines.append(ind() + "double \(cppVar) = \(doubleVal);")
-                    tupleFields[node.name]!.append((cppVar, "double"))
+                    tupleFields[node.name]?.append((cppVar, "double"))
                 }
             } else {
                 lines.append(ind() + "int \(cppVar) = \(expr(e));")
-                tupleFields[node.name]!.append((cppVar, "int"))
+                tupleFields[node.name]?.append((cppVar, "int"))
             }
         }
         return lines.joined(separator: "\n")

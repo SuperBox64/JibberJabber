@@ -207,8 +207,43 @@ public class Lexer {
             return
         }
 
+        // Catch malformed block keywords (e.g. <~morp3333h{...}>>, <~loo999p{...}>>)
+        // Must come after valid block checks.
+        if remaining().hasPrefix("<~") {
+            if let m = matchRegex("<~[a-zA-Z0-9]+\\{[^}]*\\}>>") {
+                // Extract block name between <~ and {
+                let afterTilde = m.dropFirst(2) // remove "<~"
+                let blockName = String(afterTilde.prefix(while: { $0 != "{" }))
+                let validBlocks = ["loop", "when", "morph"]
+                let suggestion = Lexer.closestMatch(to: blockName, from: validBlocks)
+                let msg: String
+                if let hint = suggestion {
+                    msg = "Unknown block '<~\(blockName)', did you mean '<~\(hint)'?"
+                } else {
+                    msg = "Unknown block '<~\(blockName)'"
+                }
+                addToken(.identifier, value: msg)
+                return
+            }
+            // Also catch <~badword>> (no braces, like <~els999e>> or <~tr999y>>)
+            if let m = matchRegex("<~[a-zA-Z0-9]+>>") {
+                let blockName = String(m.dropFirst(2).dropLast(2))
+                let validSimpleBlocks = ["else", "try", "oops"]
+                let suggestion = Lexer.closestMatch(to: blockName, from: validSimpleBlocks)
+                let msg: String
+                if let hint = suggestion {
+                    msg = "Unknown block '<~\(blockName)>>', did you mean '<~\(hint)>>'?"
+                } else {
+                    msg = "Unknown block '<~\(blockName)>>'"
+                }
+                addToken(.identifier, value: msg)
+                return
+            }
+        }
+
         // Operators - match full <...> token first, then validate
-        if peek() == "<" {
+        // Skip <~ patterns (block keywords handled above)
+        if peek() == "<" && peek(offset: 1) != "~" {
             if let m = matchRegex("<[^>]+>") {
                 // Check if it's a valid operator
                 let opMap: [String: TokenType] = [
@@ -339,7 +374,9 @@ public class Lexer {
                         _ = advance()
                     }
                 } else {
-                    value.append(advance().first!)
+                    if let ch = advance().first {
+                        value.append(ch)
+                    }
                 }
             }
             _ = advance() // closing quote

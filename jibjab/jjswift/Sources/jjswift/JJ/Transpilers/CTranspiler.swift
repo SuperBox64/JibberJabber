@@ -68,21 +68,21 @@ public class CTranspiler: CFamilyTranspiler {
             if let lit = e as? Literal {
                 if let strVal = lit.value as? String {
                     lines.append(ind() + "const char* \(cVar) = \"\(strVal)\";")
-                    tupleFields[node.name]!.append((cVar, "str"))
+                    tupleFields[node.name]?.append((cVar, "str"))
                 } else if let boolVal = lit.value as? Bool {
                     let val = boolVal ? 1 : 0
                     lines.append(ind() + "int \(cVar) = \(val);")
-                    tupleFields[node.name]!.append((cVar, "int"))
+                    tupleFields[node.name]?.append((cVar, "int"))
                 } else if let intVal = lit.value as? Int {
                     lines.append(ind() + "int \(cVar) = \(intVal);")
-                    tupleFields[node.name]!.append((cVar, "int"))
+                    tupleFields[node.name]?.append((cVar, "int"))
                 } else if let doubleVal = lit.value as? Double {
                     lines.append(ind() + "double \(cVar) = \(doubleVal);")
-                    tupleFields[node.name]!.append((cVar, "double"))
+                    tupleFields[node.name]?.append((cVar, "double"))
                 }
             } else {
                 lines.append(ind() + "int \(cVar) = \(expr(e));")
-                tupleFields[node.name]!.append((cVar, "int"))
+                tupleFields[node.name]?.append((cVar, "int"))
             }
         }
         return lines.joined(separator: "\n")
