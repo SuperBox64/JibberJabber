@@ -1,5 +1,4 @@
 import SwiftUI
-import SplitView
 import JJLib
 
 struct ContentView: View {
@@ -26,49 +25,42 @@ struct ContentView: View {
     ]
 
     var body: some View {
-        HSplit(
-            left: {
-                // Left sidebar - example selector
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Examples")
-                        .font(.headline)
-                        .padding(.horizontal, 12)
-                        .padding(.top, 12)
-                        .padding(.bottom, 8)
-                    List(examples, id: \.file, selection: $selectedExample) { example in
-                        Text(example.name)
-                            .tag(example.file)
-                    }
-                    .listStyle(.sidebar)
-                    .onChange(of: selectedExample) { _, newValue in
-                        loadExample(newValue)
-                    }
+        HSplitView {
+            // Left sidebar - example selector
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Examples")
+                    .font(.headline)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
+                List(examples, id: \.file, selection: $selectedExample) { example in
+                    Text(example.name)
+                        .tag(example.file)
                 }
-            },
-            right: {
-                // Main content
-                VSplit(
-                    top: {
-                        EditorTabView(
-                            selectedTab: $selectedTab,
-                            targets: targets,
-                            sourceCode: $sourceCode,
-                            transpiledOutputs: $transpiledOutputs,
-                            onRun: runCurrentTab
-                        )
-                    },
-                    bottom: {
-                        OutputView(output: runOutput, isRunning: isRunning)
-                    }
-                )
-                .fraction(FractionHolder.usingUserDefaults(0.7, key: "editorFraction"))
-                .constraints(minPFraction: 0.1, minSFraction: 0.1)
-                .styling(color: .clear, visibleThickness: 0, invisibleThickness: 2)
+                .listStyle(.sidebar)
+                .onChange(of: selectedExample) { _, newValue in
+                    loadExample(newValue)
+                }
             }
-        )
-        .fraction(FractionHolder.usingUserDefaults(0.15, key: "sidebarFraction"))
-        .constraints(minPFraction: 0.1, minSFraction: 0.5)
-        .styling(color: .clear, visibleThickness: 0, invisibleThickness: 2)
+            .frame(minWidth: 150, idealWidth: 180, maxWidth: 220)
+
+            // Main content
+            VSplitView {
+                // Top: editor + transpiled tabs
+                EditorTabView(
+                    selectedTab: $selectedTab,
+                    targets: targets,
+                    sourceCode: $sourceCode,
+                    transpiledOutputs: $transpiledOutputs,
+                    onRun: runCurrentTab
+                )
+                .frame(minHeight: 150)
+
+                // Bottom: output pane
+                OutputView(output: runOutput, isRunning: isRunning)
+                    .frame(minHeight: 80)
+            }
+        }
         .frame(minWidth: 900, minHeight: 600)
         .onChange(of: sourceCode) { _, _ in
             userHasEdited = true

@@ -21,7 +21,6 @@
 		A10010 /* common in Resources */ = {isa = PBXBuildFile; fileRef = A20010 /* common */; };
 		A10011 /* examples in Resources */ = {isa = PBXBuildFile; fileRef = A20011 /* examples */; };
 		EAB9779F2F2BF231004582EA /* JJLib in Frameworks */ = {isa = PBXBuildFile; productRef = A90001 /* JJLib */; };
-		EAB977A02F2BF231004582EA /* SplitView in Frameworks */ = {isa = PBXBuildFile; productRef = A90021 /* SplitView */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,7 +46,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EAB977A02F2BF231004582EA /* SplitView in Frameworks */,
 				EAB9779F2F2BF231004582EA /* JJLib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -118,7 +116,6 @@
 			name = BattleScript;
 			packageProductDependencies = (
 				A90001 /* JJLib */,
-				A90021 /* SplitView */,
 			);
 			productName = BattleScript;
 			productReference = A30001 /* BattleScript.app */;
@@ -150,7 +147,6 @@
 			mainGroup = A50001;
 			packageReferences = (
 				A90010 /* XCLocalSwiftPackageReference "../jibjab/jjswift" */,
-				A90020 /* XCRemoteSwiftPackageReference "SplitView" */,
 			);
 			productRefGroup = A50003 /* Products */;
 			projectDirPath = "";
@@ -402,27 +398,11 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		A90020 /* XCRemoteSwiftPackageReference "SplitView" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/stevengharris/SplitView.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
 		A90001 /* JJLib */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A90010 /* XCLocalSwiftPackageReference "../jibjab/jjswift" */;
 			productName = JJLib;
-		};
-		A90021 /* SplitView */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A90020 /* XCRemoteSwiftPackageReference "SplitView" */;
-			productName = SplitView;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
