@@ -153,6 +153,8 @@ struct ContentView: View {
             } else {
                 if code.isEmpty {
                     result = "No code to run for target: \(tab)"
+                } else if code.hasPrefix("// Parse error") || code.hasPrefix("// Transpilation failed") {
+                    result = code.replacingOccurrences(of: "// ", with: "")
                 } else {
                     result = JJEngine.compileAndRun(code, target: tab)
                     if userHasEdited,
