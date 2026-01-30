@@ -217,7 +217,10 @@
       "WebFetch(domain:9to5mac.com)",
       "WebFetch(domain:www.sublimetext.com)",
       "Bash(git revert:*)",
-      "Bash(/tmp/battlescript_objcpp_out)"
+      "Bash(/tmp/battlescript_objcpp_out)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:gist.githubusercontent.com)",
+      "mcp__xcf-server__xcf"
     ]
   }
 }
