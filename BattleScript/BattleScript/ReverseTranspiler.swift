@@ -406,7 +406,18 @@ class BraceReverseTranspiler: ReverseTranspiling {
 
             // Print
             if let m = config.printPattern.firstMatch(in: trimmed, range: range) {
-                let expr = reverseExpr(nsLine.substring(with: m.range(at: 1)))
+                // Support alternation patterns: try group 1 first, fall back to group 2
+                let captureRange1 = m.range(at: 1)
+                let captureRange2 = m.numberOfRanges > 2 ? m.range(at: 2) : NSRange(location: NSNotFound, length: 0)
+                let captured: String
+                if captureRange1.location != NSNotFound {
+                    captured = nsLine.substring(with: captureRange1)
+                } else if captureRange2.location != NSNotFound {
+                    captured = nsLine.substring(with: captureRange2)
+                } else {
+                    continue
+                }
+                let expr = reverseExpr(captured)
                 result.append("\(indent(indentLevel))~>frob{7a3}::emit(\(reverseFuncCalls(expr, style: config.callStyle)))")
                 continue
             }
@@ -588,7 +599,7 @@ class ObjCppReverseTranspiler: BraceReverseTranspiler {
             headerPatterns: ["// Transpiled from JibJab", "#import", "#include"],
             hasMainWrapper: true,
             mainPattern: "int main(",
-            printPattern: try! NSRegularExpression(pattern: "^std::cout\\s*<<\\s*(.+?)\\s*<<\\s*std::endl;$"),
+            printPattern: try! NSRegularExpression(pattern: "^(?:printf\\(\"%[a-z]*\\\\n\",\\s*(?:\\(long\\))?(.+)\\)|std::cout\\s*<<\\s*(.+?)\\s*<<\\s*std::endl);$"),
             varPattern: try! NSRegularExpression(pattern: "^(?:int|float|double|auto|bool|long)\\s+(\\w+)\\s*=\\s*(.+);$"),
             forPattern: try! NSRegularExpression(pattern: "^for\\s*\\(int\\s+(\\w+)\\s*=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
             ifPattern: try! NSRegularExpression(pattern: "^if\\s*\\((.+)\\)\\s*\\{$"),

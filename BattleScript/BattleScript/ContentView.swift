@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var transpiledOutputs: [String: String] = [:]
     @State private var runOutput = ""
     @State private var isRunning = false
+    @State private var userHasEdited = false
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -70,6 +71,7 @@ struct ContentView: View {
         .styling(color: .clear, visibleThickness: 0)
         .frame(minWidth: 900, minHeight: 600)
         .onChange(of: sourceCode) { _, _ in
+            userHasEdited = true
             updateTranspilation()
         }
     }
@@ -131,11 +133,12 @@ struct ContentView: View {
                     result = "No code to run for target: \(tab)"
                 } else {
                     result = JJEngine.compileAndRun(code, target: tab)
-                    // Reverse transpile back to JJ on successful run
-                    if !result.contains("error") && !result.contains("Error") && !result.contains("failed"),
+                    if userHasEdited,
+                       !result.contains("error") && !result.contains("Error") && !result.contains("failed"),
                        let reverser = ReverseTranspilerFactory.transpiler(for: tab),
                        let jjCode = reverser.reverseTranspile(code) {
                         DispatchQueue.main.async {
+                            userHasEdited = false
                             sourceCode = jjCode
                         }
                     }
