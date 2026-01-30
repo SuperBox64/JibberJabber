@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var isRunning = false
     @State private var userHasEdited = false
     @State private var transpileWork: DispatchWorkItem?
+    @State private var runWork: DispatchWorkItem?
     @State private var showDependencyCheck = true
     @State private var dependencyStatus: DependencyStatus?
 
@@ -123,7 +124,11 @@ struct ContentView: View {
     }
 
     private func stopRunning() {
+        runWork?.cancel()
+        runWork = nil
         JJEngine.stopRunning()
+        isRunning = false
+        runOutput = "Stopped"
     }
 
     private func runCurrentTab() {
@@ -138,7 +143,7 @@ struct ContentView: View {
             code = transpiledOutputs[tab] ?? ""
         }
 
-        DispatchQueue.global(qos: .userInitiated).async {
+        let work = DispatchWorkItem {
             let result: String
             if tab == "jj" {
                 do {
@@ -169,9 +174,13 @@ struct ContentView: View {
                 }
             }
             DispatchQueue.main.async {
-                runOutput = result
-                isRunning = false
+                if self.runWork?.isCancelled != true {
+                    runOutput = result
+                    isRunning = false
+                }
             }
         }
+        runWork = work
+        DispatchQueue.global(qos: .userInitiated).async(execute: work)
     }
 }
