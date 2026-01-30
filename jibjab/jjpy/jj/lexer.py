@@ -139,6 +139,18 @@ def _closest_keyword(input_kw: str) -> Optional[str]:
     return best
 
 
+def _closest_match(input_str: str, candidates: list) -> Optional[str]:
+    """Find the closest match from candidates using longest common subsequence"""
+    input_lower = input_str.lower()
+    best, best_score = None, 0
+    for c in candidates:
+        score = _lcs_length(input_lower, c.lower())
+        if score > best_score and score >= 2:
+            best_score = score
+            best = c
+    return best
+
+
 def _all_operator_symbols():
     """Get all valid operator symbols from jj.json"""
     return [op['symbol'] for op in JJ['operators'].values()]
@@ -313,8 +325,34 @@ class Lexer:
             self.add_token(TokenType.BLOCK_END)
             return
 
+        # Catch malformed block keywords (e.g. <~morp3333h{...}>>, <~loo999p{...}>>)
+        if self.source[self.pos:].startswith('<~'):
+            m = self.match_regex(r'<~[a-zA-Z0-9]+\{[^}]*\}>>')
+            if m:
+                block_name = m[2:m.index('{')]
+                valid_blocks = ['loop', 'when', 'morph']
+                hint = _closest_match(block_name, valid_blocks)
+                if hint:
+                    msg = f"Unknown block '<~{block_name}', did you mean '<~{hint}'?"
+                else:
+                    msg = f"Unknown block '<~{block_name}'"
+                self.add_token(TokenType.IDENTIFIER, msg)
+                return
+            m = self.match_regex(r'<~[a-zA-Z0-9]+>>')
+            if m:
+                block_name = m[2:-2]
+                valid_simple = ['else', 'try', 'oops']
+                hint = _closest_match(block_name, valid_simple)
+                if hint:
+                    msg = f"Unknown block '<~{block_name}>>', did you mean '<~{hint}>>'?"
+                else:
+                    msg = f"Unknown block '<~{block_name}>>'"
+                self.add_token(TokenType.IDENTIFIER, msg)
+                return
+
         # Operators - match full <...> token first, then validate
-        if self.peek() == '<':
+        # Skip <~ patterns (block keywords handled above)
+        if self.peek() == '<' and (self.pos + 1 >= len(self.source) or self.source[self.pos + 1] != '~'):
             m = self.match_regex(r'<[^>]+>')
             if m:
                 op_map = {

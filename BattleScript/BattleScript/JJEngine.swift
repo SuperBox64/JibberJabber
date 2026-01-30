@@ -56,9 +56,7 @@ struct JJEngine {
     }
 
     static func compileAndRun(_ code: String, target: String) -> String {
-        guard let cfg = loadTarget(target) else {
-            return "Error: could not load config for target '\(target)'"
-        }
+        let cfg = loadTarget(target)
         let basename = "battlescript_\(target)"
         let ext = cfg.ext
         let srcFile = "/tmp/\(basename)\(ext)"

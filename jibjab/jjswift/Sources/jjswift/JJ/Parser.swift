@@ -181,8 +181,10 @@ public class Parser {
             throw ParserError.invalidFunctionSignature(sig)
         }
 
-        let nameRange = Range(match.range(at: 1), in: sig)!
-        let paramsRange = Range(match.range(at: 2), in: sig)!
+        guard let nameRange = Range(match.range(at: 1), in: sig),
+              let paramsRange = Range(match.range(at: 2), in: sig) else {
+            throw ParserError.invalidFunctionSignature(sig)
+        }
         let name = String(sig[nameRange])
         let paramsStr = String(sig[paramsRange])
         let params = paramsStr.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }

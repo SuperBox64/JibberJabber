@@ -5,8 +5,9 @@ class LineNumberRulerView: NSRulerView {
     private let gutterFont = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
     private var textObserver: NSObjectProtocol?
 
-    init(textView: NSTextView) {
-        super.init(scrollView: textView.enclosingScrollView!, orientation: .verticalRuler)
+    init?(textView: NSTextView) {
+        guard let scrollView = textView.enclosingScrollView else { return nil }
+        super.init(scrollView: scrollView, orientation: .verticalRuler)
         self.clientView = textView
         ruleThickness = 36
 
@@ -42,7 +43,8 @@ class LineNumberRulerView: NSRulerView {
         ]
 
         let text = tv.string as NSString
-        let visibleRect = scrollView!.contentView.bounds
+        guard let sv = scrollView else { return }
+        let visibleRect = sv.contentView.bounds
         let textContainerInset = tv.textContainerInset
 
         // Handle empty text - still show line number 1

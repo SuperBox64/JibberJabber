@@ -43,9 +43,10 @@ struct HighlightedTextView: NSViewRepresentable {
         scrollView.documentView = textView
         scrollView.drawsBackground = false
 
-        let ruler = LineNumberRulerView(textView: textView)
-        ruler.clipsToBounds = true
-        scrollView.verticalRulerView = ruler
+        if let ruler = LineNumberRulerView(textView: textView) {
+            ruler.clipsToBounds = true
+            scrollView.verticalRulerView = ruler
+        }
         scrollView.hasVerticalRuler = true
         scrollView.rulersVisible = showLineNumbers
 

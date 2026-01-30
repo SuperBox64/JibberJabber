@@ -568,7 +568,7 @@ public class AssemblyTranspiler {
                     variables[node.name] = stackOffset
                     stackOffset += 8
                 }
-                let offset = variables[node.name]!
+                guard let offset = variables[node.name] else { return }
                 asmLines.append("    stur x0, [x29, #-\(offset + 16)]")
                 // Mark as a string-like variable for printing
                 enumVarLabels[node.name] = (enumAccess.enumName, enumAccess.caseName)
@@ -654,7 +654,7 @@ public class AssemblyTranspiler {
                     variables[node.name] = stackOffset
                     stackOffset += 8
                 }
-                let offset = variables[node.name]!
+                guard let offset = variables[node.name] else { return }
                 floatVars.insert(node.name)
                 asmLines.append("    stur d0, [x29, #-\(offset + 16)]")
             } else {
@@ -663,7 +663,7 @@ public class AssemblyTranspiler {
                     variables[node.name] = stackOffset
                     stackOffset += 8
                 }
-                let offset = variables[node.name]!
+                guard let offset = variables[node.name] else { return }
                 asmLines.append("    stur w0, [x29, #-\(offset + 16)]")
             }
         }

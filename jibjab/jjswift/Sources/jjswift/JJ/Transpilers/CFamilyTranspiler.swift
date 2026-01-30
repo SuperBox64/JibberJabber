@@ -12,7 +12,7 @@ public class CFamilyTranspiler {
     var tupleVars = Set<String>()
 
     public init(target: String) {
-        T = loadTarget(target)!
+        T = loadTarget(target)
     }
 
     func inferType(_ node: ASTNode) -> String {

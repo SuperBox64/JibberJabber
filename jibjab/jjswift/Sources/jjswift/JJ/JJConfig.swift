@@ -255,7 +255,7 @@ public let JJ: JJCoreConfig = {
 }()
 
 /// Load target config from common/targets/{name}.json
-public func loadTarget(_ name: String) -> TargetConfig? {
+public func loadTarget(_ name: String) -> TargetConfig {
     var possiblePaths: [String]
     if let base = JJEnv.basePath {
         possiblePaths = [base + "/targets/\(name).json"]
@@ -271,12 +271,14 @@ public func loadTarget(_ name: String) -> TargetConfig? {
         if FileManager.default.fileExists(atPath: path) {
             guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
                   let config = try? JSONDecoder().decode(TargetConfig.self, from: data) else {
-                return nil
+                print("Error: failed to parse common/targets/\(name).json")
+                exit(1)
             }
             return config
         }
     }
-    return nil
+    print("Error: could not find common/targets/\(name).json")
+    exit(1)
 }
 
 /// Re-escape a string value for code emission.

@@ -43,7 +43,7 @@ class Parser:
             return self.advance()
         token = self.peek()
         got_value = str(token.value) if token.value is not None else self.token_symbol(token.type)
-        if isinstance(got_value, str) and (got_value.startswith("Unknown operator") or got_value.startswith("Unexpected symbol")):
+        if isinstance(got_value, str) and (got_value.startswith("Unknown ") or got_value.startswith("Unexpected ")):
             raise SyntaxError(f"{got_value} at line {token.line}")
         raise SyntaxError(f"Expected {type.name.lower()}, got '{got_value}' at line {token.line}")
 
@@ -79,7 +79,7 @@ class Parser:
             else:
                 bad = self.advance()
                 token_text = str(bad.value) if bad.value is not None else str(bad.type.name.lower())
-                if token_text.startswith(("Unknown keyword", "Invalid hash", "Unknown operator", "Unexpected symbol")):
+                if token_text.startswith(("Unknown ", "Invalid ", "Unexpected ")):
                     raise SyntaxError(f"{token_text} at line {bad.line}")
                 raise SyntaxError(f"Unrecognized statement '{token_text}' at line {bad.line}")
         return Program(statements)
@@ -197,7 +197,7 @@ class Parser:
             else:
                 bad = self.advance()
                 token_text = str(bad.value) if bad.value is not None else str(bad.type.name.lower())
-                if token_text.startswith(("Unknown keyword", "Invalid hash", "Unknown operator", "Unexpected symbol")):
+                if token_text.startswith(("Unknown ", "Invalid ", "Unexpected ")):
                     raise SyntaxError(f"{token_text} at line {bad.line}")
                 raise SyntaxError(f"Unrecognized statement '{token_text}' at line {bad.line}")
         if self.peek().type == TokenType.BLOCK_END:
@@ -369,9 +369,7 @@ class Parser:
             name = token.value
             # Check for error tokens from the lexer
             if isinstance(name, str) and (name.startswith("Unknown ") or name.startswith("Invalid ") or name.startswith("Unexpected ")):
-                if name.startswith(("Unknown keyword", "Invalid hash", "Unknown operator", "Unexpected symbol")):
-                    raise SyntaxError(f"{name} at line {token.line}")
-                raise SyntaxError(f"Unrecognized '{name}' at line {token.line}")
+                raise SyntaxError(f"{name} at line {token.line}")
             return self.parse_postfix(VarRef(name))
 
         token = self.peek()

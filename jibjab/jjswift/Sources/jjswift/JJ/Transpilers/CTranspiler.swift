@@ -23,17 +23,17 @@ public class CTranspiler: CFamilyTranspiler {
                 if let vLit = v as? Literal {
                     if let strVal = vLit.value as? String {
                         lines.append(ind() + "const char* \(cVar) = \"\(strVal)\";")
-                        dictFields[node.name]![key] = (cVar, "str")
+                        dictFields[node.name, default: [:]][key] = (cVar, "str")
                     } else if let boolVal = vLit.value as? Bool {
                         let val = boolVal ? 1 : 0
                         lines.append(ind() + "int \(cVar) = \(val);")
-                        dictFields[node.name]![key] = (cVar, "int")
+                        dictFields[node.name, default: [:]][key] = (cVar, "int")
                     } else if let intVal = vLit.value as? Int {
                         lines.append(ind() + "int \(cVar) = \(intVal);")
-                        dictFields[node.name]![key] = (cVar, "int")
+                        dictFields[node.name, default: [:]][key] = (cVar, "int")
                     } else if let doubleVal = vLit.value as? Double {
                         lines.append(ind() + "double \(cVar) = \(doubleVal);")
-                        dictFields[node.name]![key] = (cVar, "double")
+                        dictFields[node.name, default: [:]][key] = (cVar, "double")
                     }
                 } else if let arrVal = v as? ArrayLiteral {
                     if !arrVal.elements.isEmpty {
@@ -46,10 +46,10 @@ public class CTranspiler: CFamilyTranspiler {
                         }
                         let elements = arrVal.elements.map { expr($0) }.joined(separator: ", ")
                         lines.append(ind() + "\(elemType) \(cVar)[] = {\(elements)};")
-                        dictFields[node.name]![key] = (cVar, "array")
+                        dictFields[node.name, default: [:]][key] = (cVar, "array")
                     } else {
                         lines.append(ind() + "int \(cVar)[] = {};")
-                        dictFields[node.name]![key] = (cVar, "array")
+                        dictFields[node.name, default: [:]][key] = (cVar, "array")
                     }
                 }
             }

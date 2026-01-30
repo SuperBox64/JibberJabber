@@ -338,9 +338,9 @@ public class Lexer {
                 let suffix = matchRegex("(i8|i16|i32|i64|u8|u16|u32|u64|u|f|d)")
                 let numericType = parseNumericType(suffix, hasDecimal: num.contains("."))
                 if num.contains(".") {
-                    addToken(.number, value: Double(num)!, numericType: numericType)
+                    addToken(.number, value: Double(num) ?? 0.0, numericType: numericType)
                 } else {
-                    addToken(.number, value: Int(num)!, numericType: numericType)
+                    addToken(.number, value: Int(num) ?? 0, numericType: numericType)
                 }
                 return
             }
@@ -353,9 +353,9 @@ public class Lexer {
                 let suffix = matchRegex("(i8|i16|i32|i64|u8|u16|u32|u64|u|f|d)")
                 let numericType = parseNumericType(suffix, hasDecimal: num.contains("."))
                 if num.contains(".") {
-                    addToken(.number, value: Double(num)!, numericType: numericType)
+                    addToken(.number, value: Double(num) ?? 0.0, numericType: numericType)
                 } else {
-                    addToken(.number, value: Int(num)!, numericType: numericType)
+                    addToken(.number, value: Int(num) ?? 0, numericType: numericType)
                 }
                 return
             }

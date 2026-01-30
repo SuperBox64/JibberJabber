@@ -120,17 +120,17 @@ public class GoTranspiler: CFamilyTranspiler {
                 if let vLit = v as? Literal {
                     if let strVal = vLit.value as? String {
                         lines.append(ind() + "\(goVar) := \"\(strVal)\"")
-                        dictFields[node.name]![key] = (goVar, "str")
+                        dictFields[node.name, default: [:]][key] = (goVar, "str")
                     } else if let boolVal = vLit.value as? Bool {
                         let val = boolVal ? "true" : "false"
                         lines.append(ind() + "\(goVar) := \(val)")
-                        dictFields[node.name]![key] = (goVar, "bool")
+                        dictFields[node.name, default: [:]][key] = (goVar, "bool")
                     } else if let intVal = vLit.value as? Int {
                         lines.append(ind() + "\(goVar) := \(intVal)")
-                        dictFields[node.name]![key] = (goVar, "int")
+                        dictFields[node.name, default: [:]][key] = (goVar, "int")
                     } else if let doubleVal = vLit.value as? Double {
                         lines.append(ind() + "\(goVar) := \(doubleVal)")
-                        dictFields[node.name]![key] = (goVar, "double")
+                        dictFields[node.name, default: [:]][key] = (goVar, "double")
                     }
                 } else if let arrVal = v as? ArrayLiteral {
                     if !arrVal.elements.isEmpty {
@@ -143,10 +143,10 @@ public class GoTranspiler: CFamilyTranspiler {
                         }
                         let elements = arrVal.elements.map { expr($0) }.joined(separator: ", ")
                         lines.append(ind() + "\(goVar) := []\(elemType){\(elements)}")
-                        dictFields[node.name]![key] = (goVar, "array")
+                        dictFields[node.name, default: [:]][key] = (goVar, "array")
                     } else {
                         lines.append(ind() + "\(goVar) := []int{}")
-                        dictFields[node.name]![key] = (goVar, "array")
+                        dictFields[node.name, default: [:]][key] = (goVar, "array")
                     }
                 }
             }

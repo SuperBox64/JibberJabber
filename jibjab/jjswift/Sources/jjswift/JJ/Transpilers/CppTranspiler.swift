@@ -52,17 +52,17 @@ public class CppTranspiler: CFamilyTranspiler {
                 if let vLit = v as? Literal {
                     if let strVal = vLit.value as? String {
                         lines.append(ind() + "std::string \(cppVar) = \"\(strVal)\";")
-                        dictFields[node.name]![key] = (cppVar, "str")
+                        dictFields[node.name, default: [:]][key] = (cppVar, "str")
                     } else if let boolVal = vLit.value as? Bool {
                         let val = boolVal ? "true" : "false"
                         lines.append(ind() + "bool \(cppVar) = \(val);")
-                        dictFields[node.name]![key] = (cppVar, "bool")
+                        dictFields[node.name, default: [:]][key] = (cppVar, "bool")
                     } else if let intVal = vLit.value as? Int {
                         lines.append(ind() + "int \(cppVar) = \(intVal);")
-                        dictFields[node.name]![key] = (cppVar, "int")
+                        dictFields[node.name, default: [:]][key] = (cppVar, "int")
                     } else if let doubleVal = vLit.value as? Double {
                         lines.append(ind() + "double \(cppVar) = \(doubleVal);")
-                        dictFields[node.name]![key] = (cppVar, "double")
+                        dictFields[node.name, default: [:]][key] = (cppVar, "double")
                     }
                 } else if let arrVal = v as? ArrayLiteral {
                     if !arrVal.elements.isEmpty {
@@ -75,10 +75,10 @@ public class CppTranspiler: CFamilyTranspiler {
                         }
                         let elements = arrVal.elements.map { expr($0) }.joined(separator: ", ")
                         lines.append(ind() + "\(elemType) \(cppVar)[] = {\(elements)};")
-                        dictFields[node.name]![key] = (cppVar, "array")
+                        dictFields[node.name, default: [:]][key] = (cppVar, "array")
                     } else {
                         lines.append(ind() + "int \(cppVar)[] = {};")
-                        dictFields[node.name]![key] = (cppVar, "array")
+                        dictFields[node.name, default: [:]][key] = (cppVar, "array")
                     }
                 }
             }

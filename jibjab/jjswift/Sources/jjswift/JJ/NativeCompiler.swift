@@ -878,7 +878,7 @@ public class NativeCompiler {
             // Store base offsets of sub-arrays as the outer array
             let outerBase = stackOffset
             for subName in subArrayNames {
-                let subInfo = arrays[subName]!
+                guard let subInfo = arrays[subName] else { continue }
                 emitMovImm(reg: 0, value: subInfo.offset)
                 if variables[name] == nil || stackOffset == outerBase + subArrayNames.count * 8 {
                     // Just keep stacking
