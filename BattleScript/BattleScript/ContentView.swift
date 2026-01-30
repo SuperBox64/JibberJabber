@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var runOutput = ""
     @State private var isRunning = false
     @State private var userHasEdited = false
+    @State private var transpileWork: DispatchWorkItem?
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -78,22 +79,35 @@ struct ContentView: View {
     }
 
     private func updateTranspilation() {
+        transpileWork?.cancel()
         guard !sourceCode.isEmpty else {
             transpiledOutputs = [:]
             return
         }
-        do {
-            let program = try JJEngine.parse(sourceCode)
-            var outputs: [String: String] = [:]
-            for target in targets where target != "jj" {
-                outputs[target] = JJEngine.transpile(program, target: target) ?? "// Transpilation failed"
-            }
-            transpiledOutputs = outputs
-        } catch {
-            for target in targets where target != "jj" {
-                transpiledOutputs[target] = "// Parse error: \(error)"
+        let code = sourceCode
+        let work = DispatchWorkItem {
+            do {
+                let program = try JJEngine.parse(code)
+                var outputs: [String: String] = [:]
+                for target in targets where target != "jj" {
+                    outputs[target] = JJEngine.transpile(program, target: target) ?? "// Transpilation failed"
+                }
+                DispatchQueue.main.async {
+                    transpiledOutputs = outputs
+                }
+            } catch {
+                let errorMsg = "// Parse error: \(error)"
+                DispatchQueue.main.async {
+                    var outputs: [String: String] = [:]
+                    for target in targets where target != "jj" {
+                        outputs[target] = errorMsg
+                    }
+                    transpiledOutputs = outputs
+                }
             }
         }
+        transpileWork = work
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.15, execute: work)
     }
 
     private func runCurrentTab() {
