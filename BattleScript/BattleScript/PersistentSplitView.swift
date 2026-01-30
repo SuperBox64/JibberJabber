@@ -30,7 +30,7 @@ struct PersistentHSplitView<Left: View, Right: View>: NSViewControllerRepresenta
         let leftHost = NSHostingController(rootView: left)
         let leftItem = NSSplitViewItem(sidebarWithViewController: leftHost)
         leftItem.canCollapse = false
-        leftItem.minimumThickness = 80
+        leftItem.minimumThickness = 100
         leftItem.maximumThickness = leftMaxWidth
         controller.addSplitViewItem(leftItem)
 
