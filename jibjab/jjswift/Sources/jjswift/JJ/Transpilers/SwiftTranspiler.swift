@@ -4,7 +4,7 @@
 public class SwiftTranspiler {
     public init() {}
     private var indentLevel = 0
-    private let T = loadTarget("swift")
+    private let T = loadTarget("swift")!
     private var doubleVars = Set<String>()
     private var enums = Set<String>()
     private var dictVars = Set<String>()

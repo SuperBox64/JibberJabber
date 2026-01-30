@@ -4,7 +4,7 @@
 public class JavaScriptTranspiler {
     public init() {}
     private var indentLevel = 0
-    private let T = loadTarget("js")
+    private let T = loadTarget("js")!
     private var enums = Set<String>()
 
     public func transpile(_ program: Program) -> String {

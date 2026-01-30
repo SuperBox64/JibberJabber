@@ -21,7 +21,7 @@ private func safeName(_ name: String) -> String {
 public class AppleScriptTranspiler {
     public init() {}
     private var indentLevel = 0
-    private let T = loadTarget("applescript")
+    private let T = loadTarget("applescript")!
     private let OP = JJ.operators
     private var enums: [String: [String]] = [:]  // Track enum name -> cases
 

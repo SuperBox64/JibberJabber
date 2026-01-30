@@ -38,7 +38,7 @@ func transpileCode(_ target: String, _ program: Program) -> String? {
 }
 
 func writeSrc(_ code: String, _ basename: String, _ target: String) -> String {
-    let ext = loadTarget(target).ext
+    let ext = loadTarget(target)?.ext ?? ""
     let srcFile = "/tmp/\(basename)\(ext)"
     try? code.write(toFile: srcFile, atomically: true, encoding: .utf8)
     return srcFile
@@ -68,7 +68,7 @@ func compileSrc(_ target: String, _ srcFile: String, _ outFile: String) -> Bool 
         ldProc.waitUntilExit()
         return ldProc.terminationStatus == 0
     }
-    let cfg = loadTarget(target)
+    guard let cfg = loadTarget(target) else { return false }
     guard let compileCmd = cfg.compile else { return false }
     let cmd = compileCmd.map { $0.replacingOccurrences(of: "{src}", with: srcFile).replacingOccurrences(of: "{out}", with: outFile) }
     let process = Process()
@@ -82,7 +82,7 @@ func compileSrc(_ target: String, _ srcFile: String, _ outFile: String) -> Bool 
 }
 
 func runSrc(_ target: String, _ srcFile: String) -> Bool {
-    let cfg = loadTarget(target)
+    guard let cfg = loadTarget(target) else { return false }
     guard let runCmd = cfg.run else { return false }
     let cmd = runCmd.map { $0.replacingOccurrences(of: "{src}", with: srcFile) }
     let process = Process()
@@ -183,7 +183,10 @@ func main() {
         guard let code = transpileCode(target, program) else { exit(1) }
         let srcFile = writeSrc(code, basename, target)
 
-        let cfg = loadTarget(target)
+        guard let cfg = loadTarget(target) else {
+            print("Error: could not load config for target '\(target)'")
+            exit(1)
+        }
         let hasCompiler = cfg.compile != nil
 
         if hasCompiler || target == "asm" {
@@ -208,7 +211,10 @@ func main() {
         guard let code = transpileCode(target, program) else { exit(1) }
         let srcFile = writeSrc(code, basename, target)
 
-        let cfg = loadTarget(target)
+        guard let cfg = loadTarget(target) else {
+            print("Error: could not load config for target '\(target)'")
+            exit(1)
+        }
         let hasCompiler = cfg.compile != nil
         let hasRunner = cfg.run != nil
 

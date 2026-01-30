@@ -4,7 +4,7 @@
 public class PythonTranspiler {
     public init() {}
     private var indentLevel = 0
-    private let T = loadTarget("py")
+    private let T = loadTarget("py")!
 
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
