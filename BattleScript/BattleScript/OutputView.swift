@@ -21,7 +21,7 @@ struct OutputView: View {
             Divider()
 
             ScrollView {
-                Text(output.isEmpty ? "Press Run to execute..." : output)
+                Text(output.isEmpty ? (isRunning ? "Running..." : "Press Run to execute...") : output)
                     .font(.system(.body, design: .monospaced))
                     .foregroundColor(output.isEmpty ? .secondary : .primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
