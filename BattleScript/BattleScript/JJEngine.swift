@@ -99,12 +99,18 @@ struct JJEngine {
         process.standardError = errPipe
         do {
             try process.run()
-            process.waitUntilExit()
         } catch {
             return "Run error: \(error)"
         }
-        let out = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        let err = String(data: errPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        // Read both pipes concurrently to avoid deadlock when output exceeds pipe buffer
+        var errData = Data()
+        let errQueue = DispatchQueue(label: "stderr-reader")
+        errQueue.async { errData = errPipe.fileHandleForReading.readDataToEndOfFile() }
+        let outData = pipe.fileHandleForReading.readDataToEndOfFile()
+        errQueue.sync {} // wait for stderr read to finish
+        process.waitUntilExit()
+        let out = String(data: outData, encoding: .utf8) ?? ""
+        let err = String(data: errData, encoding: .utf8) ?? ""
         return out + (err.isEmpty ? "" : "\nstderr: \(err)")
     }
 
@@ -130,12 +136,18 @@ struct JJEngine {
         process.standardError = errPipe
         do {
             try process.run()
-            process.waitUntilExit()
         } catch {
             return (false, "Process error: \(error)")
         }
-        let out = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        let err = String(data: errPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        // Read both pipes concurrently to avoid deadlock when output exceeds pipe buffer
+        var errData = Data()
+        let errQueue = DispatchQueue(label: "stderr-reader")
+        errQueue.async { errData = errPipe.fileHandleForReading.readDataToEndOfFile() }
+        let outData = pipe.fileHandleForReading.readDataToEndOfFile()
+        errQueue.sync {} // wait for stderr read to finish
+        process.waitUntilExit()
+        let out = String(data: outData, encoding: .utf8) ?? ""
+        let err = String(data: errData, encoding: .utf8) ?? ""
         let ok = process.terminationStatus == 0
         let combined = (out + err).trimmingCharacters(in: .whitespacesAndNewlines)
         return (ok, ok ? (combined.isEmpty ? out : combined) : (err + out))
