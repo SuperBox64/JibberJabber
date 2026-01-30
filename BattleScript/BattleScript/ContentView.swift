@@ -28,7 +28,7 @@ struct ContentView: View {
     ]
 
     var body: some View {
-        PersistentHSplitView(autosaveName: "MainHSplit", leftMinWidth: 100, leftMaxWidth: 220) {
+        PersistentHSplitView(autosaveName: "MainHSplit", leftMinWidth: 115, leftMaxWidth: 220) {
             // Left sidebar - example selector
             VStack(alignment: .leading, spacing: 0) {
                 Text("Examples")
