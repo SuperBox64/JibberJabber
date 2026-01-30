@@ -142,15 +142,21 @@ public class Lexer {
                 let hash = String(afterBrace.prefix(while: { $0 != "}" }))
 
                 // Known valid keyword{hash} pairs from jj.json
-                let validKeywords = JJ.validHashes ?? [:]
+                let validHashes = JJ.validHashes ?? [:]
 
                 let msg: String
-                if let expectedHash = validKeywords[keyword] {
+                if let expectedHash = validHashes[keyword] {
                     // Valid keyword but bad hash
                     msg = "Invalid hash '{\(hash)}' for keyword '~>\(keyword)' (expected '{\(expectedHash)}')"
                 } else {
-                    // Unknown keyword entirely
-                    msg = "Unknown keyword '~>\(keyword){\(hash)}'"
+                    // Unknown keyword - suggest closest valid keyword
+                    let allKeywordNames = Lexer.extractKeywordNames()
+                    let suggestion = Lexer.closestMatch(to: keyword, from: allKeywordNames)
+                    if let hint = suggestion {
+                        msg = "Unknown keyword '~>\(keyword){\(hash)}', did you mean '~>\(hint)'?"
+                    } else {
+                        msg = "Unknown keyword '~>\(keyword){\(hash)}'"
+                    }
                 }
                 addToken(.identifier, value: msg)
                 return
@@ -411,5 +417,53 @@ public class Lexer {
         case "d": return "Double"
         default: return hasDecimal ? "Double" : "Int"
         }
+    }
+
+    /// Extract keyword names from jj.json keywords (e.g. "frob" from "~>frob{7a3}", "snag" from "~>snag")
+    static func extractKeywordNames() -> [String] {
+        let keywords = [
+            JJ.keywords.print, JJ.keywords.input,
+            JJ.keywords.yeet, JJ.keywords.snag,
+            JJ.keywords.invoke, JJ.keywords.enum
+        ]
+        return keywords.compactMap { kw -> String? in
+            guard kw.hasPrefix("~>") else { return nil }
+            let name = kw.dropFirst(2)
+            if let braceIdx = name.firstIndex(of: "{") {
+                return String(name[name.startIndex..<braceIdx])
+            }
+            return String(name)
+        }
+    }
+
+    /// Find the closest valid keyword name using longest common subsequence
+    static func closestMatch(to input: String, from candidates: [String]) -> String? {
+        let inputLower = input.lowercased()
+        var best: String?
+        var bestScore = 0
+        for candidate in candidates {
+            let score = lcsLength(inputLower, candidate.lowercased())
+            if score > bestScore && score >= 2 {
+                bestScore = score
+                best = candidate
+            }
+        }
+        return best
+    }
+
+    /// Longest common subsequence length
+    private static func lcsLength(_ a: String, _ b: String) -> Int {
+        let a = Array(a), b = Array(b)
+        var dp = Array(repeating: Array(repeating: 0, count: b.count + 1), count: a.count + 1)
+        for i in 1...a.count {
+            for j in 1...b.count {
+                if a[i-1] == b[j-1] {
+                    dp[i][j] = dp[i-1][j-1] + 1
+                } else {
+                    dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+                }
+            }
+        }
+        return dp[a.count][b.count]
     }
 }

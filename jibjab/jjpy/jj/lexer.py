@@ -101,6 +101,44 @@ def load_jj_config():
 JJ = load_jj_config()
 
 
+def _extract_keyword_names():
+    """Extract keyword names from jj.json (e.g. 'frob' from '~>frob{7a3}', 'snag' from '~>snag')"""
+    names = []
+    for kw in JJ['keywords'].values():
+        if not kw.startswith('~>'):
+            continue
+        name = kw[2:]
+        brace = name.find('{')
+        names.append(name[:brace] if brace >= 0 else name)
+    return names
+
+
+def _lcs_length(a: str, b: str) -> int:
+    """Longest common subsequence length"""
+    m, n = len(a), len(b)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if a[i-1] == b[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    return dp[m][n]
+
+
+def _closest_keyword(input_kw: str) -> Optional[str]:
+    """Find the closest valid keyword using longest common subsequence"""
+    candidates = _extract_keyword_names()
+    input_lower = input_kw.lower()
+    best, best_score = None, 0
+    for c in candidates:
+        score = _lcs_length(input_lower, c.lower())
+        if score > best_score and score >= 2:
+            best_score = score
+            best = c
+    return best
+
+
 def load_target_config(target: str):
     """Load target config from common/targets/{target}.json"""
     target_paths = [
@@ -220,7 +258,11 @@ class Lexer:
                 if keyword in valid_hashes:
                     msg = f"Invalid hash '{{{hash_val}}}' for keyword '~>{keyword}' (expected '{{{valid_hashes[keyword]}}}')"
                 else:
-                    msg = f"Unknown keyword '~>{keyword}{{{hash_val}}}'"
+                    hint = _closest_keyword(keyword)
+                    if hint:
+                        msg = f"Unknown keyword '~>{keyword}{{{hash_val}}}', did you mean '~>{hint}'?"
+                    else:
+                        msg = f"Unknown keyword '~>{keyword}{{{hash_val}}}'"
                 self.add_token(TokenType.IDENTIFIER, msg)
                 return
 
