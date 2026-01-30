@@ -185,13 +185,15 @@ public class CFamilyTranspiler {
 
     func loopToString(_ node: LoopStmt) -> String {
         var header: String
-        if node.start != nil {
+        if let start = node.start, let end = node.end {
             header = ind() + T.forRange
                 .replacingOccurrences(of: "{var}", with: node.var)
-                .replacingOccurrences(of: "{start}", with: expr(node.start!))
-                .replacingOccurrences(of: "{end}", with: expr(node.end!))
+                .replacingOccurrences(of: "{start}", with: expr(start))
+                .replacingOccurrences(of: "{end}", with: expr(end))
+        } else if let condition = node.condition {
+            header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(condition))
         } else {
-            header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(node.condition!))
+            header = ind() + "// unsupported loop"
         }
         indentLevel += 1
         let body = node.body.map { stmtToString($0) }.joined(separator: "\n")

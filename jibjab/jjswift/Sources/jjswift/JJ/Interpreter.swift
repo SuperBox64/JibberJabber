@@ -25,9 +25,9 @@ public class Interpreter {
         } else if let varDecl = node as? VarDecl {
             locals[locals.count - 1][varDecl.name] = evaluate(varDecl.value)
         } else if let loopStmt = node as? LoopStmt {
-            if loopStmt.start != nil && loopStmt.end != nil {
-                let start = toInt(evaluate(loopStmt.start!))
-                let end = toInt(evaluate(loopStmt.end!))
+            if let startNode = loopStmt.start, let endNode = loopStmt.end {
+                let start = toInt(evaluate(startNode))
+                let end = toInt(evaluate(endNode))
                 for i in start..<end {
                     locals[locals.count - 1][loopStmt.var] = i
                     for stmt in loopStmt.body {

@@ -27,17 +27,19 @@ public class PythonTranspiler {
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
         } else if let loopStmt = node as? LoopStmt {
             var header: String
-            if loopStmt.start != nil {
+            if let start = loopStmt.start, let end = loopStmt.end {
                 header = ind() + T.forRange
                     .replacingOccurrences(of: "{var}", with: loopStmt.var)
-                    .replacingOccurrences(of: "{start}", with: expr(loopStmt.start!))
-                    .replacingOccurrences(of: "{end}", with: expr(loopStmt.end!))
+                    .replacingOccurrences(of: "{start}", with: expr(start))
+                    .replacingOccurrences(of: "{end}", with: expr(end))
             } else if let collection = loopStmt.collection {
                 header = ind() + T.forIn
                     .replacingOccurrences(of: "{var}", with: loopStmt.var)
                     .replacingOccurrences(of: "{collection}", with: expr(collection))
+            } else if let condition = loopStmt.condition {
+                header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(condition))
             } else {
-                header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(loopStmt.condition!))
+                header = ind() + "# unsupported loop"
             }
             indentLevel += 1
             let body = loopStmt.body.map { stmtToString($0) }.joined(separator: "\n")
