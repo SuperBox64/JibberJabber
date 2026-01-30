@@ -34,8 +34,8 @@ struct ContentView: View {
                 Text("Examples")
                     .font(.headline)
                     .padding(.horizontal, 12)
-                    .padding(.top, 12)
-                    .padding(.bottom, 8)
+                    .padding(.top, 5)
+                    .padding(.bottom, 5)
                 List(examples, id: \.file, selection: $selectedExample) { example in
                     Text(example.name)
                         .tag(example.file)
