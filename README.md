@@ -428,6 +428,8 @@ TOTAL: 380 passed, 0 failed
 
 BattleScript is a native macOS app that provides a visual IDE for JibJab. Write JJ code and instantly see it transpiled to all 10 target languages, then compile and run any target with one click.
 
+**Startup Checks** - On launch, BattleScript automatically verifies that required tools are installed (Xcode Command Line Tools, Go, QuickJS) and displays an animated status overlay. Missing tools are flagged with install instructions.
+
 See [BattleScript/README.md](BattleScript/README.md) for details.
 
 ---

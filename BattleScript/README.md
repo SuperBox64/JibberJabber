@@ -68,6 +68,16 @@ This installs the `go` toolchain to `/opt/homebrew/bin/`.
 | ARM64 Assembly | `as` + `ld` | `xcode-select --install` |
 | AppleScript | `osascript` | Pre-installed on macOS |
 
+### Startup Checks
+
+BattleScript automatically checks for required dependencies on launch and displays an animated overlay showing the status of each tool:
+
+- **Xcode Command Line Tools** (`clang`)
+- **Go** (`go`)
+- **QuickJS** (`qjsc`)
+
+If all tools are found, the overlay auto-dismisses. If any are missing, install hints are shown with a dismiss button.
+
 ---
 
 ## Building
