@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcscmblueprint
+DerivedData/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Build artifacts
+*.scpt
+*.o
+a.out
+/tmp/battlescript_*

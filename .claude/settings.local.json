@@ -379,7 +379,16 @@
       "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber add jibjab/jjswift/Sources/jjswift/JJ/JJConfig.swift jibjab/jjswift/Sources/jjswift/main.swift jibjab/jjswift/Sources/jjswift/JJ/Transpilers/SwiftTranspiler.swift jibjab/jjswift/Sources/jjswift/JJ/Transpilers/JavaScriptTranspiler.swift jibjab/jjswift/Sources/jjswift/JJ/Transpilers/PythonTranspiler.swift jibjab/jjswift/Sources/jjswift/JJ/Transpilers/AppleScriptTranspiler.swift jibjab/jjswift/Sources/jjswift/JJ/Transpilers/CFamilyTranspiler.swift BattleScript/BattleScript/JJEngine.swift)",
       "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber commit -m \"$\\(cat <<''EOF''\nReplace fatalError in loadTarget with optional return\n\nloadTarget now returns TargetConfig? instead of crashing. Callers with\nuser-supplied targets \\(JJEngine, CLI\\) handle nil gracefully with error\nmessages. Transpiler property initializers force-unwrap since bundled\nconfigs are guaranteed to exist.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber add jibjab/jjswift/Sources/jjswift/JJ/JJConfig.swift)",
-      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber commit -m \"$\\(cat <<''EOF''\nReplace fatalError for missing jj.json with clean exit\n\nPrint a readable error message and exit\\(1\\) instead of crashing with a\nfatalError stack trace when common/jj.json is missing or unparseable.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber commit -m \"$\\(cat <<''EOF''\nReplace fatalError for missing jj.json with clean exit\n\nPrint a readable error message and exit\\(1\\) instead of crashing with a\nfatalError stack trace when common/jj.json is missing or unparseable.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git rm:*)",
+      "Bash(xargs -0 git rm --cached)",
+      "Bash(while read f)",
+      "Bash(do if file \"$f\")",
+      "Bash(then echo \"$f\")",
+      "Bash(fi)",
+      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber add .gitignore)",
+      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber add -A)",
+      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber commit -m \"$\\(cat <<''EOF''\nAdd .gitignore and remove tracked build artifacts\n\nRemove compiled AppleScript files \\(a.scpt\\), .DS_Store files,\nxcuserdata, and add .gitignore covering macOS, Xcode, SPM build\nartifacts, and compiled output files.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
