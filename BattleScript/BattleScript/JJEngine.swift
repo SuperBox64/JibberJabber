@@ -2,6 +2,18 @@ import Foundation
 import JJLib
 
 struct JJEngine {
+    static var runningProcess: Process?
+    private static let processLock = NSLock()
+
+    static func stopRunning() {
+        processLock.lock()
+        defer { processLock.unlock() }
+        if let p = runningProcess, p.isRunning {
+            p.terminate()
+        }
+        runningProcess = nil
+    }
+
     static func parse(_ source: String) throws -> Program {
         let lexer = Lexer(source: source)
         let tokens = lexer.tokenize()
@@ -98,8 +110,14 @@ struct JJEngine {
         process.standardOutput = pipe
         process.standardError = errPipe
         do {
+            processLock.lock()
+            runningProcess = process
+            processLock.unlock()
             try process.run()
         } catch {
+            processLock.lock()
+            runningProcess = nil
+            processLock.unlock()
             return "Run error: \(error)"
         }
         // Read both pipes concurrently to avoid deadlock when output exceeds pipe buffer
@@ -109,8 +127,14 @@ struct JJEngine {
         let outData = pipe.fileHandleForReading.readDataToEndOfFile()
         errQueue.sync {} // wait for stderr read to finish
         process.waitUntilExit()
+        processLock.lock()
+        runningProcess = nil
+        processLock.unlock()
         let out = String(data: outData, encoding: .utf8) ?? ""
         let err = String(data: errData, encoding: .utf8) ?? ""
+        if process.terminationReason == .uncaughtSignal {
+            return "Stopped"
+        }
         return out + (err.isEmpty ? "" : "\nstderr: \(err)")
     }
 
@@ -135,8 +159,14 @@ struct JJEngine {
         process.standardOutput = pipe
         process.standardError = errPipe
         do {
+            processLock.lock()
+            runningProcess = process
+            processLock.unlock()
             try process.run()
         } catch {
+            processLock.lock()
+            runningProcess = nil
+            processLock.unlock()
             return (false, "Process error: \(error)")
         }
         // Read both pipes concurrently to avoid deadlock when output exceeds pipe buffer
@@ -146,6 +176,12 @@ struct JJEngine {
         let outData = pipe.fileHandleForReading.readDataToEndOfFile()
         errQueue.sync {} // wait for stderr read to finish
         process.waitUntilExit()
+        processLock.lock()
+        runningProcess = nil
+        processLock.unlock()
+        if process.terminationReason == .uncaughtSignal {
+            return (false, "Stopped")
+        }
         let out = String(data: outData, encoding: .utf8) ?? ""
         let err = String(data: errData, encoding: .utf8) ?? ""
         let ok = process.terminationStatus == 0

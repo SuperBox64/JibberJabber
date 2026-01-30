@@ -110,7 +110,9 @@ struct EditorTabView: View {
     let targets: [String]
     @Binding var sourceCode: String
     @Binding var transpiledOutputs: [String: String]
+    let isRunning: Bool
     let onRun: () -> Void
+    let onStop: () -> Void
     @AppStorage("highlighterStyle") private var highlighterStyle = "Xcode"
     @AppStorage("showLineNumbers") var showLineNumbers = true
     @State private var refreshID = UUID()
@@ -147,17 +149,31 @@ struct EditorTabView: View {
                     .buttonStyle(.plain)
                 }
                 Spacer()
-                Button(action: onRun) {
-                    Label("Run", systemImage: "play.fill")
-                        .font(.system(.caption, design: .monospaced))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Color.green.opacity(0.2))
-                        .foregroundColor(.green)
-                        .cornerRadius(4)
+                if isRunning {
+                    Button(action: onStop) {
+                        Label("Stop", systemImage: "stop.fill")
+                            .font(.system(.caption, design: .monospaced))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.red.opacity(0.2))
+                            .foregroundColor(.red)
+                            .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 8)
+                } else {
+                    Button(action: onRun) {
+                        Label("Run", systemImage: "play.fill")
+                            .font(.system(.caption, design: .monospaced))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.green.opacity(0.2))
+                            .foregroundColor(.green)
+                            .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 8)
                 }
-                .buttonStyle(.plain)
-                .padding(.trailing, 8)
             }
             .padding(.vertical, 4)
             .background(Color(nsColor: .controlBackgroundColor))

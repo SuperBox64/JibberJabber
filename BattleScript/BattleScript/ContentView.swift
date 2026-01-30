@@ -54,7 +54,9 @@ struct ContentView: View {
                     targets: targets,
                     sourceCode: $sourceCode,
                     transpiledOutputs: $transpiledOutputs,
-                    onRun: runCurrentTab
+                    isRunning: isRunning,
+                    onRun: runCurrentTab,
+                    onStop: stopRunning
                 )
             } bottom: {
                 // Bottom: output pane
@@ -118,6 +120,10 @@ struct ContentView: View {
         }
         transpileWork = work
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.15, execute: work)
+    }
+
+    private func stopRunning() {
+        JJEngine.stopRunning()
     }
 
     private func runCurrentTab() {
