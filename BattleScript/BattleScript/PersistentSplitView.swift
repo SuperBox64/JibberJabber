@@ -28,7 +28,7 @@ struct PersistentHSplitView<Left: View, Right: View>: NSViewControllerRepresenta
         controller.splitView.dividerStyle = .thin
 
         let leftHost = NSHostingController(rootView: left)
-        let leftItem = NSSplitViewItem(sidebarWithViewController: leftHost)
+        let leftItem = NSSplitViewItem(viewController: leftHost)
         leftItem.canCollapse = false
         leftItem.minimumThickness = 100
         leftItem.maximumThickness = leftMaxWidth
