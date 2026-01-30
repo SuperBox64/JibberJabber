@@ -139,7 +139,12 @@ func main() {
 
     if command == "run" {
         let interpreter = Interpreter()
-        interpreter.run(program)
+        do {
+            try interpreter.run(program)
+        } catch {
+            print("Runtime error: \(error)")
+            exit(1)
+        }
 
     } else if command == "compile" {
         let outputPath = args.count > 3 ? args[3] : "a.out"

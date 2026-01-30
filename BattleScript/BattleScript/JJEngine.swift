@@ -37,13 +37,22 @@ struct JJEngine {
         let original = dup(STDOUT_FILENO)
         dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
         let interpreter = Interpreter()
-        interpreter.run(program)
+        var errorMsg: String?
+        do {
+            try interpreter.run(program)
+        } catch {
+            errorMsg = "Runtime error: \(error)"
+        }
         fflush(stdout)
         dup2(original, STDOUT_FILENO)
         close(original)
         pipe.fileHandleForWriting.closeFile()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8) ?? ""
+        let output = String(data: data, encoding: .utf8) ?? ""
+        if let errorMsg = errorMsg {
+            return output.isEmpty ? errorMsg : output + "\n" + errorMsg
+        }
+        return output
     }
 
     static func compileAndRun(_ code: String, target: String) -> String {
