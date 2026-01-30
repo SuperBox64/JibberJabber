@@ -16,7 +16,7 @@ struct DependencyOverlay: View {
 
     var body: some View {
         if isVisible, let status {
-            ZStack {
+            ZStack(alignment: .top) {
                 Color.black.opacity(0.4)
                     .ignoresSafeArea()
 
@@ -48,6 +48,7 @@ struct DependencyOverlay: View {
                         .shadow(radius: 20)
                 )
                 .frame(width: 320)
+                .padding(.top, 80)
                 .scaleEffect(dismissing ? 0.8 : 1.0)
                 .opacity(dismissing ? 0 : 1)
             }
