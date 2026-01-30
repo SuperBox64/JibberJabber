@@ -120,7 +120,7 @@ public class Parser {
         _ = advance() // SNAG
         _ = try expect(.lbrace)
         let nameToken = try expect(.identifier)
-        let name = nameToken.value as! String
+        let name = (nameToken.value as? String) ?? ""
         _ = try expect(.rbrace)
         _ = try expect(.action)
         _ = try expect(.val)
@@ -132,7 +132,7 @@ public class Parser {
 
     private func parseLoop() throws -> LoopStmt {
         let token = advance() // LOOP with value
-        let loopSpec = token.value as! String
+        let loopSpec = (token.value as? String) ?? ""
         let body = try parseBlock()
 
         // Parse loop specification
@@ -156,7 +156,7 @@ public class Parser {
 
     private func parseIf() throws -> IfStmt {
         let token = advance() // WHEN with condition
-        let condition = try parseInlineExpr(token.value as! String)
+        let condition = try parseInlineExpr((token.value as? String) ?? "")
         let thenBody = try parseBlock()
         var elseBody: [ASTNode]? = nil
 
@@ -170,10 +170,12 @@ public class Parser {
 
     private func parseFuncDef() throws -> FuncDef {
         let token = advance() // MORPH with signature
-        let sig = token.value as! String
+        let sig = (token.value as? String) ?? ""
 
         // Parse signature like "funcName(param1, param2)"
-        let regex = try! NSRegularExpression(pattern: "(\\w+)\\(([^)]*)\\)")
+        guard let regex = try? NSRegularExpression(pattern: "(\\w+)\\(([^)]*)\\)") else {
+            throw ParserError.invalidFunctionSignature(sig)
+        }
         let range = NSRange(sig.startIndex..., in: sig)
         guard let match = regex.firstMatch(in: sig, range: range) else {
             throw ParserError.invalidFunctionSignature(sig)
@@ -201,7 +203,7 @@ public class Parser {
         _ = advance() // ENUM
         _ = try expect(.lbrace)
         let nameToken = try expect(.identifier)
-        let name = nameToken.value as! String
+        let name = (nameToken.value as? String) ?? ""
         _ = try expect(.rbrace)
         _ = try expect(.action)
         _ = try expect(.cases)
@@ -209,10 +211,10 @@ public class Parser {
         var cases: [String] = []
         if peek().type != .rparen {
             let caseToken = try expect(.identifier)
-            cases.append(caseToken.value as! String)
+            cases.append((caseToken.value as? String) ?? "")
             while match(.comma) != nil {
                 let caseToken = try expect(.identifier)
-                cases.append(caseToken.value as! String)
+                cases.append((caseToken.value as? String) ?? "")
             }
         }
         _ = try expect(.rparen)
@@ -424,7 +426,7 @@ public class Parser {
         if match(.invoke) != nil {
             _ = try expect(.lbrace)
             let nameToken = try expect(.identifier)
-            let name = nameToken.value as! String
+            let name = (nameToken.value as? String) ?? ""
             _ = try expect(.rbrace)
             _ = try expect(.action)
             _ = try expect(.with)
@@ -441,7 +443,7 @@ public class Parser {
         }
 
         if let token = match(.identifier) {
-            let name = token.value as! String
+            let name = (token.value as? String) ?? ""
             // Check for error tokens from the lexer
             if name.hasPrefix("Unknown ") || name.hasPrefix("Invalid ") || name.hasPrefix("Unexpected ") {
                 throw ParserError.unrecognizedStatement(token: name, line: token.line)
@@ -491,14 +493,14 @@ public enum ParserError: Error, CustomStringConvertible {
     public var description: String {
         switch self {
         case .unexpectedToken(let expected, _, let gotValue, let line):
-            if gotValue.hasPrefix("Unknown operator") || gotValue.hasPrefix("Unexpected symbol") {
+            if gotValue.hasPrefix("Unknown ") || gotValue.hasPrefix("Unexpected ") {
                 return "\(gotValue) at line \(line)"
             }
             return "Expected \(expected), got '\(gotValue)' at line \(line)"
         case .invalidFunctionSignature(let sig):
             return "Invalid function signature: \(sig)"
         case .unrecognizedStatement(let token, let line):
-            if token.hasPrefix("Unknown keyword") || token.hasPrefix("Invalid hash") || token.hasPrefix("Unknown operator") || token.hasPrefix("Unexpected symbol") {
+            if token.hasPrefix("Unknown ") || token.hasPrefix("Invalid ") || token.hasPrefix("Unexpected ") {
                 return "\(token) at line \(line)"
             }
             return "Unrecognized statement '\(token)' at line \(line)"

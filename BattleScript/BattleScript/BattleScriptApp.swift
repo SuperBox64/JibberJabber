@@ -5,7 +5,9 @@ import JJLib
 struct BattleScriptApp: App {
     init() {
         UserDefaults.standard.register(defaults: ["showLineNumbers": true])
-        JJEnv.basePath = Bundle.main.resourcePath! + "/common"
+        if let resourcePath = Bundle.main.resourcePath {
+            JJEnv.basePath = resourcePath + "/common"
+        }
     }
 
     var body: some Scene {
