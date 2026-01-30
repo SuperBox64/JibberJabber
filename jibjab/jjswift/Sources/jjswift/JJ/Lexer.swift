@@ -131,6 +131,20 @@ public class Lexer {
             return
         }
 
+        // Catch malformed JJ action keywords (e.g. ~>frob33333{7a3} or ~>fr999ob{7aww3})
+        // Must come after valid keyword checks. Consume the rest of the line.
+        if remaining().hasPrefix("~>") {
+            if let m = matchRegex("~>[a-zA-Z0-9]+\\{[^}]*\\}[^\n]*") {
+                // Extract the bad keyword and hash between ~>keyword{hash}
+                let afterArrow = m.dropFirst(2) // remove "~>"
+                let keyword = String(afterArrow.prefix(while: { $0 != "{" }))
+                let afterBrace = afterArrow.drop(while: { $0 != "{" }).dropFirst()
+                let hash = String(afterBrace.prefix(while: { $0 != "}" }))
+                addToken(.identifier, value: "Unknown keyword '~>\(keyword)' with hash '{\(hash)}'")
+                return
+            }
+        }
+
         // Block structures
         let loopPrefix = NSRegularExpression.escapedPattern(for: JJ.blocks.loop)
         let whenPrefix = NSRegularExpression.escapedPattern(for: JJ.blocks.when)

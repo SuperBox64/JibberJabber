@@ -192,6 +192,10 @@ public class Parser {
         while peek().type != .blockEnd && peek().type != .else && peek().type != .eof {
             if let stmt = try parseStatement() {
                 statements.append(stmt)
+            } else {
+                let bad = advance()
+                let tokenText = bad.value.map { "\($0)" } ?? "\(bad.type)"
+                throw ParserError.unrecognizedStatement(token: tokenText, line: bad.line)
             }
         }
         if peek().type == .blockEnd {
@@ -443,6 +447,9 @@ public enum ParserError: Error, CustomStringConvertible {
         case .invalidFunctionSignature(let sig):
             return "Invalid function signature: \(sig)"
         case .unrecognizedStatement(let token, let line):
+            if token.hasPrefix("Unknown keyword") {
+                return "\(token) at line \(line)"
+            }
             return "Unrecognized statement '\(token)' at line \(line)"
         }
     }
