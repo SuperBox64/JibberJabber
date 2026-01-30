@@ -148,12 +148,19 @@ struct ContentView: View {
             if tab == "jj" {
                 do {
                     let program = try JJEngine.parse(code)
-                    result = JJEngine.interpret(program)
+                    // Check if transpilation succeeds before running interpreter
+                    let testTranspile = JJEngine.transpile(program, target: "py")
+                    if testTranspile == nil || testTranspile == "// Transpilation failed" {
+                        result = "Error: invalid JJ code"
+                    } else {
+                        let output = JJEngine.interpret(program)
+                        result = output.isEmpty ? "Error: code produced no output" : output
+                        DispatchQueue.main.async {
+                            updateTranspilation()
+                        }
+                    }
                 } catch {
                     result = "Parse error: \(error)"
-                }
-                DispatchQueue.main.async {
-                    updateTranspilation()
                 }
             } else {
                 if code.isEmpty {
