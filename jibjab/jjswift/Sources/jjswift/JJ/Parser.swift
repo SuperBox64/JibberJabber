@@ -44,6 +44,9 @@ public class Parser {
         while peek().type != .eof {
             if let stmt = try parseStatement() {
                 statements.append(stmt)
+            } else {
+                let bad = advance()
+                throw ParserError.unexpectedToken(expected: .eof, got: bad.type, line: bad.line)
             }
         }
         return Program(statements: statements)

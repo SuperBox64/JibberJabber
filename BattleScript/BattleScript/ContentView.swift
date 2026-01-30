@@ -146,24 +146,14 @@ struct ContentView: View {
         let work = DispatchWorkItem {
             let result: String
             if tab == "jj" {
-                // Check if transpilation already shows errors (computed on every keystroke)
-                let hasTranspileError = transpiledOutputs.values.contains { $0.hasPrefix("// Parse error") || $0.hasPrefix("// Transpilation failed") }
-                let allEmpty = transpiledOutputs.values.allSatisfy { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0 == "// Transpiled from JibJab\n" }
-
-                if hasTranspileError {
-                    result = transpiledOutputs.values.first { $0.hasPrefix("// Parse error") }?.replacingOccurrences(of: "// ", with: "") ?? "Error: invalid JJ code"
-                } else if allEmpty && !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    result = "Error: invalid JJ code"
-                } else {
-                    do {
-                        let program = try JJEngine.parse(code)
-                        result = JJEngine.interpret(program)
-                        DispatchQueue.main.async {
-                            updateTranspilation()
-                        }
-                    } catch {
-                        result = "Parse error: \(error)"
+                do {
+                    let program = try JJEngine.parse(code)
+                    result = JJEngine.interpret(program)
+                    DispatchQueue.main.async {
+                        updateTranspilation()
                     }
+                } catch {
+                    result = "Error: \(error)"
                 }
             } else {
                 if code.isEmpty {
