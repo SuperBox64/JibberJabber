@@ -245,11 +245,13 @@ public let JJ: JJCoreConfig = {
                 let data = try Data(contentsOf: URL(fileURLWithPath: path))
                 return try JSONDecoder().decode(JJCoreConfig.self, from: data)
             } catch {
-                fatalError("Error parsing common/jj.json: \(error)")
+                print("Error parsing common/jj.json: \(error)")
+                exit(1)
             }
         }
     }
-    fatalError("Could not find common/jj.json - run from jibjab directory")
+    print("Error: could not find common/jj.json - run from jibjab directory")
+    exit(1)
 }()
 
 /// Load target config from common/targets/{name}.json
