@@ -2,8 +2,7 @@
   <img src="battlescript.png" width="256" alt="BattleScript Icon">
 </p>
   
-# JibberJabber JibJab (JJ) AI Programming Language 1.0 Pre-Release
-
+# JibberJabber JibJab (JJ) AI Programming Language 1.0
 **AI-first syntax** - looks like noise to humans, but LLMs parse it naturally.
 
 ```jj
@@ -622,3 +621,7 @@ MIT
 ---
 
 *JibJab: Where humans see noise and AI sees code.*
+
+P.S.
+
+This experiment was supposed to fail and it unexpectedly did something remarkable on the first try. #LegoBatman
