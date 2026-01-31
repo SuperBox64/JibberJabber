@@ -290,7 +290,7 @@ struct EditorTabView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
                     .contentShape(Rectangle())
-                    .background(Color.teal.opacity(0.3))
+                    .background(Color.yellow.opacity(0.3))
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                 }
