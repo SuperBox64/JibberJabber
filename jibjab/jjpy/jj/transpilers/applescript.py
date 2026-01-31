@@ -61,6 +61,17 @@ class AppleScriptTranspiler:
 
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
+            if isinstance(node.expr, VarRef) and node.expr.name in self.dict_vars:
+                name = safe_name(node.expr.name)
+                tab = T['indent']
+                lines = [
+                    self.ind() + f'if {name} is {{}} then',
+                    self.ind() + tab + 'log "{}"',
+                    self.ind() + 'else',
+                    self.ind() + tab + f'log {name}',
+                    self.ind() + 'end if',
+                ]
+                return '\n'.join(lines)
             return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
             if isinstance(node.value, DictLiteral):

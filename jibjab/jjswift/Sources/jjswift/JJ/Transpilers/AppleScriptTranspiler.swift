@@ -53,9 +53,22 @@ public class AppleScriptTranspiler {
 
     private func stmtToString(_ node: ASTNode) -> String {
         if let printStmt = node as? PrintStmt {
+            // Dict var: emit runtime check so empty dicts print "{}" instead of blank
+            if let varRef = printStmt.expr as? VarRef, dictVars.contains(varRef.name) {
+                let name = safeName(varRef.name)
+                var lines: [String] = []
+                lines.append(ind() + "if \(name) is {} then")
+                lines.append(ind() + T.indent + "log \"{}\"")
+                lines.append(ind() + "else")
+                lines.append(ind() + T.indent + "log \(name)")
+                lines.append(ind() + "end if")
+                return lines.joined(separator: "\n")
+            }
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
         } else if let varDecl = node as? VarDecl {
-            if varDecl.value is DictLiteral { dictVars.insert(varDecl.name) }
+            if varDecl.value is DictLiteral {
+                dictVars.insert(varDecl.name)
+            }
             return ind() + T.var
                 .replacingOccurrences(of: "{name}", with: safeName(varDecl.name))
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))

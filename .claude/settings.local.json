@@ -393,7 +393,8 @@
       "Bash(./regression.sh:*)",
       "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber diff --stat)",
       "Bash(for lang in py js c cpp swift objc objcpp go)",
-      "Bash(do echo \"=== numbers: $lang ===\")"
+      "Bash(do echo \"=== numbers: $lang ===\")",
+      "Bash(./jibjab/jjswift/.build/debug/jjswift:*)"
     ]
   }
 }
