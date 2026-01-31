@@ -92,6 +92,8 @@ class GoTranspiler(CFamilyTranspiler):
             self.int_vars.add(node.name)
         elif inferred == 'Double':
             self.double_vars.add(node.name)
+        elif inferred == 'String':
+            self.string_vars.add(node.name)
         return self.ind() + f'{node.name} := {self.expr(node.value)}'
 
     def _var_array(self, node: VarDecl) -> str:
@@ -185,6 +187,8 @@ class GoTranspiler(CFamilyTranspiler):
             if expr_node.name in self.enums:
                 return self.ind() + f'fmt.Println("enum {expr_node.name}")'
             if expr_node.name in self.double_vars:
+                return self.ind() + f'fmt.Println({self.expr(expr_node)})'
+            if expr_node.name in self.string_vars:
                 return self.ind() + f'fmt.Println({self.expr(expr_node)})'
             # Print whole dict
             if expr_node.name in self.dict_vars:

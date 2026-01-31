@@ -131,6 +131,9 @@ public class GoTranspiler: CFamilyTranspiler {
             if doubleVars.contains(varRef.name) {
                 return ind() + "fmt.Println(\(expr(e)))"
             }
+            if stringVars.contains(varRef.name) {
+                return ind() + "fmt.Println(\(expr(e)))"
+            }
             // Print whole dict
             if dictVars.contains(varRef.name) {
                 if let fields = dictFields[varRef.name], fields.isEmpty {

@@ -13,6 +13,7 @@ public class CFamilyTranspiler {
     var dictVars = Set<String>()
     var tupleVars = Set<String>()
     var arrayVars = Set<String>()
+    var stringVars = Set<String>()
     var dictFields: [String: [String: (String, String)]] = [:]
     var tupleFields: [String: [(String, String)]] = [:]
 
@@ -43,6 +44,7 @@ public class CFamilyTranspiler {
     }
 
     func getTargetType(_ jjType: String) -> String {
+        if jjType == "String" { return expandedStringType() }
         return T.types?[jjType] ?? "int"
     }
 
@@ -227,6 +229,9 @@ public class CFamilyTranspiler {
             if doubleVars.contains(varRef.name) {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
+            if stringVars.contains(varRef.name) {
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
+            }
             // Whole dict
             if dictVars.contains(varRef.name) {
                 if let fields = dictFields[varRef.name], fields.isEmpty {
@@ -346,6 +351,7 @@ public class CFamilyTranspiler {
         let inferredType = inferType(node.value)
         if inferredType == "Int" { intVars.insert(node.name) }
         else if inferredType == "Double" { doubleVars.insert(node.name) }
+        else if inferredType == "String" { stringVars.insert(node.name) }
         let varType = getTargetType(inferredType)
         return ind() + T.var
             .replacingOccurrences(of: "{type}", with: varType)

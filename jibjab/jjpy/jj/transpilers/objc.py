@@ -34,6 +34,8 @@ class ObjCTranspiler(CFamilyTranspiler):
                 return self.ind() + f'printf("enum {expr_node.name}\\n");'
             if expr_node.name in self.double_vars:
                 return self.ind() + f'printf("%f\\n", {self.expr(expr_node)});'
+            if expr_node.name in self.string_vars:
+                return self.ind() + self.T['printStr'].replace('{expr}', self.expr(expr_node))
             if expr_node.name in self.int_vars:
                 return self.ind() + f'printf("%ld\\n", (long){self.expr(expr_node)});'
             return self.ind() + self.T['printInt'].replace('{expr}', self.expr(expr_node))

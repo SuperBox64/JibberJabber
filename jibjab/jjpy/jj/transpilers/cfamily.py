@@ -42,9 +42,12 @@ class CFamilyTranspiler:
         self.int_vars = set()
         self.dict_vars = set()
         self.tuple_vars = set()
+        self.string_vars = set()
         self.T = load_target_config(self.target_name)
 
     def get_target_type(self, jj_type: str) -> str:
+        if jj_type == 'String':
+            return self.T.get('expandStringType', self.T.get('stringType', 'const char*'))
         types = self.T.get('types', {})
         return types.get(jj_type, 'int')
 
@@ -147,6 +150,8 @@ class CFamilyTranspiler:
                 return self._print_enum_type(expr_node.name)
             if expr_node.name in self.double_vars:
                 return self.ind() + self.T['printFloat'].replace('{expr}', self.expr(expr_node))
+            if expr_node.name in self.string_vars:
+                return self.ind() + self.T['printStr'].replace('{expr}', self.expr(expr_node))
         if isinstance(expr_node, IndexAccess):
             if isinstance(expr_node.array, VarRef) and expr_node.array.name in self.enums:
                 return self._print_enum_value(expr_node)
@@ -177,6 +182,8 @@ class CFamilyTranspiler:
             self.int_vars.add(node.name)
         elif inferred == 'Double':
             self.double_vars.add(node.name)
+        elif inferred == 'String':
+            self.string_vars.add(node.name)
         var_type = self.get_target_type(inferred)
         return self.ind() + self.T['var'].replace('{type}', var_type).replace('{name}', node.name).replace('{value}', self.expr(node.value))
 

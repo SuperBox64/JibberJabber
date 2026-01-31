@@ -122,6 +122,10 @@ public class AssemblyTranspiler {
         asmLines.append("    .asciz \"%s\\n\"")
         asmLines.append("_fmt_float:")
         asmLines.append("    .asciz \"%g\\n\"")
+        asmLines.append("_bool_true:")
+        asmLines.append("    .asciz \"true\"")
+        asmLines.append("_bool_false:")
+        asmLines.append("    .asciz \"false\"")
 
         for item in strings {
             var escaped = item.value.replacingOccurrences(of: "\\", with: "\\\\")
