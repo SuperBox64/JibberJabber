@@ -276,6 +276,25 @@ struct EditorTabView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.leading, 4)
+                Button(action: {
+                    let text = selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text, forType: .string)
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "doc.on.doc")
+                            .font(.system(.caption))
+                        Text("Copy")
+                            .font(.system(.caption, design: .monospaced))
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .contentShape(Rectangle())
+                    .foregroundColor(.secondary)
+                    .cornerRadius(4)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 4)
                 Spacer()
                 ForEach(HighlighterStyle.allCases, id: \.rawValue) { style in
                     Button(action: {
