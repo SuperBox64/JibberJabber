@@ -16,12 +16,25 @@ OP = JJ['operators']
 
 # AppleScript reserved words and class names that can't be used as variable names
 APPLESCRIPT_RESERVED = {
-    'numbers', 'strings', 'characters', 'words', 'paragraphs', 'items',
-    'text', 'list', 'record', 'number', 'integer', 'real', 'string',
-    'boolean', 'date', 'file', 'alias', 'class', 'script', 'property',
-    'application', 'window', 'document', 'folder', 'disk', 'reference',
-    'it', 'me', 'my', 'result', 'true', 'false', 'missing', 'value',
-    'error', 'pi', 'tab', 'return', 'linefeed', 'quote', 'space', 'color',
+    # Language keywords
+    'it', 'me', 'my', 'true', 'false', 'error', 'return', 'every', 'some',
+    'first', 'last', 'middle', 'front', 'back',
+    # Standard Suite commands
+    'activate', 'close', 'count', 'copy', 'delete', 'duplicate', 'exists',
+    'get', 'launch', 'make', 'move', 'open', 'print', 'quit', 'reopen',
+    'run', 'save', 'set',
+    # Standard Suite classes
+    'alias', 'application', 'boolean', 'class', 'data', 'date', 'file',
+    'integer', 'item', 'list', 'number', 'point', 'real', 'record',
+    'reference', 'script', 'text',
+    # Common properties
+    'bounds', 'color', 'document', 'folder', 'disk', 'id', 'index',
+    'length', 'name', 'position', 'property', 'result', 'size', 'value',
+    'version', 'visible', 'window',
+    # Text/collection elements
+    'characters', 'items', 'numbers', 'paragraphs', 'strings', 'words',
+    # Constants
+    'missing', 'pi', 'tab', 'linefeed', 'quote', 'space', 'container',
 }
 
 
@@ -35,6 +48,7 @@ def safe_name(name: str) -> str:
 class AppleScriptTranspiler:
     def __init__(self):
         self.indent = 0
+        self.dict_vars = set()
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip()]
@@ -49,6 +63,8 @@ class AppleScriptTranspiler:
         if isinstance(node, PrintStmt):
             return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
+            if isinstance(node.value, DictLiteral):
+                self.dict_vars.add(node.name)
             return self.ind() + T['var'].replace('{name}', safe_name(node.name)).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
@@ -100,13 +116,22 @@ class AppleScriptTranspiler:
             elements = ', '.join(self.expr(e) for e in node.elements)
             return f"{{{elements}}}"
         elif isinstance(node, DictLiteral):
-            pairs = ', '.join(f"{self.expr(k)}:{self.expr(v)}" for k, v in node.pairs)
+            def safe_key(k):
+                s = self.expr(k)
+                if s.startswith('"') and s.endswith('"'):
+                    s = s[1:-1]
+                return safe_name(s)
+            pairs = ', '.join(f"{safe_key(k)}:{self.expr(v)}" for k, v in node.pairs)
             return f"{{{pairs}}}"
         elif isinstance(node, TupleLiteral):
             elements = ', '.join(self.expr(e) for e in node.elements)
             return f"{{{elements}}}"
         elif isinstance(node, IndexAccess):
-            # AppleScript uses 1-based indexing
+            # Dict access: person["name"] -> name of person
+            if isinstance(node.array, VarRef) and node.array.name in self.dict_vars:
+                if isinstance(node.index, Literal) and isinstance(node.index.value, str):
+                    return f"{safe_name(node.index.value)} of {safe_name(node.array.name)}"
+            # AppleScript uses 1-based indexing (nested dict+array resolves recursively)
             return f"item ({self.expr(node.index)} + 1) of {self.expr(node.array)}"
         elif isinstance(node, BinaryOp):
             op = node.op

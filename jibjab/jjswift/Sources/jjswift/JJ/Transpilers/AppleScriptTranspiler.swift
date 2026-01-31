@@ -3,12 +3,25 @@
 
 // AppleScript reserved words and class names that can't be used as variable names
 private let appleScriptReserved: Set<String> = [
-    "numbers", "strings", "characters", "words", "paragraphs", "items",
-    "text", "list", "record", "number", "integer", "real", "string",
-    "boolean", "date", "file", "alias", "class", "script", "property",
-    "application", "window", "document", "folder", "disk", "reference",
-    "it", "me", "my", "result", "true", "false", "missing", "value",
-    "error", "pi", "tab", "return", "linefeed", "quote", "space", "color"
+    // Language keywords
+    "it", "me", "my", "true", "false", "error", "return", "every", "some",
+    "first", "last", "middle", "front", "back",
+    // Standard Suite commands
+    "activate", "close", "count", "copy", "delete", "duplicate", "exists",
+    "get", "launch", "make", "move", "open", "print", "quit", "reopen",
+    "run", "save", "set",
+    // Standard Suite classes
+    "alias", "application", "boolean", "class", "data", "date", "file",
+    "integer", "item", "list", "number", "point", "real", "record",
+    "reference", "script", "text",
+    // Common properties
+    "bounds", "color", "document", "folder", "disk", "id", "index",
+    "length", "name", "position", "property", "result", "size", "value",
+    "version", "visible", "window",
+    // Text/collection elements
+    "characters", "items", "numbers", "paragraphs", "strings", "words",
+    // Constants
+    "missing", "pi", "tab", "linefeed", "quote", "space", "container"
 ]
 
 private func safeName(_ name: String) -> String {
@@ -24,6 +37,7 @@ public class AppleScriptTranspiler {
     private let T = loadTarget("applescript")
     private let OP = JJ.operators
     private var enums: [String: [String]] = [:]  // Track enum name -> cases
+    private var dictVars = Set<String>()          // Track dict variable names
 
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
@@ -41,6 +55,7 @@ public class AppleScriptTranspiler {
         if let printStmt = node as? PrintStmt {
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
         } else if let varDecl = node as? VarDecl {
+            if varDecl.value is DictLiteral { dictVars.insert(varDecl.name) }
             return ind() + T.var
                 .replacingOccurrences(of: "{name}", with: safeName(varDecl.name))
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
@@ -120,7 +135,14 @@ public class AppleScriptTranspiler {
             let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
             return "{\(elements)}"
         } else if let dict = node as? DictLiteral {
-            let pairs = dict.pairs.map { "\(expr($0.0)):\(expr($0.1))" }.joined(separator: ", ")
+            let pairs = dict.pairs.map { pair -> String in
+                // AppleScript record keys must be unquoted labels, prefixed if reserved
+                var key = expr(pair.0)
+                if key.hasPrefix("\"") && key.hasSuffix("\"") {
+                    key = String(key.dropFirst().dropLast())
+                }
+                return "\(safeName(key)):\(expr(pair.1))"
+            }.joined(separator: ", ")
             return "{\(pairs)}"
         } else if let tuple = node as? TupleLiteral {
             let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
@@ -132,6 +154,14 @@ public class AppleScriptTranspiler {
                     return "\(strVal) of \(safeName(varRef.name))"
                 }
             }
+            // Dict access: person["name"] -> name of person
+            if let varRef = idx.array as? VarRef, dictVars.contains(varRef.name) {
+                if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    return "\(safeName(strVal)) of \(safeName(varRef.name))"
+                }
+            }
+            // Nested dict+array: data["items"][0] -> item (0+1) of items of data
+            // The inner dict access is resolved recursively via expr(idx.array)
             return "item (\(expr(idx.index)) + 1) of \(expr(idx.array))"
         } else if let binaryOp = node as? BinaryOp {
             var op = binaryOp.op
