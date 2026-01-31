@@ -13,5 +13,6 @@ DerivedData/
 # Build artifacts
 *.scpt
 *.o
+*.out
 a.out
 /tmp/battlescript_*
