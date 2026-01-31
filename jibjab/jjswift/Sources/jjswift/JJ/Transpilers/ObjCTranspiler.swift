@@ -23,6 +23,11 @@ public class ObjCTranspiler: CFamilyTranspiler {
                 }
             }
             let argStr = args.isEmpty ? "" : ", " + args.joined(separator: ", ")
+            if let tmpl = T.printfInterp {
+                return ind() + tmpl
+                    .replacingOccurrences(of: "{fmt}", with: fmt)
+                    .replacingOccurrences(of: "{args}", with: argStr)
+            }
             return ind() + "printf(\"\(fmt)\\n\"\(argStr));"
         }
         if let lit = e as? Literal, lit.value is String {
@@ -78,14 +83,14 @@ public class ObjCTranspiler: CFamilyTranspiler {
             }
             // Array element access
             if let varRef = idx.array as? VarRef, let meta = arrayMeta[varRef.name], !meta.isNested {
-                let elemExpr = "[\(varRef.name)[\(expr(idx.index))] \(meta.elemType == "str" ? "UTF8String" : meta.elemType == "double" ? "doubleValue" : "intValue")]"
+                let elemExpr = selectorExpr("\(varRef.name)[\(expr(idx.index))]", meta.elemType)
                 return ind() + printTemplateForType(meta.elemType).replacingOccurrences(of: "{expr}", with: elemExpr)
             }
             // Nested array element: matrix[0][1]
             if let innerIdx = idx.array as? IndexAccess,
                let varRef = innerIdx.array as? VarRef,
                let meta = arrayMeta[varRef.name], meta.isNested {
-                let elemExpr = "[\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))] \(meta.innerElemType == "str" ? "UTF8String" : meta.innerElemType == "double" ? "doubleValue" : "intValue")]"
+                let elemExpr = selectorExpr("\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))]", meta.innerElemType)
                 return ind() + printTemplateForType(meta.innerElemType).replacingOccurrences(of: "{expr}", with: elemExpr)
             }
             // Dict or tuple access
@@ -103,85 +108,112 @@ public class ObjCTranspiler: CFamilyTranspiler {
 
     override func printWholeArray(_ name: String) -> String {
         guard let meta = arrayMeta[name] else {
-            return ind() + "NSLog(@\"%@\", \(name));"
+            return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: name)
         }
+        let idxType = T.loopIndexType
         if meta.isNested {
             var lines: [String] = []
-            lines.append(ind() + "printf(\"[\");")
-            lines.append(ind() + "for (NSUInteger _i = 0; _i < [\(name) count]; _i++) {")
-            lines.append(ind() + "    if (_i > 0) printf(\", \");")
-            lines.append(ind() + "    NSArray *_row = \(name)[_i];")
-            lines.append(ind() + "    printf(\"[\");")
-            lines.append(ind() + "    for (NSUInteger _j = 0; _j < [_row count]; _j++) {")
-            lines.append(ind() + "        if (_j > 0) printf(\", \");")
-            if meta.innerElemType == "str" {
-                lines.append(ind() + "        printf(\"%s\", [_row[_j] UTF8String]);")
-            } else if meta.innerElemType == "double" {
-                lines.append(ind() + "        printf(\"%g\", [_row[_j] doubleValue]);")
-            } else {
-                lines.append(ind() + "        printf(\"%d\", [_row[_j] intValue]);")
-            }
+            lines.append(ind() + printfInline("["))
+            lines.append(ind() + "for (\(idxType) _i = 0; _i < [\(name) count]; _i++) {")
+            lines.append(ind() + "    if (_i > 0) " + printfInline(", "))
+            let arrType = T.arrayType ?? "NSArray *"
+            lines.append(ind() + "    \(arrType)_row = \(name)[_i];")
+            lines.append(ind() + "    " + printfInline("["))
+            lines.append(ind() + "    for (\(idxType) _j = 0; _j < [_row count]; _j++) {")
+            lines.append(ind() + "        if (_j > 0) " + printfInline(", "))
+            let fmt = fmtSpecifier(meta.innerElemType)
+            let sel = selectorExpr("_row[_j]", meta.innerElemType)
+            lines.append(ind() + "        " + printfInlineArgs(fmt, sel))
             lines.append(ind() + "    }")
-            lines.append(ind() + "    printf(\"]\");")
+            lines.append(ind() + "    " + printfInline("]"))
             lines.append(ind() + "}")
-            lines.append(ind() + "printf(\"]\\n\");")
+            lines.append(ind() + printfInterpStr("]"))
             return lines.joined(separator: "\n")
         }
         var lines: [String] = []
-        lines.append(ind() + "printf(\"[\");")
-        lines.append(ind() + "for (NSUInteger _i = 0; _i < [\(name) count]; _i++) {")
-        lines.append(ind() + "    if (_i > 0) printf(\", \");")
-        if meta.elemType == "str" {
-            lines.append(ind() + "    printf(\"%s\", [\(name)[_i] UTF8String]);")
-        } else if meta.elemType == "double" {
-            lines.append(ind() + "    printf(\"%g\", [\(name)[_i] doubleValue]);")
-        } else {
-            lines.append(ind() + "    printf(\"%d\", [\(name)[_i] intValue]);")
-        }
+        lines.append(ind() + printfInline("["))
+        lines.append(ind() + "for (\(idxType) _i = 0; _i < [\(name) count]; _i++) {")
+        lines.append(ind() + "    if (_i > 0) " + printfInline(", "))
+        let fmt = fmtSpecifier(meta.elemType)
+        let sel = selectorExpr("\(name)[_i]", meta.elemType)
+        lines.append(ind() + "    " + printfInlineArgs(fmt, sel))
         lines.append(ind() + "}")
-        lines.append(ind() + "printf(\"]\\n\");")
+        lines.append(ind() + printfInterpStr("]"))
         return lines.joined(separator: "\n")
     }
 
     override func varArrayToString(_ node: VarDecl, _ arr: ArrayLiteral) -> String {
-        return ind() + "NSArray *\(node.name) = \(expr(node.value));"
+        let arrType = T.arrayType ?? "NSArray *"
+        return ind() + "\(arrType)\(node.name) = \(expr(node.value));"
     }
 
     override func exprArray(_ node: ArrayLiteral) -> String {
         let elements = node.elements.map { elem -> String in
             if let lit = elem as? Literal, lit.value is String {
-                return "@\(expr(elem))"
+                return boxStr(expr(elem))
             } else if elem is ArrayLiteral {
                 return expr(elem)
             } else {
-                return "@(\(expr(elem)))"
+                return boxVal(expr(elem))
             }
         }.joined(separator: ", ")
-        return "@[\(elements)]"
+        return "\(T.arrayLitOpen)\(elements)\(T.arrayLitClose)"
     }
 
     override func exprDict(_ node: DictLiteral) -> String {
-        func boxValue(_ v: ASTNode) -> String {
+        func boxDictValue(_ v: ASTNode) -> String {
             if let lit = v as? Literal, lit.value is String {
-                return "@\(expr(v))"
+                return boxStr(expr(v))
             } else if v is ArrayLiteral {
                 return expr(v)
             } else {
-                return "@(\(expr(v)))"
+                return boxVal(expr(v))
             }
         }
-        let pairs = node.pairs.map { "@\(expr($0.0)): \(boxValue($0.1))" }.joined(separator: ", ")
-        return "@{\(pairs)}"
+        let pairs = node.pairs.map { "\(boxStr(expr($0.0))): \(boxDictValue($0.1))" }.joined(separator: ", ")
+        return "\(T.dictLitOpen)\(pairs)\(T.dictLitClose)"
     }
 
     override func exprTuple(_ node: TupleLiteral) -> String {
         let elements = node.elements.map { elem -> String in
             if let lit = elem as? Literal, lit.value is String {
-                return "@\(expr(elem))"
+                return boxStr(expr(elem))
             } else {
-                return "@(\(expr(elem)))"
+                return boxVal(expr(elem))
             }
         }.joined(separator: ", ")
-        return "@[\(elements)]"
+        return "\(T.arrayLitOpen)\(elements)\(T.arrayLitClose)"
+    }
+
+    // MARK: - ObjC helpers
+
+    /// Box a string expression (e.g. @"hello")
+    private func boxStr(_ expr: String) -> String {
+        if let tmpl = T.boxString {
+            return tmpl.replacingOccurrences(of: "{expr}", with: expr)
+        }
+        return "@\(expr)"
+    }
+
+    /// Box a value expression (e.g. @(42))
+    private func boxVal(_ expr: String) -> String {
+        if let tmpl = T.boxValue {
+            return tmpl.replacingOccurrences(of: "{expr}", with: expr)
+        }
+        return "@(\(expr))"
+    }
+
+    /// Apply selector access for a given type (e.g. [expr UTF8String])
+    private func selectorExpr(_ expr: String, _ type: String) -> String {
+        let selector: String?
+        switch type {
+        case "str": selector = T.strSelector
+        case "double": selector = T.doubleSelector
+        default: selector = T.intSelector
+        }
+        guard let sel = selector, let tmpl = T.selectorAccess else { return expr }
+        return tmpl
+            .replacingOccurrences(of: "{expr}", with: expr)
+            .replacingOccurrences(of: "{selector}", with: sel)
     }
 }

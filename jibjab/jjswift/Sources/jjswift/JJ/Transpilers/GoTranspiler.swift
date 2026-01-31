@@ -38,8 +38,17 @@ public class GoTranspiler: CFamilyTranspiler {
             .trimmingCharacters(in: .newlines)
         if needsMath {
             // Replace single import with multi-import block
-            header = header.replacingOccurrences(of: "import \"fmt\"",
-                with: "import (\n\(T.indent)\"fmt\"\n\(T.indent)\"math\"\n)")
+            let singleImport = T.importSingle ?? "import \"fmt\""
+            if let multiTmpl = T.importMulti {
+                let fmtItem = T.importItem.replacingOccurrences(of: "{name}", with: "fmt")
+                let mathItem = T.importItem.replacingOccurrences(of: "{name}", with: "math")
+                let imports = "\(T.indent)\(fmtItem)\n\(T.indent)\(mathItem)"
+                let multiImport = multiTmpl.replacingOccurrences(of: "{imports}", with: imports)
+                header = header.replacingOccurrences(of: singleImport, with: multiImport)
+            } else {
+                header = header.replacingOccurrences(of: singleImport,
+                    with: "import (\n\(T.indent)\"fmt\"\n\(T.indent)\"math\"\n)")
+            }
         }
         lines.append(header)
         lines.append("")
@@ -130,33 +139,38 @@ public class GoTranspiler: CFamilyTranspiler {
                 switch part {
                 case .literal(let text): fmt += escapeString(text)
                 case .variable(let name):
-                    fmt += "%v"
+                    fmt += interpFormatSpecifier(name)
                     args.append(interpVarExpr(name))
                 }
             }
             let argStr = args.isEmpty ? "" : ", " + args.joined(separator: ", ")
-            return ind() + "fmt.Printf(\"\(fmt)\\n\"\(argStr))"
+            if let tmpl = T.printfInterp {
+                return ind() + tmpl
+                    .replacingOccurrences(of: "{fmt}", with: fmt)
+                    .replacingOccurrences(of: "{args}", with: argStr)
+            }
+            return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"\(fmt)\"")
         }
         if let lit = e as? Literal, lit.value is String {
-            return ind() + "fmt.Println(\(expr(e)))"
+            return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if let varRef = e as? VarRef {
             // Enum variable - already a string, just print
             if enumVarTypes[varRef.name] != nil {
-                return ind() + "fmt.Println(\(varRef.name))"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: varRef.name)
             }
             // Full enum - print dict representation
             if enums.contains(varRef.name) {
                 if let cases = enumCases[varRef.name] {
                     let pairs = cases.map { "\\\"\($0)\\\": \($0)" }.joined(separator: ", ")
-                    return ind() + "fmt.Println(\"{\(pairs)}\")"
+                    return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"{\(pairs)}\"")
                 }
             }
             if doubleVars.contains(varRef.name) {
-                return ind() + "fmt.Println(\(expr(e)))"
+                return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             if stringVars.contains(varRef.name) {
-                return ind() + "fmt.Println(\(expr(e)))"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             if boolVars.contains(varRef.name) {
                 return ind() + T.printBool.replacingOccurrences(of: "{expr}", with: expr(e))
@@ -164,9 +178,9 @@ public class GoTranspiler: CFamilyTranspiler {
             // Print whole dict
             if dictVars.contains(varRef.name) {
                 if let fields = dictFields[varRef.name], fields.isEmpty {
-                    return ind() + "fmt.Println(\"{}\")"
+                    return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"{}\"")
                 }
-                return ind() + "fmt.Println(\"\(varRef.name)\")"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"\(varRef.name)\"")
             }
             // Print whole tuple
             if tupleVars.contains(varRef.name) {
@@ -176,27 +190,32 @@ public class GoTranspiler: CFamilyTranspiler {
         if let idx = e as? IndexAccess {
             // Enum access - already a string
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
-                return ind() + "fmt.Println(\(expr(e)))"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             // Dict or tuple access
             if let resolved = resolveAccess(idx) {
                 let (goVar, _) = resolved
-                return ind() + "fmt.Println(\(goVar))"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: goVar)
             }
         }
         if isFloatExpr(e) {
-            return ind() + "fmt.Println(\(expr(e)))"
+            return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
         }
-        return ind() + "fmt.Println(\(expr(e)))"
+        return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
     }
 
     override func printWholeTuple(_ name: String) -> String {
         guard let fields = tupleFields[name], !fields.isEmpty else {
-            return ind() + "fmt.Println(\"()\")"
+            return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"()\"")
         }
-        let fmts = fields.map { _ in "%v" }.joined(separator: ", ")
+        let fmts = fields.map { _ in T.intFmt }.joined(separator: ", ")
         let args = fields.map { $0.0 }.joined(separator: ", ")
-        return ind() + "fmt.Printf(\"(\(fmts))\\n\", \(args))"
+        if let tmpl = T.printfInterp {
+            return ind() + tmpl
+                .replacingOccurrences(of: "{fmt}", with: "(\(fmts))")
+                .replacingOccurrences(of: "{args}", with: ", \(args)")
+        }
+        return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"(\(fmts))\"")
     }
 
     override func enumToString(_ node: EnumDef) -> String {

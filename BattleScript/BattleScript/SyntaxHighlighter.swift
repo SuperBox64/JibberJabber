@@ -405,29 +405,13 @@ class JJHighlighter: SyntaxHighlighting {
 // MARK: - Python Highlighter
 
 class PythonHighlighter: BaseSyntaxHighlighter {
-    override var keywords: [String] {
-        ["and", "as", "assert", "async", "await", "break", "continue", "del",
-         "elif", "else", "except", "finally", "for", "from", "global", "if", "in",
-         "is", "not", "or", "pass", "raise", "return", "try", "while",
-         "with", "yield"]
-    }
-    override var declarationKeywords: [String] {
-        ["class", "def", "import", "lambda", "nonlocal"]
-    }
-    override var typeKeywords: [String] {
-        ["int", "float", "str", "bool", "list", "dict", "tuple", "set", "None", "True", "False",
-         "range", "len", "type", "object", "Exception", "ValueError", "TypeError", "KeyError",
-         "IndexError", "RuntimeError", "StopIteration", "super"]
-    }
-    override var selfKeywords: [String] { ["self", "cls"] }
-    override var systemFunctions: [String] {
-        ["print", "input", "len", "range", "enumerate", "zip", "map", "filter",
-         "sorted", "reversed", "min", "max", "abs", "sum", "any", "all",
-         "isinstance", "issubclass", "hasattr", "getattr", "setattr", "delattr",
-         "open", "iter", "next", "id", "hash", "repr", "format",
-         "chr", "ord", "hex", "oct", "bin", "round", "pow", "divmod"]
-    }
-    override var singleLineCommentPrefix: String? { "#" }
+    private let T = loadTarget("py")
+    override var keywords: [String] { T.highlightKeywords }
+    override var declarationKeywords: [String] { T.highlightDeclKeywords }
+    override var typeKeywords: [String] { T.highlightTypeKeywords }
+    override var selfKeywords: [String] { T.highlightSelfKeywords }
+    override var systemFunctions: [String] { T.highlightSystemFunctions }
+    override var singleLineCommentPrefix: String? { T.highlightCommentPrefix }
     override var blockCommentStart: String? { nil }
     override var blockCommentEnd: String? { nil }
 
@@ -450,30 +434,13 @@ class PythonHighlighter: BaseSyntaxHighlighter {
 // MARK: - JavaScript Highlighter
 
 class JavaScriptHighlighter: BaseSyntaxHighlighter {
-    override var keywords: [String] {
-        ["if", "else", "for", "while", "do", "return",
-         "break", "continue", "switch", "case", "default", "try", "catch", "finally",
-         "throw", "new", "async", "await",
-         "typeof", "instanceof", "in", "of", "delete", "void",
-         "yield", "super"]
-    }
-    override var declarationKeywords: [String] {
-        ["function", "var", "let", "const", "class", "extends", "static",
-         "import", "export", "from"]
-    }
-    override var typeKeywords: [String] {
-        ["true", "false", "null", "undefined", "NaN", "Infinity",
-         "Array", "Object", "String", "Number", "Boolean", "Map", "Set", "Promise",
-         "Date", "RegExp", "Error", "Symbol", "BigInt", "JSON", "Math", "console"]
-    }
-    override var selfKeywords: [String] { ["this"] }
-    override var systemFunctions: [String] {
-        ["alert", "confirm", "prompt", "parseInt", "parseFloat",
-         "isNaN", "isFinite", "decodeURI", "encodeURI",
-         "decodeURIComponent", "encodeURIComponent",
-         "setTimeout", "setInterval", "clearTimeout", "clearInterval",
-         "fetch", "require"]
-    }
+    private let T = loadTarget("js")
+    override var keywords: [String] { T.highlightKeywords }
+    override var declarationKeywords: [String] { T.highlightDeclKeywords }
+    override var typeKeywords: [String] { T.highlightTypeKeywords }
+    override var selfKeywords: [String] { T.highlightSelfKeywords }
+    override var systemFunctions: [String] { T.highlightSystemFunctions }
+    override var singleLineCommentPrefix: String? { T.highlightCommentPrefix }
 
     private static let _opRegex = try? NSRegularExpression(pattern: "=>|===|!==|==|!=|<=|>=|&&|\\|\\||\\?\\?|\\?\\.|\\.\\.\\.|\\.\\.|\\*\\*|<<|>>>|>>|[+\\-*/%<>&|^~!]")
     override var operatorPattern: NSRegularExpression? { Self._opRegex }
@@ -491,28 +458,12 @@ class JavaScriptHighlighter: BaseSyntaxHighlighter {
 // MARK: - C Highlighter
 
 class CHighlighter: BaseSyntaxHighlighter {
-    override var keywords: [String] {
-        ["break", "case", "continue", "default", "do", "else",
-         "for", "goto", "if", "return", "sizeof",
-         "switch", "while"]
-    }
-    override var declarationKeywords: [String] {
-        ["auto", "const", "enum", "extern", "inline", "register",
-         "static", "struct", "typedef", "union", "volatile"]
-    }
-    override var typeKeywords: [String] {
-        ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
-         "size_t", "bool", "FILE", "NULL", "true", "false"]
-    }
-    override var systemFunctions: [String] {
-        ["printf", "fprintf", "sprintf", "snprintf", "scanf", "fscanf", "sscanf",
-         "puts", "fputs", "gets", "fgets", "putchar", "getchar",
-         "malloc", "calloc", "realloc", "free",
-         "memcpy", "memmove", "memset", "memcmp",
-         "strlen", "strcpy", "strncpy", "strcat", "strncat", "strcmp", "strncmp",
-         "fopen", "fclose", "fread", "fwrite", "fseek", "ftell",
-         "exit", "abort", "atoi", "atof", "atol", "abs", "rand", "srand"]
-    }
+    private let T = loadTarget("c")
+    override var keywords: [String] { T.highlightKeywords }
+    override var declarationKeywords: [String] { T.highlightDeclKeywords }
+    override var typeKeywords: [String] { T.highlightTypeKeywords }
+    override var systemFunctions: [String] { T.highlightSystemFunctions }
+    override var singleLineCommentPrefix: String? { T.highlightCommentPrefix }
 
     private static let preprocessorRegex = try? NSRegularExpression(pattern: "^\\s*#\\s*\\w+.*$", options: .anchorsMatchLines)
     private static let _opRegex = try? NSRegularExpression(pattern: "->|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^~!]")
@@ -527,38 +478,13 @@ class CHighlighter: BaseSyntaxHighlighter {
 // MARK: - C++ Highlighter
 
 class CppHighlighter: BaseSyntaxHighlighter {
-    override var keywords: [String] {
-        ["break", "case", "catch", "continue",
-         "default", "delete", "do", "else",
-         "for", "goto", "if", "new", "noexcept",
-         "return", "sizeof", "switch",
-         "throw", "try", "while"]
-    }
-    override var declarationKeywords: [String] {
-        ["auto", "class", "const", "constexpr",
-         "enum", "explicit", "export", "extern",
-         "final", "friend", "inline", "mutable", "namespace",
-         "operator", "override", "private", "protected", "public",
-         "register", "static", "static_cast", "struct",
-         "template", "typedef", "typeid", "typename",
-         "union", "using", "virtual", "volatile", "nullptr"]
-    }
-    override var typeKeywords: [String] {
-        ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
-         "bool", "string", "vector", "map", "set", "pair", "size_t",
-         "true", "false", "NULL", "cout", "cin", "endl", "cerr"]
-    }
-    override var selfKeywords: [String] { ["this"] }
-    override var systemFunctions: [String] {
-        ["printf", "fprintf", "sprintf", "snprintf", "scanf",
-         "puts", "fputs", "getchar", "putchar",
-         "malloc", "calloc", "realloc", "free",
-         "memcpy", "memmove", "memset", "strlen", "strcmp",
-         "exit", "abort", "abs", "rand", "srand",
-         "sort", "find", "push_back", "emplace_back", "begin", "end",
-         "make_shared", "make_unique", "make_pair",
-         "move", "forward", "swap"]
-    }
+    private let T = loadTarget("cpp")
+    override var keywords: [String] { T.highlightKeywords }
+    override var declarationKeywords: [String] { T.highlightDeclKeywords }
+    override var typeKeywords: [String] { T.highlightTypeKeywords }
+    override var selfKeywords: [String] { T.highlightSelfKeywords }
+    override var systemFunctions: [String] { T.highlightSystemFunctions }
+    override var singleLineCommentPrefix: String? { T.highlightCommentPrefix }
 
     private static let preprocessorRegex = try? NSRegularExpression(pattern: "^\\s*#\\s*\\w+.*$", options: .anchorsMatchLines)
     private static let _opRegex = try? NSRegularExpression(pattern: "->|::|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^~!]")
@@ -573,42 +499,13 @@ class CppHighlighter: BaseSyntaxHighlighter {
 // MARK: - Swift Highlighter
 
 class SwiftHighlighter: BaseSyntaxHighlighter {
-    // Control-flow keywords (purple in VSCode)
-    override var keywords: [String] {
-        ["if", "else", "guard", "for", "while", "repeat",
-         "switch", "case", "default", "break", "continue", "return", "defer",
-         "do", "try", "catch", "throw", "throws", "rethrows",
-         "where", "as", "is", "in", "super",
-         "async", "await"]
-    }
-    // Declaration keywords (blue in VSCode, same as keyword in Xcode)
-    override var declarationKeywords: [String] {
-        ["func", "var", "let", "class", "struct", "enum", "extension", "protocol",
-         "mutating", "inout", "import", "public", "private",
-         "internal", "fileprivate", "open", "final", "required", "convenience",
-         "static", "subscript", "init", "deinit", "override",
-         "typealias", "associatedtype", "some", "any",
-         "actor", "nonisolated", "isolated", "sending",
-         "weak", "unowned", "lazy", "dynamic", "indirect", "consuming", "borrowing"]
-    }
-    override var typeKeywords: [String] {
-        ["Int", "Int8", "Int16", "Int32", "Int64", "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
-         "String", "Double", "Float", "Bool", "Character", "Array", "Dictionary",
-         "Set", "Optional", "Any", "AnyObject", "Void", "Error", "Result",
-         "Codable", "Encodable", "Decodable", "Hashable", "Equatable", "Comparable",
-         "Identifiable", "Sendable", "CustomStringConvertible",
-         "true", "false", "nil"]
-    }
-    override var selfKeywords: [String] { ["self", "Self"] }
-    override var systemFunctions: [String] {
-        ["print", "debugPrint", "dump", "fatalError", "preconditionFailure",
-         "precondition", "assert", "assertionFailure",
-         "min", "max", "abs", "stride", "zip", "type",
-         "isKnownUniquelyReferenced", "swap", "withUnsafePointer",
-         "withUnsafeMutablePointer", "withUnsafeBytes",
-         "MemoryLayout", "unsafeBitCast", "numericCast",
-         "readLine", "repeatElement", "sequence"]
-    }
+    private let T = loadTarget("swift")
+    override var keywords: [String] { T.highlightKeywords }
+    override var declarationKeywords: [String] { T.highlightDeclKeywords }
+    override var typeKeywords: [String] { T.highlightTypeKeywords }
+    override var selfKeywords: [String] { T.highlightSelfKeywords }
+    override var systemFunctions: [String] { T.highlightSystemFunctions }
+    override var singleLineCommentPrefix: String? { T.highlightCommentPrefix }
 
     private static let _opRegex = try? NSRegularExpression(pattern: "->|==|!=|<=|>=|&&|\\|\\||\\?\\.|\\.\\.<|\\.\\.\\.|\\?\\?|[+\\-*/%<>&|^~!?]")
     override var operatorPattern: NSRegularExpression? { Self._opRegex }
@@ -620,31 +517,16 @@ class SwiftHighlighter: BaseSyntaxHighlighter {
 // MARK: - Objective-C Highlighter
 
 class ObjCHighlighter: BaseSyntaxHighlighter {
-    override var keywords: [String] {
-        ["break", "case", "continue", "default", "do", "else",
-         "for", "goto", "if", "return", "sizeof",
-         "switch", "while", "super"]
-    }
-    override var declarationKeywords: [String] {
-        ["auto", "const", "enum", "extern", "inline", "register",
-         "static", "struct", "typedef", "union", "volatile",
-         "nil", "Nil", "YES", "NO", "NULL"]
-    }
-    override var selfKeywords: [String] { ["self"] }
-    override var systemFunctions: [String] {
-        ["printf", "NSLog", "fprintf", "sprintf", "scanf",
-         "puts", "malloc", "calloc", "realloc", "free",
-         "memcpy", "memmove", "memset", "strlen", "strcmp",
-         "exit", "abort", "abs"]
-    }
+    private let T = loadTarget("objc")
+    override var keywords: [String] { T.highlightKeywords }
+    override var declarationKeywords: [String] { T.highlightDeclKeywords }
+    override var selfKeywords: [String] { T.highlightSelfKeywords }
+    override var systemFunctions: [String] { T.highlightSystemFunctions }
+    override var singleLineCommentPrefix: String? { T.highlightCommentPrefix }
+    override var typeKeywords: [String] { T.highlightTypeKeywords }
 
     private static let _opRegex = try? NSRegularExpression(pattern: "->|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^~!]")
     override var operatorPattern: NSRegularExpression? { Self._opRegex }
-    override var typeKeywords: [String] {
-        ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
-         "id", "BOOL", "NSString", "NSArray", "NSDictionary", "NSNumber", "NSObject",
-         "NSInteger", "NSUInteger", "CGFloat", "instancetype", "SEL", "IMP", "Class"]
-    }
 
     private static let preprocessorRegex = try? NSRegularExpression(pattern: "^\\s*#\\s*\\w+.*$", options: .anchorsMatchLines)
     private static let objcDirectiveRegex = try? NSRegularExpression(pattern: "@\\w+")
@@ -671,41 +553,16 @@ class ObjCHighlighter: BaseSyntaxHighlighter {
 // MARK: - Objective-C++ Highlighter
 
 class ObjCppHighlighter: BaseSyntaxHighlighter {
-    override var keywords: [String] {
-        ["break", "case", "catch", "continue",
-         "default", "delete", "do", "else",
-         "for", "goto", "if", "new", "noexcept",
-         "return", "sizeof", "switch",
-         "throw", "try", "while", "super"]
-    }
-    override var declarationKeywords: [String] {
-        ["auto", "class", "const", "constexpr",
-         "enum", "explicit", "export", "extern",
-         "final", "friend", "inline", "mutable", "namespace",
-         "operator", "override", "private", "protected", "public",
-         "register", "static", "struct",
-         "template", "typedef", "typename",
-         "union", "using", "virtual", "volatile",
-         "nil", "Nil", "YES", "NO", "NULL", "nullptr"]
-    }
-    override var selfKeywords: [String] { ["self", "this"] }
-    override var systemFunctions: [String] {
-        ["printf", "NSLog", "fprintf", "sprintf", "scanf",
-         "puts", "malloc", "calloc", "realloc", "free",
-         "memcpy", "memmove", "memset", "strlen", "strcmp",
-         "sort", "find", "push_back", "begin", "end",
-         "make_shared", "make_unique", "move", "swap",
-         "exit", "abort", "abs"]
-    }
+    private let T = loadTarget("objcpp")
+    override var keywords: [String] { T.highlightKeywords }
+    override var declarationKeywords: [String] { T.highlightDeclKeywords }
+    override var selfKeywords: [String] { T.highlightSelfKeywords }
+    override var systemFunctions: [String] { T.highlightSystemFunctions }
+    override var singleLineCommentPrefix: String? { T.highlightCommentPrefix }
+    override var typeKeywords: [String] { T.highlightTypeKeywords }
 
     private static let _opRegex = try? NSRegularExpression(pattern: "->|::|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^~!]")
     override var operatorPattern: NSRegularExpression? { Self._opRegex }
-    override var typeKeywords: [String] {
-        ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
-         "bool", "string", "vector", "id", "BOOL",
-         "NSString", "NSArray", "NSDictionary", "NSNumber", "NSObject",
-         "true", "false"]
-    }
 
     private static let preprocessorRegex = try? NSRegularExpression(pattern: "^\\s*#\\s*\\w+.*$", options: .anchorsMatchLines)
     private static let objcDirectiveRegex = try? NSRegularExpression(pattern: "@\\w+")
@@ -730,27 +587,12 @@ class ObjCppHighlighter: BaseSyntaxHighlighter {
 // MARK: - Go Highlighter
 
 class GoHighlighter: BaseSyntaxHighlighter {
-    override var keywords: [String] {
-        ["if", "else", "for", "range",
-         "switch", "case", "default", "break", "continue", "return", "defer",
-         "go", "select", "fallthrough", "goto"]
-    }
-    override var declarationKeywords: [String] {
-        ["func", "var", "const", "package", "import",
-         "chan", "type", "struct", "interface", "map"]
-    }
-    override var typeKeywords: [String] {
-        ["int", "int8", "int16", "int32", "int64",
-         "uint", "uint8", "uint16", "uint32", "uint64",
-         "float32", "float64", "complex64", "complex128",
-         "string", "bool", "byte", "rune", "error", "any",
-         "true", "false", "nil", "iota",
-         "fmt", "Println", "Printf", "Sprintf", "Fprintf"]
-    }
-    override var systemFunctions: [String] {
-        ["println", "print", "panic", "recover", "make", "new",
-         "append", "copy", "delete", "len", "cap", "close"]
-    }
+    private let T = loadTarget("go")
+    override var keywords: [String] { T.highlightKeywords }
+    override var declarationKeywords: [String] { T.highlightDeclKeywords }
+    override var typeKeywords: [String] { T.highlightTypeKeywords }
+    override var systemFunctions: [String] { T.highlightSystemFunctions }
+    override var singleLineCommentPrefix: String? { T.highlightCommentPrefix }
 
     private static let _opRegex = try? NSRegularExpression(pattern: ":=|<-|==|!=|<=|>=|&&|\\|\\||<<|>>|\\+\\+|--|[+\\-*/%<>&|^!]")
     override var operatorPattern: NSRegularExpression? { Self._opRegex }

@@ -28,6 +28,7 @@ struct DictInfo {
 }
 
 public class AssemblyTranspiler: Transpiling {
+    private let T = loadTarget("asm")
     public init() {}
     private var asmLines: [String] = []
     private var strings: [(label: String, value: String, addNewline: Bool)] = []
@@ -65,7 +66,7 @@ public class AssemblyTranspiler: Transpiling {
 
         // Header
         asmLines.append("// JibJab -> ARM64 Assembly (macOS)")
-        asmLines.append(".global _main")
+        asmLines.append(".global \(T.mainLabel)")
         asmLines.append(".align 4")
         asmLines.append("")
 
@@ -78,7 +79,7 @@ public class AssemblyTranspiler: Transpiling {
 
         // Generate main
         let mainStmts = program.statements.filter { !($0 is FuncDef) }
-        asmLines.append("_main:")
+        asmLines.append("\(T.mainLabel):")
         asmLines.append("    stp x29, x30, [sp, #-16]!")
         asmLines.append("    stp x19, x20, [sp, #-16]!")
         asmLines.append("    stp x21, x22, [sp, #-16]!")
@@ -116,15 +117,15 @@ public class AssemblyTranspiler: Transpiling {
 
         // Data section
         asmLines.append(".data")
-        asmLines.append("_fmt_int:")
-        asmLines.append("    .asciz \"%d\\n\"")
-        asmLines.append("_fmt_str:")
-        asmLines.append("    .asciz \"%s\\n\"")
-        asmLines.append("_fmt_float:")
-        asmLines.append("    .asciz \"%g\\n\"")
-        asmLines.append("_bool_true:")
+        asmLines.append("\(T.fmtIntLabel):")
+        asmLines.append("    .asciz \"\(T.fmtIntStr)\"")
+        asmLines.append("\(T.fmtStrLabel):")
+        asmLines.append("    .asciz \"\(T.fmtStrStr)\"")
+        asmLines.append("\(T.fmtFloatLabel):")
+        asmLines.append("    .asciz \"\(T.fmtFloatStr)\"")
+        asmLines.append("\(T.boolTrueLabel):")
         asmLines.append("    .asciz \"true\"")
-        asmLines.append("_bool_false:")
+        asmLines.append("\(T.boolFalseLabel):")
         asmLines.append("    .asciz \"false\"")
 
         for item in strings {
@@ -284,9 +285,9 @@ public class AssemblyTranspiler: Transpiling {
             // For simplicity, build a single printf call with format + one arg at a time
             // Actually, printf supports multiple args. Load them in order.
             if varNames.isEmpty {
-                asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(fmtLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(fmtLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             } else {
                 // For each variable, load onto stack
                 for (i, name) in varNames.enumerated() {
@@ -301,25 +302,25 @@ public class AssemblyTranspiler: Transpiling {
                         }
                     }
                 }
-                asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(fmtLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(fmtLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             }
             return
         }
         if let literal = node.expr as? Literal, let str = literal.value as? String {
             let strLabel = addStringRaw(str)
-            asmLines.append("    adrp x0, \(strLabel)@PAGE")
-            asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
-            asmLines.append("    bl _printf")
+            asmLines.append("    adrp x0, \(strLabel)\(T.pageDirective)")
+            asmLines.append("    add x0, x0, \(strLabel)\(T.pageOffDirective)")
+            asmLines.append("    bl \(T.printfSymbol)")
         } else if let varRef = node.expr as? VarRef, let _ = enumVarLabels[varRef.name] {
             // Print enum variable by name (stored as string pointer)
             if let offset = variables[varRef.name] {
                 asmLines.append("    ldur x0, [x29, #-\(offset + 16)]")
                 asmLines.append("    str x0, [sp]")
-                asmLines.append("    adrp x0, _fmt_str@PAGE")
-                asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(T.fmtStrLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(T.fmtStrLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             }
         } else if let idx = node.expr as? IndexAccess,
                   let varRef = idx.array as? VarRef,
@@ -328,12 +329,12 @@ public class AssemblyTranspiler: Transpiling {
             if let lit = idx.index as? Literal, let strVal = lit.value as? String,
                let caseLabels = enumCaseLabels[varRef.name],
                let label = caseLabels[strVal] {
-                asmLines.append("    adrp x0, \(label)@PAGE")
-                asmLines.append("    add x0, x0, \(label)@PAGEOFF")
+                asmLines.append("    adrp x0, \(label)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(label)\(T.pageOffDirective)")
                 asmLines.append("    str x0, [sp]")
-                asmLines.append("    adrp x0, _fmt_str@PAGE")
-                asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(T.fmtStrLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(T.fmtStrLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             }
         } else if let varRef = node.expr as? VarRef, let enumCases = enums[varRef.name] {
             // Print full enum: {"Red": Red, "Green": Green, "Blue": Blue}
@@ -343,40 +344,40 @@ public class AssemblyTranspiler: Transpiling {
 
             // Print opening brace
             let openLabel = addString("{")
-            asmLines.append("    adrp x0, \(openLabel)@PAGE")
-            asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
-            asmLines.append("    bl _printf")
+            asmLines.append("    adrp x0, \(openLabel)\(T.pageDirective)")
+            asmLines.append("    add x0, x0, \(openLabel)\(T.pageOffDirective)")
+            asmLines.append("    bl \(T.printfSymbol)")
 
             for (i, caseName) in caseNames.enumerated() {
                 // Print separator between pairs
                 if i > 0 {
                     let sepLabel = addString(", ")
-                    asmLines.append("    adrp x0, \(sepLabel)@PAGE")
-                    asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
-                    asmLines.append("    bl _printf")
+                    asmLines.append("    adrp x0, \(sepLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(sepLabel)\(T.pageOffDirective)")
+                    asmLines.append("    bl \(T.printfSymbol)")
                 }
                 // Print "caseName": (with quotes around key)
                 let keyLabel = addString("\"\(caseName)\": ")
-                asmLines.append("    adrp x0, \(keyLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(keyLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(keyLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(keyLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
                 // Print case value (the case name string, unquoted)
                 if let label = caseLabels[caseName] {
-                    asmLines.append("    adrp x0, \(label)@PAGE")
-                    asmLines.append("    add x0, x0, \(label)@PAGEOFF")
+                    asmLines.append("    adrp x0, \(label)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(label)\(T.pageOffDirective)")
                     asmLines.append("    str x0, [sp]")
                     let fmtLabel = addString("%s")
-                    asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
-                    asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
-                    asmLines.append("    bl _printf")
+                    asmLines.append("    adrp x0, \(fmtLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(fmtLabel)\(T.pageOffDirective)")
+                    asmLines.append("    bl \(T.printfSymbol)")
                 }
             }
 
             // Print closing brace + newline
             let closeLabel = addStringRaw("}")
-            asmLines.append("    adrp x0, \(closeLabel)@PAGE")
-            asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
-            asmLines.append("    bl _printf")
+            asmLines.append("    adrp x0, \(closeLabel)\(T.pageDirective)")
+            asmLines.append("    add x0, x0, \(closeLabel)\(T.pageOffDirective)")
+            asmLines.append("    bl \(T.printfSymbol)")
         } else if let varRef = node.expr as? VarRef, let tupleInfo = tuples[varRef.name] {
             // Print full tuple: (elem1, elem2, ...)
             // We print it formatted like the interpreter
@@ -392,88 +393,88 @@ public class AssemblyTranspiler: Transpiling {
                 case .string:
                     asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
                     asmLines.append("    str x0, [sp]")
-                    asmLines.append("    adrp x0, _fmt_str@PAGE")
-                    asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
-                    asmLines.append("    bl _printf")
+                    asmLines.append("    adrp x0, \(T.fmtStrLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(T.fmtStrLabel)\(T.pageOffDirective)")
+                    asmLines.append("    bl \(T.printfSymbol)")
                 case .int:
                     asmLines.append("    ldur w0, [x29, #-\(elemOffset + 16)]")
                     asmLines.append("    sxtw x0, w0")
                     asmLines.append("    str x0, [sp]")
-                    asmLines.append("    adrp x0, _fmt_int@PAGE")
-                    asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
-                    asmLines.append("    bl _printf")
+                    asmLines.append("    adrp x0, \(T.fmtIntLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(T.fmtIntLabel)\(T.pageOffDirective)")
+                    asmLines.append("    bl \(T.printfSymbol)")
                 case .bool:
                     asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
                     asmLines.append("    str x0, [sp]")
-                    asmLines.append("    adrp x0, _fmt_str@PAGE")
-                    asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
-                    asmLines.append("    bl _printf")
+                    asmLines.append("    adrp x0, \(T.fmtStrLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(T.fmtStrLabel)\(T.pageOffDirective)")
+                    asmLines.append("    bl \(T.printfSymbol)")
                 }
             }
         } else if let varRef = node.expr as? VarRef, let dictInfo = dicts[varRef.name] {
             // Print empty dict
             if dictInfo.keys.isEmpty {
                 let strLabel = addStringRaw("{}")
-                asmLines.append("    adrp x0, \(strLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(strLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(strLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             } else {
                 // Print full dict: {"key": value, ...}
                 let openLabel = addString("{")
-                asmLines.append("    adrp x0, \(openLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(openLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(openLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
 
                 for (i, key) in dictInfo.keys.enumerated() {
                     if i > 0 {
                         let sepLabel = addString(", ")
-                        asmLines.append("    adrp x0, \(sepLabel)@PAGE")
-                        asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(sepLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(sepLabel)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     }
                     // Print "key":
                     let keyLabel = addString("\"\(key)\": ")
-                    asmLines.append("    adrp x0, \(keyLabel)@PAGE")
-                    asmLines.append("    add x0, x0, \(keyLabel)@PAGEOFF")
-                    asmLines.append("    bl _printf")
+                    asmLines.append("    adrp x0, \(keyLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(keyLabel)\(T.pageOffDirective)")
+                    asmLines.append("    bl \(T.printfSymbol)")
 
                     // Check for nested array value (e.g., "items": [1, 2, 3])
                     let syntheticName = "\(varRef.name).\(key)"
                     if let arrInfo = arrays[syntheticName] {
                         // Print array inline: [elem, elem, ...]
                         let arrOpen = addString("[")
-                        asmLines.append("    adrp x0, \(arrOpen)@PAGE")
-                        asmLines.append("    add x0, x0, \(arrOpen)@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(arrOpen)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(arrOpen)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                         for j in 0..<arrInfo.count {
                             if j > 0 {
                                 let s = addString(", ")
-                                asmLines.append("    adrp x0, \(s)@PAGE")
-                                asmLines.append("    add x0, x0, \(s)@PAGEOFF")
-                                asmLines.append("    bl _printf")
+                                asmLines.append("    adrp x0, \(s)\(T.pageDirective)")
+                                asmLines.append("    add x0, x0, \(s)\(T.pageOffDirective)")
+                                asmLines.append("    bl \(T.printfSymbol)")
                             }
                             let elemOffset = arrInfo.baseOffset + j * 8
                             if arrInfo.isString {
                                 asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
                                 asmLines.append("    str x0, [sp]")
                                 let fmt = addString("%s")
-                                asmLines.append("    adrp x0, \(fmt)@PAGE")
-                                asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
-                                asmLines.append("    bl _printf")
+                                asmLines.append("    adrp x0, \(fmt)\(T.pageDirective)")
+                                asmLines.append("    add x0, x0, \(fmt)\(T.pageOffDirective)")
+                                asmLines.append("    bl \(T.printfSymbol)")
                             } else {
                                 asmLines.append("    ldur w1, [x29, #-\(elemOffset + 16)]")
                                 asmLines.append("    sxtw x1, w1")
                                 asmLines.append("    str x1, [sp]")
                                 let fmt = addString("%d")
-                                asmLines.append("    adrp x0, \(fmt)@PAGE")
-                                asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
-                                asmLines.append("    bl _printf")
+                                asmLines.append("    adrp x0, \(fmt)\(T.pageDirective)")
+                                asmLines.append("    add x0, x0, \(fmt)\(T.pageOffDirective)")
+                                asmLines.append("    bl \(T.printfSymbol)")
                             }
                         }
                         let arrClose = addString("]")
-                        asmLines.append("    adrp x0, \(arrClose)@PAGE")
-                        asmLines.append("    add x0, x0, \(arrClose)@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(arrClose)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(arrClose)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     } else {
                         // Print scalar value by type
                         let valOffset = dictInfo.valueOffsets[i]
@@ -483,33 +484,33 @@ public class AssemblyTranspiler: Transpiling {
                             asmLines.append("    ldur x0, [x29, #-\(valOffset + 16)]")
                             asmLines.append("    str x0, [sp]")
                             let fmt = addString("%s")
-                            asmLines.append("    adrp x0, \(fmt)@PAGE")
-                            asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
-                            asmLines.append("    bl _printf")
+                            asmLines.append("    adrp x0, \(fmt)\(T.pageDirective)")
+                            asmLines.append("    add x0, x0, \(fmt)\(T.pageOffDirective)")
+                            asmLines.append("    bl \(T.printfSymbol)")
                         case .int:
                             asmLines.append("    ldur w1, [x29, #-\(valOffset + 16)]")
                             asmLines.append("    sxtw x1, w1")
                             asmLines.append("    str x1, [sp]")
                             let fmt = addString("%d")
-                            asmLines.append("    adrp x0, \(fmt)@PAGE")
-                            asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
-                            asmLines.append("    bl _printf")
+                            asmLines.append("    adrp x0, \(fmt)\(T.pageDirective)")
+                            asmLines.append("    add x0, x0, \(fmt)\(T.pageOffDirective)")
+                            asmLines.append("    bl \(T.printfSymbol)")
                         case .bool:
                             asmLines.append("    ldur x0, [x29, #-\(valOffset + 16)]")
                             asmLines.append("    str x0, [sp]")
                             let fmt = addString("%s")
-                            asmLines.append("    adrp x0, \(fmt)@PAGE")
-                            asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
-                            asmLines.append("    bl _printf")
+                            asmLines.append("    adrp x0, \(fmt)\(T.pageDirective)")
+                            asmLines.append("    add x0, x0, \(fmt)\(T.pageOffDirective)")
+                            asmLines.append("    bl \(T.printfSymbol)")
                         }
                     }
                 }
 
                 // Print closing brace + newline
                 let closeLabel = addStringRaw("}")
-                asmLines.append("    adrp x0, \(closeLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(closeLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(closeLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             }
         } else if let idx = node.expr as? IndexAccess,
                   let varRef = idx.array as? VarRef,
@@ -523,22 +524,22 @@ public class AssemblyTranspiler: Transpiling {
                     case .string:
                         asmLines.append("    ldur x0, [x29, #-\(valOffset + 16)]")
                         asmLines.append("    str x0, [sp]")
-                        asmLines.append("    adrp x0, _fmt_str@PAGE")
-                        asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(T.fmtStrLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(T.fmtStrLabel)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     case .int:
                         asmLines.append("    ldur w0, [x29, #-\(valOffset + 16)]")
                         asmLines.append("    sxtw x0, w0")
                         asmLines.append("    str x0, [sp]")
-                        asmLines.append("    adrp x0, _fmt_int@PAGE")
-                        asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(T.fmtIntLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(T.fmtIntLabel)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     case .bool:
                         asmLines.append("    ldur x0, [x29, #-\(valOffset + 16)]")
                         asmLines.append("    str x0, [sp]")
-                        asmLines.append("    adrp x0, _fmt_str@PAGE")
-                        asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(T.fmtStrLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(T.fmtStrLabel)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     }
                 }
             }
@@ -553,15 +554,15 @@ public class AssemblyTranspiler: Transpiling {
                     genArrayLoad(varRef: VarRef(name: syntheticName), index: idx.index, arrInfo: arrInfo, useX: arrInfo.isString)
                     if arrInfo.isString {
                         asmLines.append("    str x0, [sp]")
-                        asmLines.append("    adrp x0, _fmt_str@PAGE")
-                        asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
+                        asmLines.append("    adrp x0, \(T.fmtStrLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(T.fmtStrLabel)\(T.pageOffDirective)")
                     } else {
                         asmLines.append("    sxtw x0, w0")
                         asmLines.append("    str x0, [sp]")
-                        asmLines.append("    adrp x0, _fmt_int@PAGE")
-                        asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
+                        asmLines.append("    adrp x0, \(T.fmtIntLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(T.fmtIntLabel)\(T.pageOffDirective)")
                     }
-                    asmLines.append("    bl _printf")
+                    asmLines.append("    bl \(T.printfSymbol)")
                 }
             }
         } else if let varRef = node.expr as? VarRef, let arrInfo = arrays[varRef.name] {
@@ -569,28 +570,28 @@ public class AssemblyTranspiler: Transpiling {
             if let nested = nestedArrays[varRef.name] {
                 // Nested (2D) array: [[1, 2], [3, 4]]
                 let openLabel = addString("[")
-                asmLines.append("    adrp x0, \(openLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(openLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(openLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
 
                 for outer in 0..<nested.outerCount {
                     if outer > 0 {
                         let sepLabel = addString(", ")
-                        asmLines.append("    adrp x0, \(sepLabel)@PAGE")
-                        asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(sepLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(sepLabel)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     }
                     let innerOpen = addString("[")
-                    asmLines.append("    adrp x0, \(innerOpen)@PAGE")
-                    asmLines.append("    add x0, x0, \(innerOpen)@PAGEOFF")
-                    asmLines.append("    bl _printf")
+                    asmLines.append("    adrp x0, \(innerOpen)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(innerOpen)\(T.pageOffDirective)")
+                    asmLines.append("    bl \(T.printfSymbol)")
 
                     for inner in 0..<nested.innerSize {
                         if inner > 0 {
                             let sepLabel = addString(", ")
-                            asmLines.append("    adrp x0, \(sepLabel)@PAGE")
-                            asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
-                            asmLines.append("    bl _printf")
+                            asmLines.append("    adrp x0, \(sepLabel)\(T.pageDirective)")
+                            asmLines.append("    add x0, x0, \(sepLabel)\(T.pageOffDirective)")
+                            asmLines.append("    bl \(T.printfSymbol)")
                         }
                         let flatIdx = outer * nested.innerSize + inner
                         let elemOffset = arrInfo.baseOffset + flatIdx * 8
@@ -598,58 +599,58 @@ public class AssemblyTranspiler: Transpiling {
                         asmLines.append("    sxtw x1, w1")
                         asmLines.append("    str x1, [sp]")
                         let fmtLabel = addString("%d")
-                        asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
-                        asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(fmtLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(fmtLabel)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     }
 
                     let innerClose = addString("]")
-                    asmLines.append("    adrp x0, \(innerClose)@PAGE")
-                    asmLines.append("    add x0, x0, \(innerClose)@PAGEOFF")
-                    asmLines.append("    bl _printf")
+                    asmLines.append("    adrp x0, \(innerClose)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(innerClose)\(T.pageOffDirective)")
+                    asmLines.append("    bl \(T.printfSymbol)")
                 }
 
                 let closeLabel = addStringRaw("]")
-                asmLines.append("    adrp x0, \(closeLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(closeLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(closeLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             } else {
                 // Flat array: [1, 2, 3]
                 let openLabel = addString("[")
-                asmLines.append("    adrp x0, \(openLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(openLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(openLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
 
                 for i in 0..<arrInfo.count {
                     if i > 0 {
                         let sepLabel = addString(", ")
-                        asmLines.append("    adrp x0, \(sepLabel)@PAGE")
-                        asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(sepLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(sepLabel)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     }
                     let elemOffset = arrInfo.baseOffset + i * 8
                     if arrInfo.isString {
                         asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
                         asmLines.append("    str x0, [sp]")
                         let fmtLabel = addString("%s")
-                        asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
-                        asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(fmtLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(fmtLabel)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     } else {
                         asmLines.append("    ldur w1, [x29, #-\(elemOffset + 16)]")
                         asmLines.append("    sxtw x1, w1")
                         asmLines.append("    str x1, [sp]")
                         let fmtLabel = addString("%d")
-                        asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
-                        asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
-                        asmLines.append("    bl _printf")
+                        asmLines.append("    adrp x0, \(fmtLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(fmtLabel)\(T.pageOffDirective)")
+                        asmLines.append("    bl \(T.printfSymbol)")
                     }
                 }
 
                 let closeLabel = addStringRaw("]")
-                asmLines.append("    adrp x0, \(closeLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(closeLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(closeLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             }
         } else if let idx = node.expr as? IndexAccess,
                   let varRef = idx.array as? VarRef,
@@ -658,31 +659,31 @@ public class AssemblyTranspiler: Transpiling {
             if arrInfo.isString {
                 genArrayLoad(varRef: varRef, index: idx.index, arrInfo: arrInfo, useX: true)
                 asmLines.append("    str x0, [sp]")
-                asmLines.append("    adrp x0, _fmt_str@PAGE")
-                asmLines.append("    add x0, x0, _fmt_str@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(T.fmtStrLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(T.fmtStrLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             } else {
                 genArrayLoad(varRef: varRef, index: idx.index, arrInfo: arrInfo, useX: false)
                 asmLines.append("    sxtw x0, w0")
                 asmLines.append("    str x0, [sp]")
-                asmLines.append("    adrp x0, _fmt_int@PAGE")
-                asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(T.fmtIntLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(T.fmtIntLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             }
         } else if isFloatExpr(node.expr) {
             // Float expression — print with %g
             genFloatExpr(node.expr)
             asmLines.append("    str d0, [sp]")
-            asmLines.append("    adrp x0, _fmt_float@PAGE")
-            asmLines.append("    add x0, x0, _fmt_float@PAGEOFF")
-            asmLines.append("    bl _printf")
+            asmLines.append("    adrp x0, \(T.fmtFloatLabel)\(T.pageDirective)")
+            asmLines.append("    add x0, x0, \(T.fmtFloatLabel)\(T.pageOffDirective)")
+            asmLines.append("    bl \(T.printfSymbol)")
         } else {
             genExpr(node.expr)
             asmLines.append("    sxtw x0, w0")
             asmLines.append("    str x0, [sp]")
-            asmLines.append("    adrp x0, _fmt_int@PAGE")
-            asmLines.append("    add x0, x0, _fmt_int@PAGEOFF")
-            asmLines.append("    bl _printf")
+            asmLines.append("    adrp x0, \(T.fmtIntLabel)\(T.pageDirective)")
+            asmLines.append("    add x0, x0, \(T.fmtIntLabel)\(T.pageOffDirective)")
+            asmLines.append("    bl \(T.printfSymbol)")
         }
     }
 
@@ -735,8 +736,8 @@ public class AssemblyTranspiler: Transpiling {
         if let enumAccess = isEnumAccess(node.value) {
             if let caseLabels = enumCaseLabels[enumAccess.enumName],
                let label = caseLabels[enumAccess.caseName] {
-                asmLines.append("    adrp x0, \(label)@PAGE")
-                asmLines.append("    add x0, x0, \(label)@PAGEOFF")
+                asmLines.append("    adrp x0, \(label)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(label)\(T.pageOffDirective)")
                 if variables[node.name] == nil {
                     variables[node.name] = stackOffset
                     stackOffset += 8
@@ -804,8 +805,8 @@ public class AssemblyTranspiler: Transpiling {
                 if isString {
                     if let lit = elem as? Literal, let str = lit.value as? String {
                         let strLabel = addString(str)
-                        asmLines.append("    adrp x0, \(strLabel)@PAGE")
-                        asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                        asmLines.append("    adrp x0, \(strLabel)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(strLabel)\(T.pageOffDirective)")
                         asmLines.append("    stur x0, [x29, #-\(stackOffset + 16)]")
                     }
                 } else {
@@ -855,15 +856,15 @@ public class AssemblyTranspiler: Transpiling {
             if let lit = elem as? Literal {
                 if let str = lit.value as? String {
                     let strLabel = addString(str)
-                    asmLines.append("    adrp x0, \(strLabel)@PAGE")
-                    asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                    asmLines.append("    adrp x0, \(strLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(strLabel)\(T.pageOffDirective)")
                     asmLines.append("    stur x0, [x29, #-\(stackOffset + 16)]")
                     elemTypes.append(.string)
                 } else if let boolVal = lit.value as? Bool {
                     // Store bool as string "true"/"false" for printing
                     let strLabel = addString(boolVal ? "true" : "false")
-                    asmLines.append("    adrp x0, \(strLabel)@PAGE")
-                    asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                    asmLines.append("    adrp x0, \(strLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(strLabel)\(T.pageOffDirective)")
                     asmLines.append("    stur x0, [x29, #-\(stackOffset + 16)]")
                     elemTypes.append(.string)
                 } else if lit.value is Int {
@@ -891,17 +892,17 @@ public class AssemblyTranspiler: Transpiling {
     private func genPrintTupleFull(_ name: String, _ info: TupleInfo) {
         if info.count == 0 {
             let strLabel = addStringRaw("()")
-            asmLines.append("    adrp x0, \(strLabel)@PAGE")
-            asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
-            asmLines.append("    bl _printf")
+            asmLines.append("    adrp x0, \(strLabel)\(T.pageDirective)")
+            asmLines.append("    add x0, x0, \(strLabel)\(T.pageOffDirective)")
+            asmLines.append("    bl \(T.printfSymbol)")
             return
         }
 
         // Print opening paren (no newline)
         let openLabel = addString("(")
-        asmLines.append("    adrp x0, \(openLabel)@PAGE")
-        asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
-        asmLines.append("    bl _printf")
+        asmLines.append("    adrp x0, \(openLabel)\(T.pageDirective)")
+        asmLines.append("    add x0, x0, \(openLabel)\(T.pageOffDirective)")
+        asmLines.append("    bl \(T.printfSymbol)")
 
         for i in 0..<info.count {
             let elemOffset = info.baseOffset + i * 8
@@ -910,9 +911,9 @@ public class AssemblyTranspiler: Transpiling {
             // Print separator
             if i > 0 {
                 let sepLabel = addString(", ")
-                asmLines.append("    adrp x0, \(sepLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(sepLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(sepLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             }
 
             // Use %s or %d without newline — we need custom format strings
@@ -921,25 +922,25 @@ public class AssemblyTranspiler: Transpiling {
                 asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
                 asmLines.append("    str x0, [sp]")
                 let fmtLabel = addString("%s")
-                asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(fmtLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(fmtLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             case .int:
                 asmLines.append("    ldur w1, [x29, #-\(elemOffset + 16)]")
                 asmLines.append("    sxtw x1, w1")
                 asmLines.append("    str x1, [sp]")
                 let fmtLabel = addString("%d")
-                asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
-                asmLines.append("    bl _printf")
+                asmLines.append("    adrp x0, \(fmtLabel)\(T.pageDirective)")
+                asmLines.append("    add x0, x0, \(fmtLabel)\(T.pageOffDirective)")
+                asmLines.append("    bl \(T.printfSymbol)")
             }
         }
 
         // Print closing paren + newline
         let closeLabel = addStringRaw(")")
-        asmLines.append("    adrp x0, \(closeLabel)@PAGE")
-        asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
-        asmLines.append("    bl _printf")
+        asmLines.append("    adrp x0, \(closeLabel)\(T.pageDirective)")
+        asmLines.append("    add x0, x0, \(closeLabel)\(T.pageOffDirective)")
+        asmLines.append("    bl \(T.printfSymbol)")
     }
 
     private func genDictDecl(_ name: String, _ dictLit: DictLiteral) {
@@ -962,14 +963,14 @@ public class AssemblyTranspiler: Transpiling {
             if let lit = pair.value as? Literal {
                 if let str = lit.value as? String {
                     let strLabel = addString(str)
-                    asmLines.append("    adrp x0, \(strLabel)@PAGE")
-                    asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                    asmLines.append("    adrp x0, \(strLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(strLabel)\(T.pageOffDirective)")
                     asmLines.append("    stur x0, [x29, #-\(valOffset + 16)]")
                     valueTypes.append(.string)
                 } else if let boolVal = lit.value as? Bool {
                     let strLabel = addString(boolVal ? "true" : "false")
-                    asmLines.append("    adrp x0, \(strLabel)@PAGE")
-                    asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                    asmLines.append("    adrp x0, \(strLabel)\(T.pageDirective)")
+                    asmLines.append("    add x0, x0, \(strLabel)\(T.pageOffDirective)")
                     asmLines.append("    stur x0, [x29, #-\(valOffset + 16)]")
                     valueTypes.append(.string)
                 } else if lit.value is Int {
@@ -989,8 +990,8 @@ public class AssemblyTranspiler: Transpiling {
                     if isStr {
                         if let lit = arrElem as? Literal, let s = lit.value as? String {
                             let sl = addString(s)
-                            asmLines.append("    adrp x0, \(sl)@PAGE")
-                            asmLines.append("    add x0, x0, \(sl)@PAGEOFF")
+                            asmLines.append("    adrp x0, \(sl)\(T.pageDirective)")
+                            asmLines.append("    add x0, x0, \(sl)\(T.pageOffDirective)")
                             asmLines.append("    stur x0, [x29, #-\(stackOffset + 16)]")
                         }
                     } else {
@@ -1164,8 +1165,8 @@ public class AssemblyTranspiler: Transpiling {
                     // Load string pointer for comparison (consistent with enum var storage)
                     if let caseLabels = enumCaseLabels[varRef.name],
                        let label = caseLabels[strVal] {
-                        asmLines.append("    adrp x0, \(label)@PAGE")
-                        asmLines.append("    add x0, x0, \(label)@PAGEOFF")
+                        asmLines.append("    adrp x0, \(label)\(T.pageDirective)")
+                        asmLines.append("    add x0, x0, \(label)\(T.pageOffDirective)")
                         asmLines.append("    mov w0, w0")  // truncate to w0 for comparison
                         return
                     }
@@ -1274,8 +1275,8 @@ public class AssemblyTranspiler: Transpiling {
         if let literal = node as? Literal {
             if let dblVal = literal.value as? Double {
                 let label = addDouble(dblVal)
-                asmLines.append("    adrp x8, \(label)@PAGE")
-                asmLines.append("    ldr d0, [x8, \(label)@PAGEOFF]")
+                asmLines.append("    adrp x8, \(label)\(T.pageDirective)")
+                asmLines.append("    ldr d0, [x8, \(label)\(T.pageOffDirective)]")
             } else if let intVal = literal.value as? Int {
                 // Int literal in float context — convert
                 if intVal >= -65536 && intVal <= 65535 {

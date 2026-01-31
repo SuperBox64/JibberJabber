@@ -124,10 +124,41 @@ public class CFamilyTranspiler: Transpiling {
     /// Format specifier for printf-style targets
     func fmtSpecifier(_ type: String) -> String {
         switch type {
-        case "str": return "%s"
-        case "double": return "%g"
-        default: return "%d"
+        case "str": return T.strFmt
+        case "double": return T.doubleFmt
+        case "bool": return T.boolFmt
+        default: return T.intFmt
         }
+    }
+
+    /// Printf inline (no newline, no args) - e.g. printf("[");
+    func printfInline(_ text: String) -> String {
+        if let tmpl = T.printfInline {
+            return tmpl
+                .replacingOccurrences(of: "{fmt}", with: text)
+                .replacingOccurrences(of: "{args}", with: "")
+        }
+        return "printf(\"\(text)\");"
+    }
+
+    /// Printf inline with format and args - e.g. printf("%d", x);
+    func printfInlineArgs(_ fmt: String, _ args: String) -> String {
+        if let tmpl = T.printfInline {
+            return tmpl
+                .replacingOccurrences(of: "{fmt}", with: fmt)
+                .replacingOccurrences(of: "{args}", with: ", \(args)")
+        }
+        return "printf(\"\(fmt)\", \(args));"
+    }
+
+    /// Printf with newline (interp style) - e.g. printf("]\n");
+    func printfInterpStr(_ text: String) -> String {
+        if let tmpl = T.printfInterp {
+            return tmpl
+                .replacingOccurrences(of: "{fmt}", with: text)
+                .replacingOccurrences(of: "{args}", with: "")
+        }
+        return "printf(\"\(text)\\n\");"
     }
 
     /// Print template by resolved type
@@ -218,11 +249,11 @@ public class CFamilyTranspiler: Transpiling {
     }
 
     func interpFormatSpecifier(_ name: String) -> String {
-        if doubleVars.contains(name) { return "%g" }
-        if stringVars.contains(name) { return "%s" }
-        if boolVars.contains(name) { return "%s" }
-        if enumVarTypes[name] != nil { return "%s" }
-        return "%d"
+        if doubleVars.contains(name) { return T.doubleFmt }
+        if stringVars.contains(name) { return T.strFmt }
+        if boolVars.contains(name) { return T.boolFmt }
+        if enumVarTypes[name] != nil { return T.strFmt }
+        return T.intFmt
     }
 
     /// Extract bool display strings from printBool template (e.g. "true"/"false" from ternary)
@@ -264,6 +295,11 @@ public class CFamilyTranspiler: Transpiling {
                 }
             }
             let argStr = args.isEmpty ? "" : ", " + args.joined(separator: ", ")
+            if let tmpl = T.printfInterp {
+                return ind() + tmpl
+                    .replacingOccurrences(of: "{fmt}", with: fmt)
+                    .replacingOccurrences(of: "{args}", with: argStr)
+            }
             return ind() + "printf(\"\(fmt)\\n\"\(argStr));"
         }
         if let lit = e as? Literal, lit.value is String {
@@ -338,28 +374,28 @@ public class CFamilyTranspiler: Transpiling {
         }
         if meta.isNested {
             var lines: [String] = []
-            lines.append(ind() + "printf(\"[\");")
+            lines.append(ind() + printfInline("["))
             for i in 0..<meta.count {
-                if i > 0 { lines.append(ind() + "printf(\", \");") }
-                lines.append(ind() + "printf(\"[\");")
+                if i > 0 { lines.append(ind() + printfInline(", ")) }
+                lines.append(ind() + printfInline("["))
                 for j in 0..<meta.innerCount {
-                    let fmt = meta.innerElemType == "str" ? "%s" : (meta.innerElemType == "double" ? "%g" : "%d")
-                    if j > 0 { lines.append(ind() + "printf(\", \");") }
-                    lines.append(ind() + "printf(\"\(fmt)\", \(name)[\(i)][\(j)]);")
+                    let fmt = fmtSpecifier(meta.innerElemType)
+                    if j > 0 { lines.append(ind() + printfInline(", ")) }
+                    lines.append(ind() + printfInlineArgs(fmt, "\(name)[\(i)][\(j)]"))
                 }
-                lines.append(ind() + "printf(\"]\");")
+                lines.append(ind() + printfInline("]"))
             }
-            lines.append(ind() + "printf(\"]\\n\");")
+            lines.append(ind() + printfInterpStr("]"))
             return lines.joined(separator: "\n")
         }
-        let fmt = meta.elemType == "str" ? "%s" : (meta.elemType == "double" ? "%g" : "%d")
+        let fmt = fmtSpecifier(meta.elemType)
         var lines: [String] = []
-        lines.append(ind() + "printf(\"[\");")
+        lines.append(ind() + printfInline("["))
         lines.append(ind() + "for (int _i = 0; _i < \(meta.count); _i++) {")
-        lines.append(ind() + "    if (_i > 0) printf(\", \");")
-        lines.append(ind() + "    printf(\"\(fmt)\", \(name)[_i]);")
+        lines.append(ind() + "    if (_i > 0) " + printfInline(", "))
+        lines.append(ind() + "    " + printfInlineArgs(fmt, "\(name)[_i]"))
         lines.append(ind() + "}")
-        lines.append(ind() + "printf(\"]\\n\");")
+        lines.append(ind() + printfInterpStr("]"))
         return lines.joined(separator: "\n")
     }
 
@@ -373,9 +409,14 @@ public class CFamilyTranspiler: Transpiling {
             partsFmt.append(fmtSpecifier(typ))
             partsArgs.append(cVar)
         }
-        let fmt = "(" + partsFmt.joined(separator: ", ") + ")\\n"
+        let fmtStr = "(" + partsFmt.joined(separator: ", ") + ")"
         let args = partsArgs.joined(separator: ", ")
-        return ind() + "printf(\"\(fmt)\", \(args));"
+        if let tmpl = T.printfInterp {
+            return ind() + tmpl
+                .replacingOccurrences(of: "{fmt}", with: fmtStr)
+                .replacingOccurrences(of: "{args}", with: ", \(args)")
+        }
+        return ind() + "printf(\"\(fmtStr)\\n\", \(args));"
     }
 
     func varDeclToString(_ node: VarDecl) -> String {

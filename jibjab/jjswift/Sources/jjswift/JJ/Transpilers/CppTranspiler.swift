@@ -35,36 +35,36 @@ public class CppTranspiler: CFamilyTranspiler {
 
     override func printWholeArray(_ name: String) -> String {
         guard let meta = arrayMeta[name] else {
-            return ind() + "std::cout << \(name) << std::endl;"
+            return ind() + coutLine(name)
         }
         if meta.isNested {
             var lines: [String] = []
-            lines.append(ind() + "std::cout << \"[\";")
+            lines.append(ind() + coutStr("["))
             for i in 0..<meta.count {
-                if i > 0 { lines.append(ind() + "std::cout << \", \";") }
-                lines.append(ind() + "std::cout << \"[\";")
+                if i > 0 { lines.append(ind() + coutStr(", ")) }
+                lines.append(ind() + coutStr("["))
                 for j in 0..<meta.innerCount {
-                    if j > 0 { lines.append(ind() + "std::cout << \", \";") }
-                    lines.append(ind() + "std::cout << \(name)[\(i)][\(j)];")
+                    if j > 0 { lines.append(ind() + coutStr(", ")) }
+                    lines.append(ind() + coutStr("\(name)[\(i)][\(j)]", quoted: false))
                 }
-                lines.append(ind() + "std::cout << \"]\";")
+                lines.append(ind() + coutStr("]"))
             }
-            lines.append(ind() + "std::cout << \"]\" << std::endl;")
+            lines.append(ind() + coutLineStr("]"))
             return lines.joined(separator: "\n")
         }
         var lines: [String] = []
-        lines.append(ind() + "std::cout << \"[\";")
+        lines.append(ind() + coutStr("["))
         lines.append(ind() + "for (int _i = 0; _i < \(meta.count); _i++) {")
-        lines.append(ind() + "    if (_i > 0) std::cout << \", \";")
-        lines.append(ind() + "    std::cout << \(name)[_i];")
+        lines.append(ind() + "    if (_i > 0) " + coutStr(", "))
+        lines.append(ind() + "    " + coutStr("\(name)[_i]", quoted: false))
         lines.append(ind() + "}")
-        lines.append(ind() + "std::cout << \"]\" << std::endl;")
+        lines.append(ind() + coutLineStr("]"))
         return lines.joined(separator: "\n")
     }
 
     override func printWholeTuple(_ name: String) -> String {
         guard let fields = tupleFields[name], !fields.isEmpty else {
-            return ind() + "std::cout << \"()\" << std::endl;"
+            return ind() + coutLine("\"()\"")
         }
         var parts: [String] = []
         for (i, (cppVar, _)) in fields.enumerated() {
@@ -73,7 +73,33 @@ public class CppTranspiler: CFamilyTranspiler {
             if i < fields.count - 1 { parts.append("\", \"") }
         }
         parts.append("\")\"")
-        return ind() + "std::cout << \(parts.joined(separator: " << ")) << std::endl;"
+        let coutExprStr = T.coutExpr?.replacingOccurrences(of: "{expr}", with: parts.joined(separator: T.coutSep))
+            ?? "std::cout << \(parts.joined(separator: " << "))"
+        return ind() + coutExprStr + T.coutEndl
+    }
+
+    // MARK: - Cout helpers
+
+    /// cout with expression and endl
+    private func coutLine(_ expr: String) -> String {
+        if let tmpl = T.coutNewline {
+            return tmpl.replacingOccurrences(of: "{expr}", with: expr)
+        }
+        return "std::cout << \(expr) << std::endl;"
+    }
+
+    /// cout inline with quoted string literal
+    private func coutStr(_ text: String, quoted: Bool = true) -> String {
+        let val = quoted ? "\"\(text)\"" : text
+        if let tmpl = T.coutInline {
+            return tmpl.replacingOccurrences(of: "{expr}", with: val)
+        }
+        return "std::cout << \(val);"
+    }
+
+    /// cout with string literal and endl
+    private func coutLineStr(_ text: String) -> String {
+        return coutLine("\"\(text)\"")
     }
 
 }

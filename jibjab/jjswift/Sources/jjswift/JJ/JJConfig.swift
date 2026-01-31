@@ -147,6 +147,55 @@ public struct TargetConfig: Codable {
     private let _varDict: String?
     private let _dictEmpty: String?
     private let _paramFormat: String?
+    private let _intFmt: String?
+    private let _strFmt: String?
+    private let _doubleFmt: String?
+    private let _boolFmt: String?
+    private let _printfInterp: String?
+    private let _printfInline: String?
+    private let _coutExpr: String?
+    private let _coutEndl: String?
+    private let _coutSep: String?
+    private let _coutNewline: String?
+    private let _coutInline: String?
+    private let _importSingle: String?
+    private let _importMulti: String?
+    private let _importItem: String?
+    private let _arrayLitOpen: String?
+    private let _arrayLitClose: String?
+    private let _dictLitOpen: String?
+    private let _dictLitClose: String?
+    private let _boxString: String?
+    private let _boxValue: String?
+    private let _arrayType: String?
+    private let _loopIndexType: String?
+    private let _strSelector: String?
+    private let _doubleSelector: String?
+    private let _intSelector: String?
+    private let _selectorAccess: String?
+    private let _fmtIntLabel: String?
+    private let _fmtStrLabel: String?
+    private let _fmtFloatLabel: String?
+    private let _boolTrueLabel: String?
+    private let _boolFalseLabel: String?
+    private let _mainLabel: String?
+    private let _printfSymbol: String?
+    private let _pageDirective: String?
+    private let _pageOffDirective: String?
+    private let _fmtIntStr: String?
+    private let _fmtStrStr: String?
+    private let _fmtFloatStr: String?
+    private let _varArray: String?
+    private let _varArrayNested: String?
+    private let _enumNames: String?
+    private let _highlightKeywords: [String]?
+    private let _highlightDeclKeywords: [String]?
+    private let _highlightTypeKeywords: [String]?
+    private let _highlightSelfKeywords: [String]?
+    private let _highlightSystemFunctions: [String]?
+    private let _highlightCommentPrefix: String?
+    private let _highlightBlockCommentStart: String?
+    private let _highlightBlockCommentEnd: String?
     public let main: String?
     public let compile: [String]?
     public let run: [String]?
@@ -198,6 +247,55 @@ public struct TargetConfig: Codable {
         case _varDict = "varDict"
         case _dictEmpty = "dictEmpty"
         case _paramFormat = "paramFormat"
+        case _intFmt = "intFmt"
+        case _strFmt = "strFmt"
+        case _doubleFmt = "doubleFmt"
+        case _boolFmt = "boolFmt"
+        case _printfInterp = "printfInterp"
+        case _printfInline = "printfInline"
+        case _coutExpr = "coutExpr"
+        case _coutEndl = "coutEndl"
+        case _coutSep = "coutSep"
+        case _coutNewline = "coutNewline"
+        case _coutInline = "coutInline"
+        case _importSingle = "importSingle"
+        case _importMulti = "importMulti"
+        case _importItem = "importItem"
+        case _arrayLitOpen = "arrayLitOpen"
+        case _arrayLitClose = "arrayLitClose"
+        case _dictLitOpen = "dictLitOpen"
+        case _dictLitClose = "dictLitClose"
+        case _boxString = "boxString"
+        case _boxValue = "boxValue"
+        case _arrayType = "arrayType"
+        case _loopIndexType = "loopIndexType"
+        case _strSelector = "strSelector"
+        case _doubleSelector = "doubleSelector"
+        case _intSelector = "intSelector"
+        case _selectorAccess = "selectorAccess"
+        case _fmtIntLabel = "fmtIntLabel"
+        case _fmtStrLabel = "fmtStrLabel"
+        case _fmtFloatLabel = "fmtFloatLabel"
+        case _boolTrueLabel = "boolTrueLabel"
+        case _boolFalseLabel = "boolFalseLabel"
+        case _mainLabel = "mainLabel"
+        case _printfSymbol = "printfSymbol"
+        case _pageDirective = "pageDirective"
+        case _pageOffDirective = "pageOffDirective"
+        case _fmtIntStr = "fmtIntStr"
+        case _fmtStrStr = "fmtStrStr"
+        case _fmtFloatStr = "fmtFloatStr"
+        case _varArray = "varArray"
+        case _varArrayNested = "varArrayNested"
+        case _enumNames = "enumNames"
+        case _highlightKeywords = "highlightKeywords"
+        case _highlightDeclKeywords = "highlightDeclKeywords"
+        case _highlightTypeKeywords = "highlightTypeKeywords"
+        case _highlightSelfKeywords = "highlightSelfKeywords"
+        case _highlightSystemFunctions = "highlightSystemFunctions"
+        case _highlightCommentPrefix = "highlightCommentPrefix"
+        case _highlightBlockCommentStart = "highlightBlockCommentStart"
+        case _highlightBlockCommentEnd = "highlightBlockCommentEnd"
         // true/false/nil handled specially
     }
 
@@ -267,6 +365,55 @@ public struct TargetConfig: Codable {
         _varDict = try container.decodeIfPresent(String.self, forKey: ._varDict)
         _dictEmpty = try container.decodeIfPresent(String.self, forKey: ._dictEmpty)
         _paramFormat = try container.decodeIfPresent(String.self, forKey: ._paramFormat)
+        _intFmt = try container.decodeIfPresent(String.self, forKey: ._intFmt)
+        _strFmt = try container.decodeIfPresent(String.self, forKey: ._strFmt)
+        _doubleFmt = try container.decodeIfPresent(String.self, forKey: ._doubleFmt)
+        _boolFmt = try container.decodeIfPresent(String.self, forKey: ._boolFmt)
+        _printfInterp = try container.decodeIfPresent(String.self, forKey: ._printfInterp)
+        _printfInline = try container.decodeIfPresent(String.self, forKey: ._printfInline)
+        _coutExpr = try container.decodeIfPresent(String.self, forKey: ._coutExpr)
+        _coutEndl = try container.decodeIfPresent(String.self, forKey: ._coutEndl)
+        _coutSep = try container.decodeIfPresent(String.self, forKey: ._coutSep)
+        _coutNewline = try container.decodeIfPresent(String.self, forKey: ._coutNewline)
+        _coutInline = try container.decodeIfPresent(String.self, forKey: ._coutInline)
+        _importSingle = try container.decodeIfPresent(String.self, forKey: ._importSingle)
+        _importMulti = try container.decodeIfPresent(String.self, forKey: ._importMulti)
+        _importItem = try container.decodeIfPresent(String.self, forKey: ._importItem)
+        _arrayLitOpen = try container.decodeIfPresent(String.self, forKey: ._arrayLitOpen)
+        _arrayLitClose = try container.decodeIfPresent(String.self, forKey: ._arrayLitClose)
+        _dictLitOpen = try container.decodeIfPresent(String.self, forKey: ._dictLitOpen)
+        _dictLitClose = try container.decodeIfPresent(String.self, forKey: ._dictLitClose)
+        _boxString = try container.decodeIfPresent(String.self, forKey: ._boxString)
+        _boxValue = try container.decodeIfPresent(String.self, forKey: ._boxValue)
+        _arrayType = try container.decodeIfPresent(String.self, forKey: ._arrayType)
+        _loopIndexType = try container.decodeIfPresent(String.self, forKey: ._loopIndexType)
+        _strSelector = try container.decodeIfPresent(String.self, forKey: ._strSelector)
+        _doubleSelector = try container.decodeIfPresent(String.self, forKey: ._doubleSelector)
+        _intSelector = try container.decodeIfPresent(String.self, forKey: ._intSelector)
+        _selectorAccess = try container.decodeIfPresent(String.self, forKey: ._selectorAccess)
+        _fmtIntLabel = try container.decodeIfPresent(String.self, forKey: ._fmtIntLabel)
+        _fmtStrLabel = try container.decodeIfPresent(String.self, forKey: ._fmtStrLabel)
+        _fmtFloatLabel = try container.decodeIfPresent(String.self, forKey: ._fmtFloatLabel)
+        _boolTrueLabel = try container.decodeIfPresent(String.self, forKey: ._boolTrueLabel)
+        _boolFalseLabel = try container.decodeIfPresent(String.self, forKey: ._boolFalseLabel)
+        _mainLabel = try container.decodeIfPresent(String.self, forKey: ._mainLabel)
+        _printfSymbol = try container.decodeIfPresent(String.self, forKey: ._printfSymbol)
+        _pageDirective = try container.decodeIfPresent(String.self, forKey: ._pageDirective)
+        _pageOffDirective = try container.decodeIfPresent(String.self, forKey: ._pageOffDirective)
+        _fmtIntStr = try container.decodeIfPresent(String.self, forKey: ._fmtIntStr)
+        _fmtStrStr = try container.decodeIfPresent(String.self, forKey: ._fmtStrStr)
+        _fmtFloatStr = try container.decodeIfPresent(String.self, forKey: ._fmtFloatStr)
+        _varArray = try container.decodeIfPresent(String.self, forKey: ._varArray)
+        _varArrayNested = try container.decodeIfPresent(String.self, forKey: ._varArrayNested)
+        _enumNames = try container.decodeIfPresent(String.self, forKey: ._enumNames)
+        _highlightKeywords = try container.decodeIfPresent([String].self, forKey: ._highlightKeywords)
+        _highlightDeclKeywords = try container.decodeIfPresent([String].self, forKey: ._highlightDeclKeywords)
+        _highlightTypeKeywords = try container.decodeIfPresent([String].self, forKey: ._highlightTypeKeywords)
+        _highlightSelfKeywords = try container.decodeIfPresent([String].self, forKey: ._highlightSelfKeywords)
+        _highlightSystemFunctions = try container.decodeIfPresent([String].self, forKey: ._highlightSystemFunctions)
+        _highlightCommentPrefix = try container.decodeIfPresent(String.self, forKey: ._highlightCommentPrefix)
+        _highlightBlockCommentStart = try container.decodeIfPresent(String.self, forKey: ._highlightBlockCommentStart)
+        _highlightBlockCommentEnd = try container.decodeIfPresent(String.self, forKey: ._highlightBlockCommentEnd)
 
         // Handle true/false/nil with special decoder keys
         let additionalContainer = try decoder.container(keyedBy: AdditionalCodingKeys.self)
@@ -325,6 +472,55 @@ public struct TargetConfig: Codable {
     public var varDict: String? { _varDict }
     public var dictEmpty: String { _dictEmpty ?? "{}" }
     public var paramFormat: String? { _paramFormat }
+    public var intFmt: String { _intFmt ?? "%d" }
+    public var strFmt: String { _strFmt ?? "%s" }
+    public var doubleFmt: String { _doubleFmt ?? "%g" }
+    public var boolFmt: String { _boolFmt ?? "%s" }
+    public var printfInterp: String? { _printfInterp }
+    public var printfInline: String? { _printfInline }
+    public var coutExpr: String? { _coutExpr }
+    public var coutEndl: String { _coutEndl ?? " << std::endl;" }
+    public var coutSep: String { _coutSep ?? " << " }
+    public var coutNewline: String? { _coutNewline }
+    public var coutInline: String? { _coutInline }
+    public var importSingle: String? { _importSingle }
+    public var importMulti: String? { _importMulti }
+    public var importItem: String { _importItem ?? "\"{name}\"" }
+    public var arrayLitOpen: String { _arrayLitOpen ?? "{" }
+    public var arrayLitClose: String { _arrayLitClose ?? "}" }
+    public var dictLitOpen: String { _dictLitOpen ?? "{" }
+    public var dictLitClose: String { _dictLitClose ?? "}" }
+    public var boxString: String? { _boxString }
+    public var boxValue: String? { _boxValue }
+    public var arrayType: String? { _arrayType }
+    public var loopIndexType: String { _loopIndexType ?? "int" }
+    public var strSelector: String? { _strSelector }
+    public var doubleSelector: String? { _doubleSelector }
+    public var intSelector: String? { _intSelector }
+    public var selectorAccess: String? { _selectorAccess }
+    public var fmtIntLabel: String { _fmtIntLabel ?? "_fmt_int" }
+    public var fmtStrLabel: String { _fmtStrLabel ?? "_fmt_str" }
+    public var fmtFloatLabel: String { _fmtFloatLabel ?? "_fmt_float" }
+    public var boolTrueLabel: String { _boolTrueLabel ?? "_bool_true" }
+    public var boolFalseLabel: String { _boolFalseLabel ?? "_bool_false" }
+    public var mainLabel: String { _mainLabel ?? "_main" }
+    public var printfSymbol: String { _printfSymbol ?? "_printf" }
+    public var pageDirective: String { _pageDirective ?? "@PAGE" }
+    public var pageOffDirective: String { _pageOffDirective ?? "@PAGEOFF" }
+    public var fmtIntStr: String { _fmtIntStr ?? "%d\\n" }
+    public var fmtStrStr: String { _fmtStrStr ?? "%s\\n" }
+    public var fmtFloatStr: String { _fmtFloatStr ?? "%g\\n" }
+    public var varArray: String? { _varArray }
+    public var varArrayNested: String? { _varArrayNested }
+    public var enumNames: String? { _enumNames }
+    public var highlightKeywords: [String] { _highlightKeywords ?? [] }
+    public var highlightDeclKeywords: [String] { _highlightDeclKeywords ?? [] }
+    public var highlightTypeKeywords: [String] { _highlightTypeKeywords ?? [] }
+    public var highlightSelfKeywords: [String] { _highlightSelfKeywords ?? [] }
+    public var highlightSystemFunctions: [String] { _highlightSystemFunctions ?? [] }
+    public var highlightCommentPrefix: String { _highlightCommentPrefix ?? "//" }
+    public var highlightBlockCommentStart: String { _highlightBlockCommentStart ?? "/*" }
+    public var highlightBlockCommentEnd: String { _highlightBlockCommentEnd ?? "*/" }
 }
 
 /// Environment overrides for JJLib
