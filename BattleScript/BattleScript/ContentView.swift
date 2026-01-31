@@ -41,7 +41,7 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(nsColor: .controlBackgroundColor))
                 Color(nsColor: .separatorColor)
-                    .frame(height: 2)
+                    .frame(height: 1)
                 List(examples, id: \.file, selection: $selectedExample) { example in
                     Text(example.name)
                         .padding(.leading, 4)
