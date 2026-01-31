@@ -396,7 +396,8 @@
       "Bash(do echo \"=== numbers: $lang ===\")",
       "Bash(./jibjab/jjswift/.build/debug/jjswift:*)",
       "Bash(mkdir:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(plutil:*)"
     ]
   }
 }
