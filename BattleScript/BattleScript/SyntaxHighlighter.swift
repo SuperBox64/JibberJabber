@@ -52,6 +52,9 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
             .font: font
         ], range: fullRange)
 
+        // Color all identifiers first (keywords/types/strings/comments override later)
+        applyIdentifiers(textStorage, text: text, range: fullRange)
+
         // Apply function calls early (keywords/types override known ones)
         if highlightFunctionCalls {
             applyFunctionCalls(textStorage, text: text, range: fullRange)
@@ -135,6 +138,16 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
     }
 
     private static let _wordRegex = try? NSRegularExpression(pattern: "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b")
+
+    private func applyIdentifiers(_ ts: NSTextStorage, text: String, range: NSRange) {
+        guard let pattern = Self._wordRegex else { return }
+        let identColor = SyntaxTheme.identifier
+        pattern.enumerateMatches(in: text, range: range) { match, _, _ in
+            if let r = match?.range {
+                ts.addAttribute(.foregroundColor, value: identColor, range: r)
+            }
+        }
+    }
 
     private func applyKeywords(_ ts: NSTextStorage, text: NSString, range: NSRange) {
         if _keywordSet == nil { _keywordSet = Set(keywords) }
@@ -256,6 +269,7 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
 class JJHighlighter: SyntaxHighlighting {
     let font = SyntaxTheme.font
 
+    private static let identifierRegex = try? NSRegularExpression(pattern: "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b")
     private static let keywordRegex = try? NSRegularExpression(pattern: JJPatterns.keyword)
     private static let blockRegex = try? NSRegularExpression(pattern: JJPatterns.block)
     private static let operatorRegex = try? NSRegularExpression(pattern: JJPatterns.operator)
@@ -278,6 +292,14 @@ class JJHighlighter: SyntaxHighlighting {
             .foregroundColor: SyntaxTheme.defaultText,
             .font: font
         ], range: fullRange)
+
+        // Color all identifiers first (keywords/strings/comments override later)
+        let identColor = SyntaxTheme.identifier
+        Self.identifierRegex?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
+            if let r = match?.range {
+                textStorage.addAttribute(.foregroundColor, value: identColor, range: r)
+            }
+        }
 
         // Block structures (orange)
         Self.blockRegex?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
@@ -673,6 +695,7 @@ class GoHighlighter: BaseSyntaxHighlighter {
 class AsmHighlighter: SyntaxHighlighting {
     let font = SyntaxTheme.font
 
+    private static let identifierRegex = try? NSRegularExpression(pattern: "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b")
     private static let directiveRegex = try? NSRegularExpression(pattern: "\\.[a-zA-Z_][a-zA-Z0-9_]*")
     private static let registerRegex = try? NSRegularExpression(pattern: "\\b(?:x[0-9]|x[12][0-9]|x30|w[0-9]|w[12][0-9]|w30|sp|lr|xzr|wzr|pc|fp)\\b")
     private static let instructionRegex = try? NSRegularExpression(
@@ -694,6 +717,14 @@ class AsmHighlighter: SyntaxHighlighting {
             .foregroundColor: SyntaxTheme.defaultText,
             .font: font
         ], range: fullRange)
+
+        // Color all identifiers first
+        let identColor = SyntaxTheme.identifier
+        Self.identifierRegex?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
+            if let r = match?.range {
+                textStorage.addAttribute(.foregroundColor, value: identColor, range: r)
+            }
+        }
 
         // Directives
         Self.directiveRegex?.enumerateMatches(in: text, range: fullRange) { match, _, _ in

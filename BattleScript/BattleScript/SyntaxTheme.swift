@@ -102,7 +102,7 @@ struct SyntaxTheme {
         color(xd: 0xFD8F3F, xl: 0x643820, vd: 0xC586C0, vl: 0x0000FF)
     }
     static var functionCall: NSColor {
-        color(xd: 0xB281EB, xl: 0x804FB8, vd: 0xDCDCAA, vl: 0x795E26)
+        color(xd: 0x67B7A4, xl: 0x316E74, vd: 0xDCDCAA, vl: 0x795E26)
     }
     static var attribute: NSColor {
         color(xd: 0xFD8F3F, xl: 0x643820, vd: 0xDCDCAA, vl: 0x795E26)
@@ -112,6 +112,10 @@ struct SyntaxTheme {
     }
     static var property: NSColor {
         color(xd: 0x4EB0CC, xl: 0x3E8087, vd: 0x9CDCFE, vl: 0x001080)
+    }
+    // All identifiers (variables, functions, etc.) - Xcode colors everything, VSCode colors variables
+    static var identifier: NSColor {
+        color(xd: 0x67B7A4, xl: 0x316E74, vd: 0x9CDCFE, vl: 0x001080)
     }
 
     // MARK: - Bracket Pair Colorization (VSCode only; Xcode uses default text)
