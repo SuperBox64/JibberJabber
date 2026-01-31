@@ -283,13 +283,45 @@ public class AssemblyTranspiler {
             }
         } else if let varRef = node.expr as? VarRef, let enumCases = enums[varRef.name] {
             // Print full enum: {"Red": Red, "Green": Green, "Blue": Blue}
+            // Build output at runtime from individual case labels
             let caseNames = enumCaseStrings[varRef.name] ?? Array(enumCases.keys)
-            // Build the string at compile time
-            let items = caseNames.map { "\"\($0)\": \($0)" }
-            let enumStr = "{" + items.joined(separator: ", ") + "}"
-            let strLabel = addStringRaw(enumStr)
-            asmLines.append("    adrp x0, \(strLabel)@PAGE")
-            asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+            guard let caseLabels = enumCaseLabels[varRef.name] else { return }
+
+            // Print opening brace
+            let openLabel = addString("{")
+            asmLines.append("    adrp x0, \(openLabel)@PAGE")
+            asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
+            asmLines.append("    bl _printf")
+
+            for (i, caseName) in caseNames.enumerated() {
+                // Print separator between pairs
+                if i > 0 {
+                    let sepLabel = addString(", ")
+                    asmLines.append("    adrp x0, \(sepLabel)@PAGE")
+                    asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
+                    asmLines.append("    bl _printf")
+                }
+                // Print "caseName": (with quotes around key)
+                let keyLabel = addString("\"\(caseName)\": ")
+                asmLines.append("    adrp x0, \(keyLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(keyLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+                // Print case value (the case name string, unquoted)
+                if let label = caseLabels[caseName] {
+                    asmLines.append("    adrp x0, \(label)@PAGE")
+                    asmLines.append("    add x0, x0, \(label)@PAGEOFF")
+                    asmLines.append("    str x0, [sp]")
+                    let fmtLabel = addString("%s")
+                    asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
+                    asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
+                    asmLines.append("    bl _printf")
+                }
+            }
+
+            // Print closing brace + newline
+            let closeLabel = addStringRaw("}")
+            asmLines.append("    adrp x0, \(closeLabel)@PAGE")
+            asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
             asmLines.append("    bl _printf")
         } else if let varRef = node.expr as? VarRef, let tupleInfo = tuples[varRef.name] {
             // Print full tuple: (elem1, elem2, ...)
@@ -332,10 +364,97 @@ public class AssemblyTranspiler {
                 asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
                 asmLines.append("    bl _printf")
             } else {
-                // Print dict not fully supported in asm, print placeholder
-                let strLabel = addStringRaw("{...}")
-                asmLines.append("    adrp x0, \(strLabel)@PAGE")
-                asmLines.append("    add x0, x0, \(strLabel)@PAGEOFF")
+                // Print full dict: {"key": value, ...}
+                let openLabel = addString("{")
+                asmLines.append("    adrp x0, \(openLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(openLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+
+                for (i, key) in dictInfo.keys.enumerated() {
+                    if i > 0 {
+                        let sepLabel = addString(", ")
+                        asmLines.append("    adrp x0, \(sepLabel)@PAGE")
+                        asmLines.append("    add x0, x0, \(sepLabel)@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    }
+                    // Print "key":
+                    let keyLabel = addString("\"\(key)\": ")
+                    asmLines.append("    adrp x0, \(keyLabel)@PAGE")
+                    asmLines.append("    add x0, x0, \(keyLabel)@PAGEOFF")
+                    asmLines.append("    bl _printf")
+
+                    // Check for nested array value (e.g., "items": [1, 2, 3])
+                    let syntheticName = "\(varRef.name).\(key)"
+                    if let arrInfo = arrays[syntheticName] {
+                        // Print array inline: [elem, elem, ...]
+                        let arrOpen = addString("[")
+                        asmLines.append("    adrp x0, \(arrOpen)@PAGE")
+                        asmLines.append("    add x0, x0, \(arrOpen)@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                        for j in 0..<arrInfo.count {
+                            if j > 0 {
+                                let s = addString(", ")
+                                asmLines.append("    adrp x0, \(s)@PAGE")
+                                asmLines.append("    add x0, x0, \(s)@PAGEOFF")
+                                asmLines.append("    bl _printf")
+                            }
+                            let elemOffset = arrInfo.baseOffset + j * 8
+                            if arrInfo.isString {
+                                asmLines.append("    ldur x0, [x29, #-\(elemOffset + 16)]")
+                                asmLines.append("    str x0, [sp]")
+                                let fmt = addString("%s")
+                                asmLines.append("    adrp x0, \(fmt)@PAGE")
+                                asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
+                                asmLines.append("    bl _printf")
+                            } else {
+                                asmLines.append("    ldur w1, [x29, #-\(elemOffset + 16)]")
+                                asmLines.append("    sxtw x1, w1")
+                                asmLines.append("    str x1, [sp]")
+                                let fmt = addString("%d")
+                                asmLines.append("    adrp x0, \(fmt)@PAGE")
+                                asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
+                                asmLines.append("    bl _printf")
+                            }
+                        }
+                        let arrClose = addString("]")
+                        asmLines.append("    adrp x0, \(arrClose)@PAGE")
+                        asmLines.append("    add x0, x0, \(arrClose)@PAGEOFF")
+                        asmLines.append("    bl _printf")
+                    } else {
+                        // Print scalar value by type
+                        let valOffset = dictInfo.valueOffsets[i]
+                        let valType = dictInfo.valueTypes[i]
+                        switch valType {
+                        case .string:
+                            asmLines.append("    ldur x0, [x29, #-\(valOffset + 16)]")
+                            asmLines.append("    str x0, [sp]")
+                            let fmt = addString("%s")
+                            asmLines.append("    adrp x0, \(fmt)@PAGE")
+                            asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
+                            asmLines.append("    bl _printf")
+                        case .int:
+                            asmLines.append("    ldur w1, [x29, #-\(valOffset + 16)]")
+                            asmLines.append("    sxtw x1, w1")
+                            asmLines.append("    str x1, [sp]")
+                            let fmt = addString("%d")
+                            asmLines.append("    adrp x0, \(fmt)@PAGE")
+                            asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
+                            asmLines.append("    bl _printf")
+                        case .bool:
+                            asmLines.append("    ldur x0, [x29, #-\(valOffset + 16)]")
+                            asmLines.append("    str x0, [sp]")
+                            let fmt = addString("%s")
+                            asmLines.append("    adrp x0, \(fmt)@PAGE")
+                            asmLines.append("    add x0, x0, \(fmt)@PAGEOFF")
+                            asmLines.append("    bl _printf")
+                        }
+                    }
+                }
+
+                // Print closing brace + newline
+                let closeLabel = addStringRaw("}")
+                asmLines.append("    adrp x0, \(closeLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(closeLabel)@PAGEOFF")
                 asmLines.append("    bl _printf")
             }
         } else if let idx = node.expr as? IndexAccess,
