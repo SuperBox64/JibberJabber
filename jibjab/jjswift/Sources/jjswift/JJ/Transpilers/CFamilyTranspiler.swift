@@ -46,6 +46,13 @@ public class CFamilyTranspiler {
         return T.types?[jjType] ?? "int"
     }
 
+    func stripOuterParens(_ s: String) -> String {
+        if s.hasPrefix("(") && s.hasSuffix(")") {
+            return String(s.dropFirst().dropLast())
+        }
+        return s
+    }
+
     func isFloatExpr(_ node: ASTNode) -> Bool {
         if let lit = node as? Literal { return lit.value is Double }
         if let v = node as? VarRef { return doubleVars.contains(v.name) }
@@ -277,7 +284,7 @@ public class CFamilyTranspiler {
                 .replacingOccurrences(of: "{start}", with: expr(start))
                 .replacingOccurrences(of: "{end}", with: expr(end))
         } else if let condition = node.condition {
-            header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(condition))
+            header = ind() + T.while.replacingOccurrences(of: "{condition}", with: stripOuterParens(expr(condition)))
         } else {
             header = ind() + "// unsupported loop"
         }
@@ -288,7 +295,7 @@ public class CFamilyTranspiler {
     }
 
     func ifToString(_ node: IfStmt) -> String {
-        let header = ind() + T.if.replacingOccurrences(of: "{condition}", with: expr(node.condition))
+        let header = ind() + T.if.replacingOccurrences(of: "{condition}", with: stripOuterParens(expr(node.condition)))
         indentLevel += 1
         let thenBody = node.thenBody.map { stmtToString($0) }.joined(separator: "\n")
         indentLevel -= 1
