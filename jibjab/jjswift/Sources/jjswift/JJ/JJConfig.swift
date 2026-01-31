@@ -141,6 +141,7 @@ public struct TargetConfig: Codable {
     private let _propertyAccess: String?
     private let _enumAccess: String?
     private let _enumConst: String?
+    private let _enumSelf: String?
     private let _reservedWords: [String]?
     private let _reservedPrefix: String?
     private let _stringInclude: String?
@@ -241,6 +242,7 @@ public struct TargetConfig: Codable {
         case _propertyAccess = "propertyAccess"
         case _enumAccess = "enumAccess"
         case _enumConst = "enumConst"
+        case _enumSelf = "enumSelf"
         case _reservedWords = "reservedWords"
         case _reservedPrefix = "reservedPrefix"
         case _stringInclude = "stringInclude"
@@ -359,6 +361,7 @@ public struct TargetConfig: Codable {
         _propertyAccess = try container.decodeIfPresent(String.self, forKey: ._propertyAccess)
         _enumAccess = try container.decodeIfPresent(String.self, forKey: ._enumAccess)
         _enumConst = try container.decodeIfPresent(String.self, forKey: ._enumConst)
+        _enumSelf = try container.decodeIfPresent(String.self, forKey: ._enumSelf)
         _reservedWords = try container.decodeIfPresent([String].self, forKey: ._reservedWords)
         _reservedPrefix = try container.decodeIfPresent(String.self, forKey: ._reservedPrefix)
         _stringInclude = try container.decodeIfPresent(String.self, forKey: ._stringInclude)
@@ -466,6 +469,7 @@ public struct TargetConfig: Codable {
     public var propertyAccess: String { _propertyAccess ?? "{object}[{key}]" }
     public var enumAccess: String { _enumAccess ?? "{key}" }
     public var enumConst: String? { _enumConst }
+    public var enumSelf: String { _enumSelf ?? "{name}.self" }
     public var reservedWords: [String] { _reservedWords ?? [] }
     public var reservedPrefix: String { _reservedPrefix ?? "_" }
     public var stringInclude: String? { _stringInclude }

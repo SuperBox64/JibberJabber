@@ -48,16 +48,12 @@ public class SwiftTranspiler: Transpiling {
             // Dict declaration
             if let dictLit = varDecl.value as? DictLiteral {
                 dictVars.insert(varDecl.name)
-                if let varDict = T.varDict {
-                    let value = dictLit.pairs.isEmpty ? T.dictEmpty : expr(varDecl.value)
-                    return ind() + varDict
-                        .replacingOccurrences(of: "{name}", with: varDecl.name)
-                        .replacingOccurrences(of: "{value}", with: value)
-                }
-                if dictLit.pairs.isEmpty {
-                    return ind() + "var \(varDecl.name): [String: Any] = \(T.dictEmpty)"
-                }
-                return ind() + "var \(varDecl.name): [String: Any] = \(expr(varDecl.value))"
+                let value = dictLit.pairs.isEmpty ? T.dictEmpty : expr(varDecl.value)
+                let tmpl = T.varDict ?? T.var
+                return ind() + tmpl
+                    .replacingOccurrences(of: "{name}", with: varDecl.name)
+                    .replacingOccurrences(of: "{value}", with: value)
+                    .replacingOccurrences(of: "{type}", with: "")
             }
             // Tuple declaration
             if varDecl.value is TupleLiteral {
@@ -106,16 +102,12 @@ public class SwiftTranspiler: Transpiling {
             }
             return result
         } else if let funcDef = node as? FuncDef {
-            let typedParams: String
-            if let paramFmt = T.paramFormat {
-                let paramType = T.types?["Int"] ?? "Int"
-                typedParams = funcDef.params.map {
-                    paramFmt.replacingOccurrences(of: "{name}", with: $0)
-                            .replacingOccurrences(of: "{type}", with: paramType)
-                }.joined(separator: ", ")
-            } else {
-                typedParams = funcDef.params.map { "_ \($0): Int" }.joined(separator: ", ")
-            }
+            let paramFmt = T.paramFormat ?? "{name}: {type}"
+            let paramType = T.types?["Int"] ?? "Int"
+            let typedParams = funcDef.params.map {
+                paramFmt.replacingOccurrences(of: "{name}", with: $0)
+                        .replacingOccurrences(of: "{type}", with: paramType)
+            }.joined(separator: ", ")
             let header = ind() + T.func
                 .replacingOccurrences(of: "{name}", with: funcDef.name)
                 .replacingOccurrences(of: "{params}", with: typedParams)
@@ -129,13 +121,9 @@ public class SwiftTranspiler: Transpiling {
             enums.insert(enumDef.name)
             enumCases[enumDef.name] = enumDef.cases
             let cases = enumDef.cases.joined(separator: ", ")
-            if let tmpl = T.enumTemplate {
-                return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
-                                   .replacingOccurrences(of: "{cases}", with: cases)
-            }
-            return ind() + T.var.replacingOccurrences(of: "{type}", with: "enum")
-                .replacingOccurrences(of: "{name}", with: enumDef.name)
-                .replacingOccurrences(of: "{value}", with: "{ case \(cases) }")
+            let tmpl = T.enumTemplate ?? "enum {name} { case {cases} }"
+            return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
+                               .replacingOccurrences(of: "{cases}", with: cases)
         }
         return ""
     }
@@ -174,7 +162,7 @@ public class SwiftTranspiler: Transpiling {
                     let pairs = cases.map { "\\\"\($0)\\\": \($0)" }.joined(separator: ", ")
                     return "\"{\(pairs)}\""
                 }
-                return "\(varRef.name).self"
+                return T.enumSelf.replacingOccurrences(of: "{name}", with: varRef.name)
             }
             return varRef.name
         } else if let binaryOp = node as? BinaryOp {
