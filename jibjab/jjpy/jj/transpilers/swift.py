@@ -23,6 +23,7 @@ class SwiftTranspiler:
         self.double_vars = set()
         self.dict_vars = set()
         self.tuple_vars = set()
+        self.bool_vars = set()
 
     def is_float_expr(self, node) -> bool:
         """Check if expression involves floating-point values"""
@@ -47,8 +48,13 @@ class SwiftTranspiler:
 
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
+            if isinstance(node.expr, VarRef) and node.expr.name in self.bool_vars:
+                return self.ind() + T.get('printBool', T['print']).replace('{expr}', self.expr(node.expr))
             return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
+            # Track bool variables
+            if isinstance(node.value, Literal) and isinstance(node.value.value, bool):
+                self.bool_vars.add(node.name)
             # Track double variables
             if isinstance(node.value, Literal) and isinstance(node.value.value, float):
                 self.double_vars.add(node.name)

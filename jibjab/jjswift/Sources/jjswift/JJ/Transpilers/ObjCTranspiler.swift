@@ -60,6 +60,9 @@ public class ObjCTranspiler: CFamilyTranspiler {
             if stringVars.contains(varRef.name) {
                 return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
             }
+            if boolVars.contains(varRef.name) {
+                return ind() + T.printBool.replacingOccurrences(of: "{expr}", with: expr(e))
+            }
             if intVars.contains(varRef.name) {
                 return ind() + "printf(\"%ld\\n\", (long)\(expr(e)));"
             }

@@ -6,6 +6,7 @@ public class PythonTranspiler {
     private var indentLevel = 0
     private let T = loadTarget("py")
     private var enums = Set<String>()
+    private var boolVars = Set<String>()
 
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
@@ -21,8 +22,14 @@ public class PythonTranspiler {
 
     private func stmtToString(_ node: ASTNode) -> String {
         if let printStmt = node as? PrintStmt {
+            if let varRef = printStmt.expr as? VarRef, boolVars.contains(varRef.name) {
+                return ind() + T.printBool.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
+            }
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
         } else if let varDecl = node as? VarDecl {
+            if let lit = varDecl.value as? Literal, lit.value is Bool {
+                boolVars.insert(varDecl.name)
+            }
             return ind() + T.var
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))

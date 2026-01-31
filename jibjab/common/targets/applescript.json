@@ -3,6 +3,7 @@
   "ext": ".applescript",
   "header": "-- Transpiled from JibJab\n",
   "print": "log {expr}",
+  "printBool": "log {expr}",
   "var": "set {name} to {value}",
   "forRange": "repeat with {var} from {start} to ({end} - 1)",
   "forIn": "repeat with {var} in {collection}",

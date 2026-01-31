@@ -3,6 +3,7 @@
   "ext": ".swift",
   "header": "// Transpiled from JibJab\n",
   "print": "print({expr})",
+  "printBool": "print({expr})",
   "var": "var {name}: {type} = {value}",
   "varInfer": "var {name} = {value}",
   "forRange": "for {var} in {start}..<{end} {",

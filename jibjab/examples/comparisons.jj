@@ -5,8 +5,8 @@
 ~>snag{x}::val(#5)
 ~>snag{y}::val(#10)
 ~>snag{z}::val(#5)
-~>snag{t}::val("true")
-~>snag{f}::val("false")
+~>snag{t}::val(~yep)
+~>snag{f}::val(~nope)
 
 @@ Less than (true case)
 ~>frob{7a3}::emit("{x} < {y}:")

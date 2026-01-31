@@ -34,6 +34,7 @@ class AssemblyTranspiler:
         self.nested_arrays = {}      # var name -> (outer_count, inner_size)
         self.tuples = {}             # var name -> {base_offset, count, elem_types}
         self.dicts = {}              # var name -> {keys, value_offsets, value_types}
+        self.bool_vars = set()       # var names holding booleans
 
     def transpile(self, program: Program) -> str:
         self.asm_lines = []
@@ -91,6 +92,7 @@ class AssemblyTranspiler:
         self.tuples = {}
         self.dicts = {}
         self.enum_var_labels = {}
+        self.bool_vars = set()
 
         for stmt in main_stmts:
             self.gen_stmt(stmt)
@@ -247,6 +249,8 @@ class AssemblyTranspiler:
                         fmt += '%g'
                     elif text in self.enum_var_labels:
                         fmt += '%s'
+                    elif text in self.bool_vars:
+                        fmt += '%s'
                     else:
                         fmt += '%d'
                     var_names.append(text)
@@ -262,6 +266,9 @@ class AssemblyTranspiler:
                         if name in self.float_vars:
                             self.asm_lines.append(f"    ldur d{i}, [x29, #-{offset + 16}]")
                             self.asm_lines.append(f"    str d{i}, [sp, #{i * 8}]")
+                        elif name in self.bool_vars or name in self.enum_var_labels:
+                            self.asm_lines.append(f"    ldur x0, [x29, #-{offset + 16}]")
+                            self.asm_lines.append(f"    str x0, [sp, #{i * 8}]")
                         else:
                             self.asm_lines.append(f"    ldur w0, [x29, #-{offset + 16}]")
                             self.asm_lines.append("    sxtw x0, w0")
@@ -275,6 +282,15 @@ class AssemblyTranspiler:
             self.asm_lines.append(f"    adrp x0, {str_label}@PAGE")
             self.asm_lines.append(f"    add x0, x0, {str_label}@PAGEOFF")
             self.asm_lines.append("    bl _printf")
+        elif isinstance(expr, VarRef) and expr.name in self.bool_vars:
+            # Print bool variable as string "true"/"false"
+            if expr.name in self.variables:
+                offset = self.variables[expr.name]
+                self.asm_lines.append(f"    ldur x0, [x29, #-{offset + 16}]")
+                self.asm_lines.append("    str x0, [sp]")
+                self.asm_lines.append("    adrp x0, _fmt_str@PAGE")
+                self.asm_lines.append("    add x0, x0, _fmt_str@PAGEOFF")
+                self.asm_lines.append("    bl _printf")
         elif isinstance(expr, VarRef) and expr.name in self.enum_var_labels:
             # Print enum variable by name (stored as string pointer)
             if expr.name in self.variables:
@@ -632,6 +648,19 @@ class AssemblyTranspiler:
                 'base_offset': base_offset, 'count': len(arr.elements), 'is_string': is_string
             }
             self.variables[node.name] = base_offset
+            return
+
+        # Scalar variable - check if bool
+        if isinstance(node.value, Literal) and isinstance(node.value.value, bool):
+            self.bool_vars.add(node.name)
+            str_label = self.add_string("true" if node.value.value else "false")
+            self.asm_lines.append(f"    adrp x0, {str_label}@PAGE")
+            self.asm_lines.append(f"    add x0, x0, {str_label}@PAGEOFF")
+            if node.name not in self.variables:
+                self.variables[node.name] = self.stack_offset
+                self.stack_offset += 8
+            offset = self.variables[node.name]
+            self.asm_lines.append(f"    stur x0, [x29, #-{offset + 16}]")
             return
 
         # Scalar variable - check if float

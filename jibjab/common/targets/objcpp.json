@@ -6,6 +6,7 @@
   "printStr": "std::cout << {expr} << std::endl;",
   "printFloat": "std::cout << {expr} << std::endl;",
   "printDouble": "std::cout << {expr} << std::endl;",
+  "printBool": "std::cout << ({expr} ? \"true\" : \"false\") << std::endl;",
   "var": "{type} {name} = {value};",
   "varAuto": "auto {name} = {value};",
   "forRange": "for (int {var} = {start}; {var} < {end}; {var}++) {",

@@ -90,6 +90,8 @@ class GoTranspiler(CFamilyTranspiler):
         inferred = infer_type(node.value)
         if inferred == 'Int':
             self.int_vars.add(node.name)
+        elif inferred == 'Bool':
+            self.bool_vars.add(node.name)
         elif inferred == 'Double':
             self.double_vars.add(node.name)
         elif inferred == 'String':
@@ -201,6 +203,8 @@ class GoTranspiler(CFamilyTranspiler):
                 return self.ind() + f'fmt.Println({self.expr(expr_node)})'
             if expr_node.name in self.string_vars:
                 return self.ind() + f'fmt.Println({self.expr(expr_node)})'
+            if expr_node.name in self.bool_vars:
+                return self.ind() + self.T.get('printBool', 'fmt.Println({expr})').replace('{expr}', self.expr(expr_node))
             # Print whole dict
             if expr_node.name in self.dict_vars:
                 if expr_node.name in self.dict_fields and not self.dict_fields[expr_node.name]:

@@ -3,6 +3,7 @@
   "ext": ".py",
   "header": "#!/usr/bin/env python3\n# Transpiled from JibJab\n",
   "print": "print({expr})",
+  "printBool": "print(str({expr}).lower())",
   "var": "{name} = {value}",
   "forRange": "for {var} in range({start}, {end}):",
   "forIn": "for {var} in {collection}:",

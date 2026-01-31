@@ -19,6 +19,7 @@ OP = JJ['operators']
 class PythonTranspiler:
     def __init__(self):
         self.indent = 0
+        self.bool_vars = set()
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip()]
@@ -31,8 +32,12 @@ class PythonTranspiler:
 
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
+            if isinstance(node.expr, VarRef) and node.expr.name in self.bool_vars:
+                return self.ind() + T.get('printBool', T['print']).replace('{expr}', self.expr(node.expr))
             return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
+            if isinstance(node.value, Literal) and isinstance(node.value.value, bool):
+                self.bool_vars.add(node.name)
             return self.ind() + T['var'].replace('{name}', node.name).replace('{value}', self.expr(node.value))
         elif isinstance(node, LoopStmt):
             if node.start is not None:
@@ -78,7 +83,10 @@ class PythonTranspiler:
                 if kind == 'literal':
                     fstr += text.replace('\\', '\\\\').replace('"', '\\"')
                 else:
-                    fstr += '{' + text + '}'
+                    if text in self.bool_vars:
+                        fstr += '{str(' + text + ').lower()}'
+                    else:
+                        fstr += '{' + text + '}'
             return fstr + '"'
         if isinstance(node, Literal):
             if isinstance(node.value, str):

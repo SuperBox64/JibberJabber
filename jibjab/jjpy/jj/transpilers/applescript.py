@@ -50,6 +50,7 @@ class AppleScriptTranspiler:
     def __init__(self):
         self.indent = 0
         self.dict_vars = set()
+        self.bool_vars = set()
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip()]
@@ -75,6 +76,8 @@ class AppleScriptTranspiler:
                 return '\n'.join(lines)
             return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
+            if isinstance(node.value, Literal) and isinstance(node.value.value, bool):
+                self.bool_vars.add(node.name)
             if isinstance(node.value, DictLiteral):
                 self.dict_vars.add(node.name)
             return self.ind() + T['var'].replace('{name}', safe_name(node.name)).replace('{value}', self.expr(node.value))

@@ -85,7 +85,8 @@ public class GoTranspiler: CFamilyTranspiler {
             enumVarTypes[node.name] = varRef.name
         }
         let inferredType = inferType(node.value)
-        if inferredType == "Int" && enumVarTypes[node.name] == nil { intVars.insert(node.name) }
+        if inferredType == "Bool" { boolVars.insert(node.name) }
+        else if inferredType == "Int" && enumVarTypes[node.name] == nil { intVars.insert(node.name) }
         else if inferredType == "Double" { doubleVars.insert(node.name) }
         return ind() + "\(node.name) := \(expr(node.value))"
     }
@@ -147,6 +148,9 @@ public class GoTranspiler: CFamilyTranspiler {
             }
             if stringVars.contains(varRef.name) {
                 return ind() + "fmt.Println(\(expr(e)))"
+            }
+            if boolVars.contains(varRef.name) {
+                return ind() + T.printBool.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             // Print whole dict
             if dictVars.contains(varRef.name) {

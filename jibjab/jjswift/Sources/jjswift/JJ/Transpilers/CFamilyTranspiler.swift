@@ -14,6 +14,7 @@ public class CFamilyTranspiler {
     var tupleVars = Set<String>()
     var arrayVars = Set<String>()
     var stringVars = Set<String>()
+    var boolVars = Set<String>()
     var dictFields: [String: [String: (String, String)]] = [:]
     var tupleFields: [String: [(String, String)]] = [:]
 
@@ -32,7 +33,7 @@ public class CFamilyTranspiler {
 
     func inferType(_ node: ASTNode) -> String {
         if let literal = node as? Literal {
-            if literal.value is Bool { return "Int" }
+            if literal.value is Bool { return "Bool" }
             else if literal.value is Int { return "Int" }
             else if literal.value is Double { return "Double" }
             else if literal.value is String { return "String" }
@@ -131,6 +132,7 @@ public class CFamilyTranspiler {
         switch type {
         case "str": return T.printStr
         case "double": return T.printFloat
+        case "bool": return T.printBool
         default: return T.printInt
         }
     }
@@ -211,6 +213,7 @@ public class CFamilyTranspiler {
     func interpFormatSpecifier(_ name: String) -> String {
         if doubleVars.contains(name) { return "%g" }
         if stringVars.contains(name) { return "%s" }
+        if boolVars.contains(name) { return "%s" }
         if enumVarTypes[name] != nil { return "%s" }
         return "%d"
     }
@@ -218,6 +221,9 @@ public class CFamilyTranspiler {
     func interpVarExpr(_ name: String) -> String {
         if let enumName = enumVarTypes[name] {
             return "\(enumName)_names[\(name)]"
+        }
+        if boolVars.contains(name) {
+            return "\(name) ? \"true\" : \"false\""
         }
         return name
     }
@@ -259,6 +265,9 @@ public class CFamilyTranspiler {
             }
             if stringVars.contains(varRef.name) {
                 return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
+            }
+            if boolVars.contains(varRef.name) {
+                return ind() + T.printBool.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             // Whole dict
             if dictVars.contains(varRef.name) {
@@ -377,7 +386,8 @@ public class CFamilyTranspiler {
             enumVarTypes[node.name] = varRef.name
         }
         let inferredType = inferType(node.value)
-        if inferredType == "Int" { intVars.insert(node.name) }
+        if inferredType == "Bool" { boolVars.insert(node.name) }
+        else if inferredType == "Int" { intVars.insert(node.name) }
         else if inferredType == "Double" { doubleVars.insert(node.name) }
         else if inferredType == "String" { stringVars.insert(node.name) }
         let varType = getTargetType(inferredType)

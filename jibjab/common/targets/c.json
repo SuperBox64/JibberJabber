@@ -5,6 +5,7 @@
   "printInt": "printf(\"%d\\n\", {expr});",
   "printStr": "printf(\"%s\\n\", {expr});",
   "printFloat": "printf(\"%f\\n\", {expr});",
+  "printBool": "printf(\"%s\\n\", {expr} ? \"true\" : \"false\");",
   "printDouble": "printf(\"%lf\\n\", {expr});",
   "var": "{type} {name} = {value};",
   "forRange": "for (int {var} = {start}; {var} < {end}; {var}++) {",

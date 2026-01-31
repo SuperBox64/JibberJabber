@@ -5,6 +5,7 @@
   "printInt": "fmt.Println({expr})",
   "printStr": "fmt.Println({expr})",
   "printFloat": "fmt.Println({expr})",
+  "printBool": "fmt.Println({expr})",
   "printDouble": "fmt.Println({expr})",
   "var": "var {name} {type} = {value}",
   "forRange": "for {var} := {start}; {var} < {end}; {var}++ {",

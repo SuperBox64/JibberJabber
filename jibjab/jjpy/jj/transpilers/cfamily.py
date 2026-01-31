@@ -17,7 +17,7 @@ def infer_type(node) -> str:
     """Infer JJ type from AST node"""
     if isinstance(node, Literal):
         if isinstance(node.value, bool):
-            return 'Int'
+            return 'Bool'
         elif isinstance(node.value, int):
             return 'Int'
         elif isinstance(node.value, float):
@@ -44,6 +44,7 @@ class CFamilyTranspiler:
         self.dict_vars = set()
         self.tuple_vars = set()
         self.string_vars = set()
+        self.bool_vars = set()
         self.enum_var_types = {}
         self.T = load_target_config(self.target_name)
 
@@ -145,12 +146,15 @@ class CFamilyTranspiler:
     def _interp_format_specifier(self, name: str) -> str:
         if name in self.double_vars: return '%g'
         if name in self.string_vars: return '%s'
+        if name in self.bool_vars: return '%s'
         if name in self.enum_var_types: return '%s'
         return '%d'
 
     def _interp_var_expr(self, name: str) -> str:
         if name in self.enum_var_types:
             return f'{self.enum_var_types[name]}_names[{name}]'
+        if name in self.bool_vars:
+            return f'{name} ? "true" : "false"'
         return name
 
     def _print_stmt(self, node: PrintStmt) -> str:
@@ -176,6 +180,8 @@ class CFamilyTranspiler:
                 return self.ind() + self.T['printFloat'].replace('{expr}', self.expr(expr_node))
             if expr_node.name in self.string_vars:
                 return self.ind() + self.T['printStr'].replace('{expr}', self.expr(expr_node))
+            if expr_node.name in self.bool_vars:
+                return self.ind() + self.T.get('printBool', self.T.get('printInt', '')).replace('{expr}', self.expr(expr_node))
         if isinstance(expr_node, IndexAccess):
             if isinstance(expr_node.array, VarRef) and expr_node.array.name in self.enums:
                 return self._print_enum_value(expr_node)
@@ -202,7 +208,9 @@ class CFamilyTranspiler:
             self.dict_vars.add(node.name)
             return self._var_dict(node)
         inferred = infer_type(node.value)
-        if inferred == 'Int':
+        if inferred == 'Bool':
+            self.bool_vars.add(node.name)
+        elif inferred == 'Int':
             self.int_vars.add(node.name)
         elif inferred == 'Double':
             self.double_vars.add(node.name)

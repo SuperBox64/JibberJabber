@@ -92,6 +92,7 @@ public struct TargetConfig: Codable {
     private let _printStr: String?
     private let _printFloat: String?
     private let _printDouble: String?
+    private let _printBool: String?
     public let `var`: String
     public let varInfer: String?
     public let varAuto: String?
@@ -140,6 +141,7 @@ public struct TargetConfig: Codable {
         case _printStr = "printStr"
         case _printFloat = "printFloat"
         case _printDouble = "printDouble"
+        case _printBool = "printBool"
         case _forIn = "forIn"
         case _funcDecl = "funcDecl"
         case _blockEnd = "blockEnd"
@@ -173,6 +175,7 @@ public struct TargetConfig: Codable {
         _printStr = try container.decodeIfPresent(String.self, forKey: ._printStr)
         _printFloat = try container.decodeIfPresent(String.self, forKey: ._printFloat)
         _printDouble = try container.decodeIfPresent(String.self, forKey: ._printDouble)
+        _printBool = try container.decodeIfPresent(String.self, forKey: ._printBool)
         `var` = try container.decode(String.self, forKey: .var)
         varInfer = try container.decodeIfPresent(String.self, forKey: .varInfer)
         varAuto = try container.decodeIfPresent(String.self, forKey: .varAuto)
@@ -230,6 +233,7 @@ public struct TargetConfig: Codable {
     public var printStr: String { _printStr ?? _print ?? "" }
     public var printFloat: String { _printFloat ?? _printInt ?? "" }
     public var printDouble: String { _printDouble ?? _printInt ?? "" }
+    public var printBool: String { _printBool ?? _print ?? printInt }
     public var forIn: String { _forIn ?? forRange }
     public var funcDecl: String { _funcDecl ?? `func` }
     public var blockEnd: String { _blockEnd ?? "" }

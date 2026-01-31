@@ -3,6 +3,7 @@
   "ext": ".js",
   "header": "// Transpiled from JibJab\n",
   "print": "console.log({expr});",
+  "printBool": "console.log({expr});",
   "var": "let {name} = {value};",
   "forRange": "for (let {var} = {start}; {var} < {end}; {var}++) {",
   "forIn": "for (const {var} of {collection}) {",
