@@ -112,7 +112,7 @@ struct EditorTabView: View {
     @Binding var sourceCode: String
     @Binding var transpiledOutputs: [String: String]
     @Binding var userHasEdited: Bool
-    @Binding var editMode: Bool
+    @AppStorage("editMode") var editMode = false
     let isRunning: Bool
     let onRun: () -> Void
     let onStop: () -> Void

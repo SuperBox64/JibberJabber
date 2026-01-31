@@ -9,7 +9,7 @@ struct ContentView: View {
     @State private var runOutput = ""
     @State private var isRunning = false
     @State private var userHasEdited = false
-    @State private var editMode = false
+    @AppStorage("editMode") private var editMode = false
     @State private var transpileWork: DispatchWorkItem?
     @State private var runWork: DispatchWorkItem?
     @State private var showDependencyCheck = true
@@ -58,7 +58,6 @@ struct ContentView: View {
                     sourceCode: $sourceCode,
                     transpiledOutputs: $transpiledOutputs,
                     userHasEdited: $userHasEdited,
-                    editMode: $editMode,
                     isRunning: isRunning,
                     onRun: runCurrentTab,
                     onStop: stopRunning
