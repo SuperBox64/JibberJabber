@@ -19,17 +19,6 @@ An **AI-first programming language** created by [Todd Bruss](https://github.com/
 - **Native ARM64 Compiler** - Generates Mach-O binaries directly, no assembler or linker needed
 - **Agentic Engineering** - AI generates JJ logic, the engine materializes it into production-ready code for any target
 
----
-
-## Transpile Example
-
-```bash
-jjswift exec examples/hello.jj py
-```
-```
-Hello, JibJab World!
-```
-
 **Targets:** `py` `js` `c` `cpp` `swift` `objc` `objcpp` `go` `asm` `applescript`
 
 ---
@@ -42,54 +31,7 @@ Hello, JibJab World!
 | **jjpy** | Python | `jibjab/jjpy/` | Cross-platform |
 | **BattleScript** | SwiftUI | `BattleScript/` | Visual IDE for JibJab |
 
----
-
-## Quick Start
-
-```bash
-git clone https://github.com/user/JibberJabber.git
-cd JibberJabber/jibjab/jjswift
-swift build -c release
-```
-
-### Commands
-
-```bash
-jjswift run examples/hello.jj                        # Interpret
-jjswift compile examples/fibonacci.jj fib             # Native ARM64 binary
-jjswift transpile examples/fibonacci.jj py            # Transpile to target
-jjswift exec examples/fibonacci.jj py                 # Transpile + compile + run
-```
-
-### Dependencies
-
-| Tool | Used For | Install |
-|------|----------|---------|
-| `clang` / `swiftc` | C, C++, Swift, ObjC, ObjC++ | `xcode-select --install` |
-| `python3` / `osascript` | Python, AppleScript | Pre-installed on macOS |
-| `qjs` | JavaScript (QuickJS) | `brew install quickjs` |
-| `go` | Go | `brew install go` |
-
----
-
-## Regression Tests
-
-Run `bash regression.sh -vg` for verbose output with grid.
-
-| | run | comp | asm | py | js | c | cpp | swft | objc | ocpp | go | as |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| numbers | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fizzbuzz | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| fibonacci | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| variables | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| enums | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| dictionaries | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| tuples | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| arrays | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| comparisons | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| helloworld | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-
-**TOTAL: 420 passed, 0 failed**
+See [jibjab/README.md](jibjab/README.md) for quick start, commands, and dependencies.
 
 ---
 
@@ -142,6 +84,15 @@ flowchart TD
 ```
 
 </div>
+
+---
+
+## More
+
+- [Quick Start & Commands](jibjab/README.md)
+- [Language Spec](jibjab/SPEC.md)
+- [Regression Tests](jibjab/TESTS.md)
+- [BattleScript IDE](BattleScript/README.md)
 
 ---
 
