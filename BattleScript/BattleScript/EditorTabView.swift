@@ -246,7 +246,7 @@ struct EditorTabView: View {
             }
             .padding(.vertical, 2)
             .offset(y: 1)
-            .background(Color(nsColor: .controlBackgroundColor))
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.8))
         }
     }
 }
