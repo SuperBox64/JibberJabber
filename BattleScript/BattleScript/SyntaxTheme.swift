@@ -106,7 +106,7 @@ struct SyntaxTheme {
     }
     // System functions (print, etc.) - purple in Xcode, same as functionCall in VSCode
     static var systemFunctionCall: NSColor {
-        color(xd: 0xA167E6, xl: 0x6C36A9, vd: 0xDCDCAA, vl: 0x795E26)
+        color(xd: 0xB281EB, xl: 0x6C36A9, vd: 0xDCDCAA, vl: 0x795E26)
     }
     static var attribute: NSColor {
         color(xd: 0xFD8F3F, xl: 0x643820, vd: 0xDCDCAA, vl: 0x795E26)
