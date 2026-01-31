@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="battlescript.png" width="256" alt="BattleScript Icon">
+  <img src="battlescript.png" width="256" alt="BattleScript JibberJabber JibJab JJ AI first programming language experiment GUI Icon">
 </p>
 
 # JibberJabber (JJ) 1.0
