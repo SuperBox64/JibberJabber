@@ -60,21 +60,18 @@ struct CodeEditor: NSViewRepresentable {
             let showing = showLineNumbers
             if let ruler = scrollView.verticalRulerView {
                 if showing {
-                    // Start at 0 width, make visible, then animate to full width
-                    ruler.frame.size.width = 0
+                    ruler.alphaValue = 0
                     scrollView.rulersVisible = true
-                } else {
-                    ruler.frame.size.width = ruler.requiredThickness
                 }
                 NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.3
+                    ctx.duration = 0.25
                     ctx.allowsImplicitAnimation = true
-                    ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                    ruler.animator().frame.size.width = showing ? ruler.requiredThickness : 0
+                    ruler.animator().alphaValue = showing ? 1 : 0
                 } completionHandler: {
                     if !showing {
                         scrollView.rulersVisible = false
                     }
+                    ruler.alphaValue = showing ? 1 : 0
                     ruler.needsDisplay = true
                 }
             }
