@@ -54,35 +54,17 @@ struct PersistentHSplitView<Left: View, Right: View>: NSViewControllerRepresenta
     }
 }
 
-class ProportionalSplitDelegate: NSObject, NSSplitViewDelegate {
+class FixedTopSplitDelegate: NSObject, NSSplitViewDelegate {
     func splitView(_ splitView: NSSplitView, resizeSubviewsWithOldSize oldSize: NSSize) {
-        let dividerThickness = splitView.dividerThickness
-        let newHeight = splitView.bounds.height
-        let oldHeight = oldSize.height
-
-        guard oldHeight > 0, splitView.subviews.count == 2 else {
-            splitView.adjustSubviews()
-            return
-        }
-
+        guard splitView.subviews.count == 2 else { splitView.adjustSubviews(); return }
         let topView = splitView.subviews[0]
         let bottomView = splitView.subviews[1]
-        let oldTopHeight = topView.frame.height
-        let usableOld = oldHeight - dividerThickness
-        let usableNew = newHeight - dividerThickness
-
-        guard usableOld > 0 else {
-            splitView.adjustSubviews()
-            return
-        }
-
-        let ratio = oldTopHeight / usableOld
-        let newTopHeight = round(ratio * usableNew)
-        let newBottomHeight = usableNew - newTopHeight
+        let divider = splitView.dividerThickness
         let width = splitView.bounds.width
-
-        topView.frame = NSRect(x: 0, y: newBottomHeight + dividerThickness, width: width, height: newTopHeight)
-        bottomView.frame = NSRect(x: 0, y: 0, width: width, height: newBottomHeight)
+        let topHeight = topView.frame.height
+        let bottomHeight = splitView.bounds.height - topHeight - divider
+        topView.frame = NSRect(x: 0, y: bottomHeight + divider, width: width, height: topHeight)
+        bottomView.frame = NSRect(x: 0, y: 0, width: width, height: max(0, bottomHeight))
     }
 }
 
@@ -107,8 +89,8 @@ struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresenta
         self.bottom = bottom()
     }
 
-    func makeCoordinator() -> ProportionalSplitDelegate {
-        ProportionalSplitDelegate()
+    func makeCoordinator() -> FixedTopSplitDelegate {
+        FixedTopSplitDelegate()
     }
 
     func makeNSViewController(context: Context) -> NSSplitViewController {
@@ -128,6 +110,10 @@ struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresenta
         bottomItem.canCollapse = false
         bottomItem.minimumThickness = bottomMinHeight
         controller.addSplitViewItem(bottomItem)
+
+        // Code editor stays fixed; output absorbs window resize
+        controller.splitView.setHoldingPriority(.init(490), forSubviewAt: 0)
+        controller.splitView.setHoldingPriority(.init(200), forSubviewAt: 1)
 
         controller.splitView.autosaveName = autosaveName
 
