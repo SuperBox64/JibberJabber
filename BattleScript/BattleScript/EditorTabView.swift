@@ -142,6 +142,7 @@ struct EditorTabView: View {
                         Text(target.uppercased())
                             .font(.system(.caption, design: .monospaced))
                             .fontWeight(selectedTab == target ? .bold : .regular)
+                            .fixedSize()
                             .padding(.horizontal, 8)
                             .padding(.vertical, 6)
                             .contentShape(Rectangle())
@@ -151,11 +152,12 @@ struct EditorTabView: View {
                     .foregroundColor(selectedTab == target ? .primary : .secondary)
                     .cornerRadius(6)
                 }
-                Spacer()
+                Spacer(minLength: 0)
                 if isRunning {
                     Button(action: onStop) {
                         Label("Stop", systemImage: "stop.fill")
                             .font(.system(.caption, design: .monospaced))
+                            .fixedSize()
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(Color.red.opacity(0.2))
@@ -168,6 +170,7 @@ struct EditorTabView: View {
                     Button(action: onRun) {
                         Label("Run", systemImage: "play.fill")
                             .font(.system(.caption, design: .monospaced))
+                            .fixedSize()
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(Color.green.opacity(0.2))
