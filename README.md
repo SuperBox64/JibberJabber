@@ -115,157 +115,35 @@ swift build -c release
 
 The executable will be at `.build/release/jjswift`
 
-### Running Programs
+### Commands
 
 ```bash
-# Run via interpreter
-swift run jjswift run ../examples/hello.jj
-```
-
-### Compiling to Native Binary
-
-```bash
-# True native compilation (no external tools)
-swift run jjswift compile ../examples/fibonacci.jj fib
-codesign -s - fib  # Sign for Apple Silicon
-./fib
-
-# Alternative: via assembly transpiler
-swift run jjswift asm ../examples/fibonacci.jj fib_asm
-./fib_asm
-```
-
-The `compile` command generates ARM64 machine code directly from JJ source, producing a standalone Mach-O executable without needing `as` or `ld`.
-
-### Transpiling
-
-```bash
-swift run jjswift transpile ../examples/fibonacci.jj py          # Python
-swift run jjswift transpile ../examples/fibonacci.jj js          # JavaScript
-swift run jjswift transpile ../examples/fibonacci.jj c           # C
-swift run jjswift transpile ../examples/fibonacci.jj cpp         # C++
-swift run jjswift transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
-swift run jjswift transpile ../examples/fibonacci.jj swift       # Swift
-swift run jjswift transpile ../examples/fibonacci.jj applescript fib.scpt  # AppleScript (compiled)
-swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
-swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
-swift run jjswift transpile ../examples/fibonacci.jj go          # Go
-```
-
-### Build (Transpile + Compile)
-
-```bash
-swift run jjswift build ../examples/fibonacci.jj c              # Build via C
-swift run jjswift build ../examples/fibonacci.jj cpp            # Build via C++
-swift run jjswift build ../examples/fibonacci.jj swift           # Build via Swift
-swift run jjswift build ../examples/fibonacci.jj objc            # Build via Objective-C
-swift run jjswift build ../examples/fibonacci.jj objcpp          # Build via Objective-C++
-swift run jjswift build ../examples/fibonacci.jj go              # Build via Go
-swift run jjswift build ../examples/fibonacci.jj asm             # Build via ARM64 Assembly
-swift run jjswift build ../examples/fibonacci.jj c my_output     # Custom output name
+swift run jjswift run ../examples/hello.jj                         # Interpret
+swift run jjswift compile ../examples/fibonacci.jj fib             # Native ARM64 binary
+swift run jjswift asm ../examples/fibonacci.jj fib_asm             # Compile via assembly
+swift run jjswift transpile ../examples/fibonacci.jj target        # Transpile to target
+swift run jjswift build ../examples/fibonacci.jj target output     # Transpile + compile
+swift run jjswift exec ../examples/fibonacci.jj target             # Transpile + compile + run
 ```
 
 Targets: `py`, `js`, `c`, `cpp`, `swift`, `objc`, `objcpp`, `asm`, `applescript`, `go`
-
-The `build` command transpiles JJ source to the target language, then compiles it into a binary. Output defaults to `{basename}_{target}`. For interpreted targets (py, js), it produces the source file instead.
-
-### Exec (Transpile + Compile + Run)
-
-```bash
-swift run jjswift exec ../examples/fibonacci.jj c               # Exec via C
-swift run jjswift exec ../examples/fibonacci.jj py              # Exec via Python
-swift run jjswift exec ../examples/fibonacci.jj js              # Exec via JavaScript
-swift run jjswift exec ../examples/fibonacci.jj cpp             # Exec via C++
-swift run jjswift exec ../examples/fibonacci.jj swift            # Exec via Swift
-swift run jjswift exec ../examples/fibonacci.jj objc             # Exec via Objective-C
-swift run jjswift exec ../examples/fibonacci.jj objcpp           # Exec via Objective-C++
-swift run jjswift exec ../examples/fibonacci.jj go               # Exec via Go
-swift run jjswift exec ../examples/fibonacci.jj asm              # Exec via ARM64 Assembly
-swift run jjswift exec ../examples/fibonacci.jj applescript      # Exec via AppleScript
-```
-
-Targets: `py`, `js`, `c`, `cpp`, `swift`, `objc`, `objcpp`, `asm`, `applescript`, `go`
-
-The `exec` command transpiles, compiles (if needed), and immediately runs the result. The temporary binary is placed in `/tmp/`.
 
 ---
 
 ## Using the Python Interpreter (`jjpy`)
 
-### Running Programs
+### Commands
 
 ```bash
-cd jibjab/jjpy
-
-# Run via interpreter
-python3 jj.py run ../examples/hello.jj
-```
-
-### Compiling to Native Binary
-
-```bash
-# True native compilation (no external tools)
-python3 jj.py compile ../examples/fibonacci.jj fib
-codesign -s - fib  # Sign for Apple Silicon
-./fib
-
-# Alternative: via assembly transpiler
-python3 jj.py asm ../examples/fibonacci.jj fib_asm
-./fib_asm
-```
-
-The `compile` command generates ARM64 machine code directly from JJ source, producing a standalone Mach-O executable without needing `as` or `ld`.
-
-### Transpiling
-
-```bash
-python3 jj.py transpile ../examples/fibonacci.jj py          # Python
-python3 jj.py transpile ../examples/fibonacci.jj js          # JavaScript
-python3 jj.py transpile ../examples/fibonacci.jj c           # C
-python3 jj.py transpile ../examples/fibonacci.jj cpp         # C++
-python3 jj.py transpile ../examples/fibonacci.jj asm         # ARM64 Assembly
-python3 jj.py transpile ../examples/fibonacci.jj swift       # Swift
-python3 jj.py transpile ../examples/fibonacci.jj applescript fib.scpt  # AppleScript (compiled)
-python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
-python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
-python3 jj.py transpile ../examples/fibonacci.jj go          # Go
-```
-
-### Build (Transpile + Compile)
-
-```bash
-python3 jj.py build ../examples/fibonacci.jj c              # Build via C
-python3 jj.py build ../examples/fibonacci.jj cpp            # Build via C++
-python3 jj.py build ../examples/fibonacci.jj swift           # Build via Swift
-python3 jj.py build ../examples/fibonacci.jj objc            # Build via Objective-C
-python3 jj.py build ../examples/fibonacci.jj objcpp          # Build via Objective-C++
-python3 jj.py build ../examples/fibonacci.jj go              # Build via Go
-python3 jj.py build ../examples/fibonacci.jj asm             # Build via ARM64 Assembly
-python3 jj.py build ../examples/fibonacci.jj c my_output     # Custom output name
+python3 jj.py run ../examples/hello.jj                         # Interpret
+python3 jj.py compile ../examples/fibonacci.jj fib             # Native ARM64 binary
+python3 jj.py asm ../examples/fibonacci.jj fib_asm             # Compile via assembly
+python3 jj.py transpile ../examples/fibonacci.jj target        # Transpile to target
+python3 jj.py build ../examples/fibonacci.jj target output     # Transpile + compile
+python3 jj.py exec ../examples/fibonacci.jj target             # Transpile + compile + run
 ```
 
 Targets: `py`, `js`, `c`, `cpp`, `swift`, `objc`, `objcpp`, `asm`, `applescript`, `go`
-
-The `build` command transpiles JJ source to the target language, then compiles it into a binary. Output defaults to `{basename}_{target}`. For interpreted targets (py, js), it produces the source file instead.
-
-### Exec (Transpile + Compile + Run)
-
-```bash
-python3 jj.py exec ../examples/fibonacci.jj c               # Exec via C
-python3 jj.py exec ../examples/fibonacci.jj py              # Exec via Python
-python3 jj.py exec ../examples/fibonacci.jj js              # Exec via JavaScript
-python3 jj.py exec ../examples/fibonacci.jj cpp             # Exec via C++
-python3 jj.py exec ../examples/fibonacci.jj swift            # Exec via Swift
-python3 jj.py exec ../examples/fibonacci.jj objc             # Exec via Objective-C
-python3 jj.py exec ../examples/fibonacci.jj objcpp           # Exec via Objective-C++
-python3 jj.py exec ../examples/fibonacci.jj go               # Exec via Go
-python3 jj.py exec ../examples/fibonacci.jj asm              # Exec via ARM64 Assembly
-python3 jj.py exec ../examples/fibonacci.jj applescript      # Exec via AppleScript
-```
-
-Targets: `py`, `js`, `c`, `cpp`, `swift`, `objc`, `objcpp`, `asm`, `applescript`, `go`
-
-The `exec` command transpiles, compiles (if needed), and immediately runs the result. The temporary binary is placed in `/tmp/`.
 
 ---
 
