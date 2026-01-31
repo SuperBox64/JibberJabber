@@ -398,7 +398,9 @@
       "Bash(mkdir:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(plutil:*)",
-      "Bash(defaults delete:*)"
+      "Bash(defaults delete:*)",
+      "Bash(for f in jibjab/common/targets/{py,js,c,cpp,swift,objc,objcpp,go,applescript}.json)",
+      "Bash(do echo -n \"$f: \")"
     ]
   }
 }

@@ -38,17 +38,12 @@ public class GoTranspiler: CFamilyTranspiler {
             .trimmingCharacters(in: .newlines)
         if needsMath {
             // Replace single import with multi-import block
-            let singleImport = T.importSingle ?? "import \"fmt\""
-            if let multiTmpl = T.importMulti {
-                let fmtItem = T.importItem.replacingOccurrences(of: "{name}", with: "fmt")
-                let mathItem = T.importItem.replacingOccurrences(of: "{name}", with: "math")
-                let imports = "\(T.indent)\(fmtItem)\n\(T.indent)\(mathItem)"
-                let multiImport = multiTmpl.replacingOccurrences(of: "{imports}", with: imports)
-                header = header.replacingOccurrences(of: singleImport, with: multiImport)
-            } else {
-                header = header.replacingOccurrences(of: singleImport,
-                    with: "import (\n\(T.indent)\"fmt\"\n\(T.indent)\"math\"\n)")
-            }
+            let singleImport = T.importSingle.replacingOccurrences(of: "{name}", with: "fmt")
+            let fmtItem = T.importItem.replacingOccurrences(of: "{name}", with: "fmt")
+            let mathItem = T.importItem.replacingOccurrences(of: "{name}", with: "math")
+            let imports = "\(T.indent)\(fmtItem)\n\(T.indent)\(mathItem)"
+            let multiImport = T.importMulti.replacingOccurrences(of: "{imports}", with: imports)
+            header = header.replacingOccurrences(of: singleImport, with: multiImport)
         }
         lines.append(header)
         lines.append("")
@@ -215,34 +210,20 @@ public class GoTranspiler: CFamilyTranspiler {
     override func enumToString(_ node: EnumDef) -> String {
         enums.insert(node.name)
         enumCases[node.name] = node.cases
-        if let constTmpl = T.enumConst {
-            var casesLines: [String] = []
-            indentLevel += 1
-            for c in node.cases {
-                let caseName = T.enumAccess
-                    .replacingOccurrences(of: "{name}", with: node.name)
-                    .replacingOccurrences(of: "{key}", with: c)
-                casesLines.append(ind() + "\(caseName) = \"\(c)\"")
-            }
-            indentLevel -= 1
-            let casesStr = casesLines.joined(separator: "\n")
-            return ind() + constTmpl
-                .replacingOccurrences(of: "\\n", with: "\n")
-                .replacingOccurrences(of: "{cases}", with: casesStr)
-        }
-        // Fallback
-        var lines: [String] = []
-        lines.append(ind() + "const (")
+        let constTmpl = T.enumConst ?? "const (\n{cases}\n)"
+        var casesLines: [String] = []
         indentLevel += 1
         for c in node.cases {
             let caseName = T.enumAccess
                 .replacingOccurrences(of: "{name}", with: node.name)
                 .replacingOccurrences(of: "{key}", with: c)
-            lines.append(ind() + "\(caseName) = \"\(c)\"")
+            casesLines.append(ind() + "\(caseName) = \"\(c)\"")
         }
         indentLevel -= 1
-        lines.append(ind() + ")")
-        return lines.joined(separator: "\n")
+        let casesStr = casesLines.joined(separator: "\n")
+        return ind() + constTmpl
+            .replacingOccurrences(of: "\\n", with: "\n")
+            .replacingOccurrences(of: "{cases}", with: casesStr)
     }
 
     override func expr(_ node: ASTNode) -> String {

@@ -483,8 +483,8 @@ public struct TargetConfig: Codable {
     public var coutSep: String { _coutSep ?? " << " }
     public var coutNewline: String { _coutNewline ?? "std::cout << {expr} << std::endl;" }
     public var coutInline: String { _coutInline ?? "std::cout << {expr};" }
-    public var importSingle: String? { _importSingle }
-    public var importMulti: String? { _importMulti }
+    public var importSingle: String { _importSingle ?? "import \"{name}\"" }
+    public var importMulti: String { _importMulti ?? "import (\n{imports}\n)" }
     public var importItem: String { _importItem ?? "\"{name}\"" }
     public var arrayLitOpen: String { _arrayLitOpen ?? "{" }
     public var arrayLitClose: String { _arrayLitClose ?? "}" }
