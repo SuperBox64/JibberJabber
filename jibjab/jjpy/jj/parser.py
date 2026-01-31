@@ -10,7 +10,8 @@ from .lexer import Lexer, Token, TokenType, JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    EnumDef, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess
+    EnumDef, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
+    StringInterpolation
 )
 
 # Get operator emit values from config
@@ -333,6 +334,8 @@ class Parser:
 
         if token := self.match(TokenType.NUMBER):
             return Literal(token.value)
+        if token := self.match(TokenType.INTERP_STRING):
+            return StringInterpolation(token.value)
         if token := self.match(TokenType.STRING):
             return Literal(token.value)
         if self.match(TokenType.TRUE):

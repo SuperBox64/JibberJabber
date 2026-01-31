@@ -8,7 +8,7 @@ Tuples: stored as numbered variables (_0, _1, _2)
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, PrintStmt, FuncDef, EnumDef, Program
+    IndexAccess, PrintStmt, FuncDef, EnumDef, Program, StringInterpolation
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -181,6 +181,17 @@ class GoTranspiler(CFamilyTranspiler):
 
     def _print_stmt(self, node: PrintStmt) -> str:
         expr_node = node.expr
+        if isinstance(expr_node, StringInterpolation):
+            fmt = ''
+            args = []
+            for kind, text in expr_node.parts:
+                if kind == 'literal':
+                    fmt += text
+                else:
+                    fmt += '%v'
+                    args.append(self._interp_var_expr(text))
+            arg_str = '' if not args else ', ' + ', '.join(args)
+            return self.ind() + f'fmt.Printf("{fmt}\\n"{arg_str})'
         if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
             return self.ind() + f'fmt.Println({self.expr(expr_node)})'
         if isinstance(expr_node, VarRef):

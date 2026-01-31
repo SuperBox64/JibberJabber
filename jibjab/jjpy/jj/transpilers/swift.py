@@ -7,7 +7,8 @@ from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    EnumDef, IndexAccess, ArrayLiteral, DictLiteral, TupleLiteral
+    EnumDef, IndexAccess, ArrayLiteral, DictLiteral, TupleLiteral,
+    StringInterpolation
 )
 
 # Get target config and operators
@@ -105,6 +106,14 @@ class SwiftTranspiler:
         return ""
 
     def expr(self, node: ASTNode) -> str:
+        if isinstance(node, StringInterpolation):
+            result = '"'
+            for kind, text in node.parts:
+                if kind == 'literal':
+                    result += text.replace('\\', '\\\\').replace('"', '\\"')
+                else:
+                    result += f'\\({text})'
+            return result + '"'
         if isinstance(node, Literal):
             if isinstance(node.value, str):
                 # Swift uses double quotes for strings

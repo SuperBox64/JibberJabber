@@ -257,6 +257,56 @@ public class AssemblyTranspiler {
     }
 
     private func genPrint(_ node: PrintStmt) {
+        if let interp = node.expr as? StringInterpolation {
+            // Build printf format string and args from interpolation parts
+            var fmt = ""
+            var varNames: [String] = []
+            for part in interp.parts {
+                switch part {
+                case .literal(let text):
+                    fmt += text.replacingOccurrences(of: "%", with: "%%")
+                case .variable(let name):
+                    if floatVars.contains(name) {
+                        fmt += "%g"
+                    } else if let offset = variables[name], enumVarLabels[name] != nil {
+                        _ = offset // enum var is a string pointer
+                        fmt += "%s"
+                    } else {
+                        fmt += "%d"
+                    }
+                    varNames.append(name)
+                }
+            }
+            // Create format string with newline
+            let fmtLabel = addStringRaw(fmt)
+            // Load variable values onto stack before printf
+            // ARM64 printf: x0=format, then args go to stack via str
+            // For simplicity, build a single printf call with format + one arg at a time
+            // Actually, printf supports multiple args. Load them in order.
+            if varNames.isEmpty {
+                asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+            } else {
+                // For each variable, load onto stack
+                for (i, name) in varNames.enumerated() {
+                    if let offset = variables[name] {
+                        if floatVars.contains(name) {
+                            asmLines.append("    ldur d\(i), [x29, #-\(offset + 16)]")
+                            asmLines.append("    str d\(i), [sp, #\(i * 8)]")
+                        } else {
+                            asmLines.append("    ldur w0, [x29, #-\(offset + 16)]")
+                            asmLines.append("    sxtw x0, w0")
+                            asmLines.append("    str x0, [sp, #\(i * 8)]")
+                        }
+                    }
+                }
+                asmLines.append("    adrp x0, \(fmtLabel)@PAGE")
+                asmLines.append("    add x0, x0, \(fmtLabel)@PAGEOFF")
+                asmLines.append("    bl _printf")
+            }
+            return
+        }
         if let literal = node.expr as? Literal, let str = literal.value as? String {
             let strLabel = addStringRaw(str)
             asmLines.append("    adrp x0, \(strLabel)@PAGE")

@@ -8,7 +8,7 @@ from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
     EnumDef, ArrayLiteral, IndexAccess, TupleLiteral, DictLiteral,
-    UnaryOp
+    UnaryOp, StringInterpolation
 )
 
 T = load_target_config('asm')
@@ -236,6 +236,40 @@ class AssemblyTranspiler:
 
     def gen_print(self, node: PrintStmt):
         expr = node.expr
+        if isinstance(expr, StringInterpolation):
+            fmt = ''
+            var_names = []
+            for kind, text in expr.parts:
+                if kind == 'literal':
+                    fmt += text.replace('%', '%%')
+                else:
+                    if text in self.float_vars:
+                        fmt += '%g'
+                    elif text in self.enum_var_labels:
+                        fmt += '%s'
+                    else:
+                        fmt += '%d'
+                    var_names.append(text)
+            fmt_label = self.add_string_raw(fmt)
+            if not var_names:
+                self.asm_lines.append(f"    adrp x0, {fmt_label}@PAGE")
+                self.asm_lines.append(f"    add x0, x0, {fmt_label}@PAGEOFF")
+                self.asm_lines.append("    bl _printf")
+            else:
+                for i, name in enumerate(var_names):
+                    if name in self.variables:
+                        offset = self.variables[name]
+                        if name in self.float_vars:
+                            self.asm_lines.append(f"    ldur d{i}, [x29, #-{offset + 16}]")
+                            self.asm_lines.append(f"    str d{i}, [sp, #{i * 8}]")
+                        else:
+                            self.asm_lines.append(f"    ldur w0, [x29, #-{offset + 16}]")
+                            self.asm_lines.append("    sxtw x0, w0")
+                            self.asm_lines.append(f"    str x0, [sp, #{i * 8}]")
+                self.asm_lines.append(f"    adrp x0, {fmt_label}@PAGE")
+                self.asm_lines.append(f"    add x0, x0, {fmt_label}@PAGEOFF")
+                self.asm_lines.append("    bl _printf")
+            return
         if isinstance(expr, Literal) and isinstance(expr.value, str):
             str_label = self.add_string_raw(expr.value)
             self.asm_lines.append(f"    adrp x0, {str_label}@PAGE")

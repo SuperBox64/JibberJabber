@@ -9,7 +9,7 @@
 ~>snag{f}::val("false")
 
 @@ Less than (true case)
-~>frob{7a3}::emit("5 < 10:")
+~>frob{7a3}::emit("{x} < {y}:")
 <~when{x <lt> y}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -17,7 +17,7 @@
 <~>>
 
 @@ Less than (false case)
-~>frob{7a3}::emit("10 < 5:")
+~>frob{7a3}::emit("{y} < {x}:")
 <~when{y <lt> x}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -25,7 +25,7 @@
 <~>>
 
 @@ Less than or equal (equal case)
-~>frob{7a3}::emit("5 <= 5:")
+~>frob{7a3}::emit("{x} <= {z}:")
 <~when{x <lte> z}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -33,7 +33,7 @@
 <~>>
 
 @@ Less than or equal (false case)
-~>frob{7a3}::emit("10 <= 5:")
+~>frob{7a3}::emit("{y} <= {x}:")
 <~when{y <lte> x}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -41,7 +41,7 @@
 <~>>
 
 @@ Greater than (true case)
-~>frob{7a3}::emit("10 > 5:")
+~>frob{7a3}::emit("{y} > {x}:")
 <~when{y <gt> x}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -49,7 +49,7 @@
 <~>>
 
 @@ Greater than (false case)
-~>frob{7a3}::emit("5 > 10:")
+~>frob{7a3}::emit("{x} > {y}:")
 <~when{x <gt> y}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -57,7 +57,7 @@
 <~>>
 
 @@ Greater than or equal (equal case)
-~>frob{7a3}::emit("5 >= 5:")
+~>frob{7a3}::emit("{x} >= {z}:")
 <~when{x <gte> z}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -65,7 +65,7 @@
 <~>>
 
 @@ Greater than or equal (false case)
-~>frob{7a3}::emit("5 >= 10:")
+~>frob{7a3}::emit("{x} >= {y}:")
 <~when{x <gte> y}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -73,7 +73,7 @@
 <~>>
 
 @@ Equality (true case)
-~>frob{7a3}::emit("5 == 5:")
+~>frob{7a3}::emit("{x} == {z}:")
 <~when{x <=> z}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -81,7 +81,7 @@
 <~>>
 
 @@ Equality (false case)
-~>frob{7a3}::emit("5 == 10:")
+~>frob{7a3}::emit("{x} == {y}:")
 <~when{x <=> y}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -89,7 +89,7 @@
 <~>>
 
 @@ Not equal (true case)
-~>frob{7a3}::emit("5 != 10:")
+~>frob{7a3}::emit("{x} != {y}:")
 <~when{x <!=> y}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -97,7 +97,7 @@
 <~>>
 
 @@ Not equal (false case)
-~>frob{7a3}::emit("5 != 5:")
+~>frob{7a3}::emit("{x} != {z}:")
 <~when{x <!=> z}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -105,7 +105,7 @@
 <~>>
 
 @@ Combined with logical AND (true case)
-~>frob{7a3}::emit("5 <= 10 && 10 >= 5:")
+~>frob{7a3}::emit("{x} <= {y} && {y} >= {x}:")
 <~when{(x <lte> y) <&&> (y <gte> x)}>>
     ~>frob{7a3}::emit(t)
 <~else>>
@@ -113,7 +113,7 @@
 <~>>
 
 @@ Combined with logical AND (false case)
-~>frob{7a3}::emit("5 > 10 && 10 < 5:")
+~>frob{7a3}::emit("{x} > {y} && {y} < {x}:")
 <~when{(x <gt> y) <&&> (y <lt> x)}>>
     ~>frob{7a3}::emit(t)
 <~else>>

@@ -96,6 +96,25 @@ public class Interpreter {
     private func evaluate(_ node: ASTNode) throws -> Any? {
         if let literal = node as? Literal {
             return literal.value
+        } else if let interp = node as? StringInterpolation {
+            var result = ""
+            for part in interp.parts {
+                switch part {
+                case .literal(let text):
+                    result += text
+                case .variable(let name):
+                    var found = false
+                    for scope in locals.reversed() {
+                        if let value = scope[name] {
+                            result += stringify(value)
+                            found = true
+                            break
+                        }
+                    }
+                    if !found { result += name }
+                }
+            }
+            return result
         } else if let arrayLit = node as? ArrayLiteral {
             return try arrayLit.elements.map { try evaluate($0) }
         } else if let dictLit = node as? DictLiteral {

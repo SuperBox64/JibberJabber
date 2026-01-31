@@ -92,6 +92,15 @@ public class JavaScriptTranspiler {
                 return String(double)
             }
             return String(describing: literal.value ?? T.nil)
+        } else if let interp = node as? StringInterpolation {
+            var tmpl = "`"
+            for part in interp.parts {
+                switch part {
+                case .literal(let text): tmpl += escapeString(text)
+                case .variable(let name): tmpl += "${\(name)}"
+                }
+            }
+            return tmpl + "`"
         } else if let varRef = node as? VarRef {
             return varRef.name
         } else if let binaryOp = node as? BinaryOp {

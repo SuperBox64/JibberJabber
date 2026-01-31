@@ -35,6 +35,7 @@ public enum TokenType {
     // Literals
     case number     // #42 or #3.14
     case string     // "..."
+    case interpString // "...{var}..." string with interpolation
     case array      // [...]
     case map        // {...}
     case `nil`      // ~nil

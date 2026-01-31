@@ -111,3 +111,12 @@ public struct IndexAccess: ASTNode {
     public let array: ASTNode
     public let index: ASTNode
 }
+
+public enum StringInterpPart {
+    case literal(String)
+    case variable(String)
+}
+
+public struct StringInterpolation: ASTNode {
+    public let parts: [StringInterpPart]
+}

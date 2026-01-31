@@ -7,7 +7,8 @@ from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef,
+    StringInterpolation
 )
 
 # Get target config and operators
@@ -72,6 +73,14 @@ class JavaScriptTranspiler:
         return ""
 
     def expr(self, node: ASTNode) -> str:
+        if isinstance(node, StringInterpolation):
+            tmpl = '`'
+            for kind, text in node.parts:
+                if kind == 'literal':
+                    tmpl += text.replace('`', '\\`')
+                else:
+                    tmpl += '${' + text + '}'
+            return tmpl + '`'
         if isinstance(node, Literal):
             if isinstance(node.value, str):
                 return repr(node.value).replace("'", '"')

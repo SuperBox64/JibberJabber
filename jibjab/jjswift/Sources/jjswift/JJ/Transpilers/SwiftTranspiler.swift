@@ -138,6 +138,15 @@ public class SwiftTranspiler {
                 return String(double)
             }
             return String(describing: literal.value ?? T.nil)
+        } else if let interp = node as? StringInterpolation {
+            var result = "\""
+            for part in interp.parts {
+                switch part {
+                case .literal(let text): result += escapeString(text)
+                case .variable(let name): result += "\\(\(name))"
+                }
+            }
+            return result + "\""
         } else if let varRef = node as? VarRef {
             // If referencing an enum type directly, generate dict representation
             if enums.contains(varRef.name) {

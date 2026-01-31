@@ -403,6 +403,14 @@ public class Parser {
             let numType = token.numericType.flatMap { NumericType(rawValue: $0) }
             return Literal(value: token.value, numericType: numType)
         }
+        if let token = match(.interpString) {
+            if let rawParts = token.value as? [(isVar: Bool, text: String)] {
+                let parts = rawParts.map { part -> StringInterpPart in
+                    part.isVar ? .variable(part.text) : .literal(part.text)
+                }
+                return StringInterpolation(parts: parts)
+            }
+        }
         if let token = match(.string) {
             return Literal(value: token.value)
         }

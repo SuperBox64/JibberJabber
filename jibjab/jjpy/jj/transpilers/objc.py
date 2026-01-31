@@ -5,7 +5,7 @@ Uses shared C-family base from cfamily.py
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, EnumDef, PrintStmt, FuncDef
+    IndexAccess, EnumDef, PrintStmt, FuncDef, StringInterpolation
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -27,6 +27,17 @@ class ObjCTranspiler(CFamilyTranspiler):
 
     def _print_stmt(self, node: PrintStmt) -> str:
         expr_node = node.expr
+        if isinstance(expr_node, StringInterpolation):
+            fmt = ''
+            args = []
+            for kind, text in expr_node.parts:
+                if kind == 'literal':
+                    fmt += text
+                else:
+                    fmt += self._interp_format_specifier(text)
+                    args.append(self._interp_var_expr(text))
+            arg_str = '' if not args else ', ' + ', '.join(args)
+            return self.ind() + f'printf("{fmt}\\n"{arg_str});'
         if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
             return self.ind() + f'printf("%s\\n", {self.expr(expr_node)});'
         if isinstance(expr_node, VarRef):

@@ -46,6 +46,7 @@ class TokenType(Enum):
     # Literals
     NUMBER = auto()
     STRING = auto()
+    INTERP_STRING = auto()
     ARRAY = auto()
     MAP = auto()
     NIL = auto()
@@ -429,20 +430,46 @@ class Lexer:
                     self.add_token(TokenType.NUMBER, int(num))
                 return
 
-        # Strings
+        # Strings (with interpolation detection)
         if self.peek() == JJ['literals']['stringDelim']:
             self.advance()
-            value = ''
-            while self.peek() and self.peek() != JJ['literals']['stringDelim']:
+            current_literal = ''
+            parts = []
+            has_interpolation = False
+            delim = JJ['literals']['stringDelim']
+            while self.peek() and self.peek() != delim:
                 if self.peek() == '\\':
                     self.advance()
-                    escapes = {'n': '\n', 't': '\t', 'r': '\r', '"': '"', '\\': '\\'}
-                    value += escapes.get(self.peek(), self.peek())
+                    ch = self.peek()
+                    if ch == '{':
+                        current_literal += '{'
+                        self.advance()
+                    else:
+                        escapes = {'n': '\n', 't': '\t', 'r': '\r', '"': '"', '\\': '\\'}
+                        current_literal += escapes.get(ch, ch)
+                        self.advance()
+                elif self.peek() == '{':
                     self.advance()
+                    var_name = ''
+                    while self.peek() and self.peek() != '}' and self.peek() != delim:
+                        var_name += self.advance()
+                    if self.peek() == '}':
+                        self.advance()
+                    if var_name and re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', var_name):
+                        has_interpolation = True
+                        parts.append(('literal', current_literal))
+                        current_literal = ''
+                        parts.append(('variable', var_name))
+                    else:
+                        current_literal += '{' + var_name + '}'
                 else:
-                    value += self.advance()
+                    current_literal += self.advance()
             self.advance()  # closing quote
-            self.add_token(TokenType.STRING, value)
+            if has_interpolation:
+                parts.append(('literal', current_literal))
+                self.add_token(TokenType.INTERP_STRING, parts)
+            else:
+                self.add_token(TokenType.STRING, current_literal)
             return
 
         # Syntax keywords

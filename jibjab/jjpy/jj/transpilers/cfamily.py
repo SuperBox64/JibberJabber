@@ -8,7 +8,8 @@ from ..lexer import load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef,
+    StringInterpolation
 )
 
 
@@ -43,6 +44,7 @@ class CFamilyTranspiler:
         self.dict_vars = set()
         self.tuple_vars = set()
         self.string_vars = set()
+        self.enum_var_types = {}
         self.T = load_target_config(self.target_name)
 
     def get_target_type(self, jj_type: str) -> str:
@@ -140,9 +142,31 @@ class CFamilyTranspiler:
             return self._enum_def(node)
         return ""
 
+    def _interp_format_specifier(self, name: str) -> str:
+        if name in self.double_vars: return '%g'
+        if name in self.string_vars: return '%s'
+        if name in self.enum_var_types: return '%s'
+        return '%d'
+
+    def _interp_var_expr(self, name: str) -> str:
+        if name in self.enum_var_types:
+            return f'{self.enum_var_types[name]}_names[{name}]'
+        return name
+
     def _print_stmt(self, node: PrintStmt) -> str:
         """Print statement. Override for different print mechanisms."""
         expr_node = node.expr
+        if isinstance(expr_node, StringInterpolation):
+            fmt = ''
+            args = []
+            for kind, text in expr_node.parts:
+                if kind == 'literal':
+                    fmt += text
+                else:
+                    fmt += self._interp_format_specifier(text)
+                    args.append(self._interp_var_expr(text))
+            arg_str = '' if not args else ', ' + ', '.join(args)
+            return self.ind() + f'printf("{fmt}\\n"{arg_str});'
         if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
             return self.ind() + self.T['printStr'].replace('{expr}', self.expr(expr_node))
         if isinstance(expr_node, VarRef):
@@ -228,6 +252,18 @@ class CFamilyTranspiler:
         return self.ind() + f"enum {node.name} {{ {cases} }};"
 
     def expr(self, node: ASTNode) -> str:
+        if isinstance(node, StringInterpolation):
+            fmt = ''
+            args = []
+            for kind, text in node.parts:
+                if kind == 'literal':
+                    fmt += text
+                else:
+                    fmt += self._interp_format_specifier(text)
+                    args.append(self._interp_var_expr(text))
+            if not args:
+                return f'"{fmt}"'
+            return f'/* sprintf: */ "{fmt}"'
         if isinstance(node, Literal):
             if isinstance(node.value, str):
                 return f'"{node.value}"'

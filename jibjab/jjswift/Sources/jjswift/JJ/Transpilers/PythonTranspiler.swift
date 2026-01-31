@@ -94,6 +94,15 @@ public class PythonTranspiler {
                 return String(double)
             }
             return String(describing: literal.value ?? T.nil)
+        } else if let interp = node as? StringInterpolation {
+            var fstr = "f\""
+            for part in interp.parts {
+                switch part {
+                case .literal(let text): fstr += escapeString(text)
+                case .variable(let name): fstr += "{\(name)}"
+                }
+            }
+            return fstr + "\""
         } else if let varRef = node as? VarRef {
             return varRef.name
         } else if let arrayLit = node as? ArrayLiteral {

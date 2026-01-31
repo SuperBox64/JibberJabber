@@ -113,6 +113,20 @@ public class GoTranspiler: CFamilyTranspiler {
 
     override func printStmtToString(_ node: PrintStmt) -> String {
         let e = node.expr
+        if let interp = e as? StringInterpolation {
+            var fmt = ""
+            var args: [String] = []
+            for part in interp.parts {
+                switch part {
+                case .literal(let text): fmt += escapeString(text)
+                case .variable(let name):
+                    fmt += "%v"
+                    args.append(interpVarExpr(name))
+                }
+            }
+            let argStr = args.isEmpty ? "" : ", " + args.joined(separator: ", ")
+            return ind() + "fmt.Printf(\"\(fmt)\\n\"\(argStr))"
+        }
         if let lit = e as? Literal, lit.value is String {
             return ind() + "fmt.Println(\(expr(e)))"
         }

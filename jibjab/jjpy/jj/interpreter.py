@@ -9,7 +9,8 @@ from .lexer import JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    EnumDef, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess
+    EnumDef, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
+    StringInterpolation
 )
 
 OP = JJ['operators']
@@ -78,6 +79,21 @@ class Interpreter:
     def evaluate(self, node: ASTNode) -> Any:
         if isinstance(node, Literal):
             return node.value
+        elif isinstance(node, StringInterpolation):
+            result = ''
+            for kind, text in node.parts:
+                if kind == 'literal':
+                    result += text
+                elif kind == 'variable':
+                    found = False
+                    for scope in reversed(self.locals):
+                        if text in scope:
+                            result += str(scope[text])
+                            found = True
+                            break
+                    if not found:
+                        result += text
+            return result
         elif isinstance(node, ArrayLiteral):
             return [self.evaluate(elem) for elem in node.elements]
         elif isinstance(node, DictLiteral):

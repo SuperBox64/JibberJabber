@@ -208,8 +208,36 @@ public class CFamilyTranspiler {
         return ""
     }
 
+    func interpFormatSpecifier(_ name: String) -> String {
+        if doubleVars.contains(name) { return "%g" }
+        if stringVars.contains(name) { return "%s" }
+        if enumVarTypes[name] != nil { return "%s" }
+        return "%d"
+    }
+
+    func interpVarExpr(_ name: String) -> String {
+        if let enumName = enumVarTypes[name] {
+            return "\(enumName)_names[\(name)]"
+        }
+        return name
+    }
+
     func printStmtToString(_ node: PrintStmt) -> String {
         let e = node.expr
+        if let interp = e as? StringInterpolation {
+            var fmt = ""
+            var args: [String] = []
+            for part in interp.parts {
+                switch part {
+                case .literal(let text): fmt += escapeString(text)
+                case .variable(let name):
+                    fmt += interpFormatSpecifier(name)
+                    args.append(interpVarExpr(name))
+                }
+            }
+            let argStr = args.isEmpty ? "" : ", " + args.joined(separator: ", ")
+            return ind() + "printf(\"\(fmt)\\n\"\(argStr));"
+        }
         if let lit = e as? Literal, lit.value is String {
             return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
         }
@@ -540,6 +568,21 @@ public class CFamilyTranspiler {
     func expr(_ node: ASTNode) -> String {
         if let idx = node as? IndexAccess {
             if let resolved = resolveAccess(idx) { return resolved.0 }
+        }
+        if let interp = node as? StringInterpolation {
+            var fmt = ""
+            var args: [String] = []
+            for part in interp.parts {
+                switch part {
+                case .literal(let text): fmt += escapeString(text)
+                case .variable(let name):
+                    fmt += interpFormatSpecifier(name)
+                    args.append(interpVarExpr(name))
+                }
+            }
+            // Expression context: best-effort format string
+            if args.isEmpty { return "\"\(fmt)\"" }
+            return "/* sprintf: */ \"\(fmt)\""
         }
         if let literal = node as? Literal {
             if let str = literal.value as? String { return "\"\(escapeString(str))\"" }

@@ -129,6 +129,20 @@ public class AppleScriptTranspiler {
     }
 
     private func expr(_ node: ASTNode) -> String {
+        if let interp = node as? StringInterpolation {
+            // Build & concatenation: (x as text) & " literal " & (y as text)
+            var parts: [String] = []
+            for part in interp.parts {
+                switch part {
+                case .literal(let text):
+                    if !text.isEmpty { parts.append("\"\(escapeString(text))\"") }
+                case .variable(let name):
+                    parts.append("(\(safeName(name)) as text)")
+                }
+            }
+            if parts.isEmpty { return "\"\"" }
+            return parts.joined(separator: " & ")
+        }
         if let literal = node as? Literal {
             if let str = literal.value as? String {
                 return "\"\(escapeString(str))\""

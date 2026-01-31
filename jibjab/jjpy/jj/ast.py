@@ -116,3 +116,8 @@ class TupleLiteral(ASTNode):
 class IndexAccess(ASTNode):
     array: ASTNode
     index: ASTNode
+
+
+@dataclass
+class StringInterpolation(ASTNode):
+    parts: list  # List of ('literal', text) or ('variable', name) tuples

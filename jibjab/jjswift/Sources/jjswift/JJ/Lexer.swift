@@ -361,26 +361,59 @@ public class Lexer {
             }
         }
 
-        // Strings
+        // Strings (with interpolation detection)
         if peek() == Character(JJ.literals.stringDelim) {
             _ = advance()
-            var value = ""
+            var currentLiteral = ""
+            var parts: [(isVar: Bool, text: String)] = []
+            var hasInterpolation = false
+
             while let ch = peek(), ch != Character(JJ.literals.stringDelim) {
                 if ch == "\\" {
                     _ = advance()
                     if let esc = peek() {
-                        let escapes: [Character: Character] = ["n": "\n", "t": "\t", "r": "\r", "\"": "\"", "\\": "\\"]
-                        value.append(escapes[esc] ?? esc)
+                        if esc == "{" {
+                            currentLiteral.append("{")
+                            _ = advance()
+                        } else {
+                            let escapes: [Character: Character] = ["n": "\n", "t": "\t", "r": "\r", "\"": "\"", "\\": "\\"]
+                            currentLiteral.append(escapes[esc] ?? esc)
+                            _ = advance()
+                        }
+                    }
+                } else if ch == "{" {
+                    _ = advance()
+                    var varName = ""
+                    while let inner = peek(), inner != "}" && inner != Character(JJ.literals.stringDelim) {
+                        varName.append(inner)
                         _ = advance()
                     }
+                    if peek() == "}" { _ = advance() }
+                    let isValidId = !varName.isEmpty && varName.range(of: "^[a-zA-Z_][a-zA-Z0-9_]*$", options: .regularExpression) != nil
+                    if isValidId {
+                        hasInterpolation = true
+                        parts.append((isVar: false, text: currentLiteral))
+                        currentLiteral = ""
+                        parts.append((isVar: true, text: varName))
+                    } else {
+                        currentLiteral.append("{")
+                        currentLiteral.append(varName)
+                        currentLiteral.append("}")
+                    }
                 } else {
-                    if let ch = advance().first {
-                        value.append(ch)
+                    if let c = advance().first {
+                        currentLiteral.append(c)
                     }
                 }
             }
             _ = advance() // closing quote
-            addToken(.string, value: value)
+
+            if hasInterpolation {
+                parts.append((isVar: false, text: currentLiteral))
+                addToken(.interpString, value: parts)
+            } else {
+                addToken(.string, value: currentLiteral)
+            }
             return
         }
 

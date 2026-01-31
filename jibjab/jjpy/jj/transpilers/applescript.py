@@ -7,7 +7,8 @@ from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef
+    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef,
+    StringInterpolation
 )
 
 # Get target config and operators
@@ -113,6 +114,17 @@ class AppleScriptTranspiler:
         return ""
 
     def expr(self, node: ASTNode) -> str:
+        if isinstance(node, StringInterpolation):
+            parts = []
+            for kind, text in node.parts:
+                if kind == 'literal':
+                    if text:
+                        parts.append(f'"{text}"')
+                else:
+                    parts.append(f'({safe_name(text)} as text)')
+            if not parts:
+                return '""'
+            return ' & '.join(parts)
         if isinstance(node, Literal):
             if isinstance(node.value, str):
                 return f'"{node.value}"'
