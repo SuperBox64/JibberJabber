@@ -73,11 +73,9 @@ public class JavaScriptTranspiler: Transpiling {
         } else if let enumDef = node as? EnumDef {
             enums.insert(enumDef.name)
             let cases = enumDef.cases.map { "\($0): \"\($0)\"" }.joined(separator: ", ")
-            if let tmpl = T.enumTemplate {
-                return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
-                                   .replacingOccurrences(of: "{cases}", with: cases)
-            }
-            return ind() + "const \(enumDef.name) = { \(cases) };"
+            let tmpl = T.enumTemplate ?? "const {name} = { {cases} };"
+            return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
+                               .replacingOccurrences(of: "{cases}", with: cases)
         }
         return ""
     }
