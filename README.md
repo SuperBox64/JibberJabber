@@ -82,7 +82,7 @@ Hello, JibJab World!
 
 ```
 JJ Source → Lexer → Parser → AST
-                                 ├─ Interpret → Output
+                                 ├─ Interpret → Run
                                  ├─ Native Compile → ARM64 Mach-O → Run
                                  └─ Transpile → 10 Languages → Compile → Run
 ```
