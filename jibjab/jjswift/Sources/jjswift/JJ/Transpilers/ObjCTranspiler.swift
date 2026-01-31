@@ -23,12 +23,9 @@ public class ObjCTranspiler: CFamilyTranspiler {
                 }
             }
             let argStr = args.isEmpty ? "" : ", " + args.joined(separator: ", ")
-            if let tmpl = T.printfInterp {
-                return ind() + tmpl
-                    .replacingOccurrences(of: "{fmt}", with: fmt)
-                    .replacingOccurrences(of: "{args}", with: argStr)
-            }
-            return ind() + "printf(\"\(fmt)\\n\"\(argStr));"
+            return ind() + T.printfInterp
+                .replacingOccurrences(of: "{fmt}", with: fmt)
+                .replacingOccurrences(of: "{args}", with: argStr)
         }
         if let lit = e as? Literal, lit.value is String {
             return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))

@@ -144,12 +144,9 @@ public class GoTranspiler: CFamilyTranspiler {
                 }
             }
             let argStr = args.isEmpty ? "" : ", " + args.joined(separator: ", ")
-            if let tmpl = T.printfInterp {
-                return ind() + tmpl
-                    .replacingOccurrences(of: "{fmt}", with: fmt)
-                    .replacingOccurrences(of: "{args}", with: argStr)
-            }
-            return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"\(fmt)\"")
+            return ind() + T.printfInterp
+                .replacingOccurrences(of: "{fmt}", with: fmt)
+                .replacingOccurrences(of: "{args}", with: argStr)
         }
         if let lit = e as? Literal, lit.value is String {
             return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
@@ -210,12 +207,9 @@ public class GoTranspiler: CFamilyTranspiler {
         }
         let fmts = fields.map { _ in T.intFmt }.joined(separator: ", ")
         let args = fields.map { $0.0 }.joined(separator: ", ")
-        if let tmpl = T.printfInterp {
-            return ind() + tmpl
-                .replacingOccurrences(of: "{fmt}", with: "(\(fmts))")
-                .replacingOccurrences(of: "{args}", with: ", \(args)")
-        }
-        return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"(\(fmts))\"")
+        return ind() + T.printfInterp
+            .replacingOccurrences(of: "{fmt}", with: "(\(fmts))")
+            .replacingOccurrences(of: "{args}", with: ", \(args)")
     }
 
     override func enumToString(_ node: EnumDef) -> String {

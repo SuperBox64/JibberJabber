@@ -476,8 +476,8 @@ public struct TargetConfig: Codable {
     public var strFmt: String { _strFmt ?? "%s" }
     public var doubleFmt: String { _doubleFmt ?? "%g" }
     public var boolFmt: String { _boolFmt ?? "%s" }
-    public var printfInterp: String? { _printfInterp }
-    public var printfInline: String? { _printfInline }
+    public var printfInterp: String { _printfInterp ?? "printf(\"{fmt}\\n\"{args});" }
+    public var printfInline: String { _printfInline ?? "printf(\"{fmt}\"{args});" }
     public var coutExpr: String? { _coutExpr }
     public var coutEndl: String { _coutEndl ?? " << std::endl;" }
     public var coutSep: String { _coutSep ?? " << " }

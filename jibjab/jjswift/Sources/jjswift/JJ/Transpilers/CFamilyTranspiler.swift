@@ -133,32 +133,23 @@ public class CFamilyTranspiler: Transpiling {
 
     /// Printf inline (no newline, no args) - e.g. printf("[");
     func printfInline(_ text: String) -> String {
-        if let tmpl = T.printfInline {
-            return tmpl
-                .replacingOccurrences(of: "{fmt}", with: text)
-                .replacingOccurrences(of: "{args}", with: "")
-        }
-        return "printf(\"\(text)\");"
+        return T.printfInline
+            .replacingOccurrences(of: "{fmt}", with: text)
+            .replacingOccurrences(of: "{args}", with: "")
     }
 
     /// Printf inline with format and args - e.g. printf("%d", x);
     func printfInlineArgs(_ fmt: String, _ args: String) -> String {
-        if let tmpl = T.printfInline {
-            return tmpl
-                .replacingOccurrences(of: "{fmt}", with: fmt)
-                .replacingOccurrences(of: "{args}", with: ", \(args)")
-        }
-        return "printf(\"\(fmt)\", \(args));"
+        return T.printfInline
+            .replacingOccurrences(of: "{fmt}", with: fmt)
+            .replacingOccurrences(of: "{args}", with: ", \(args)")
     }
 
     /// Printf with newline (interp style) - e.g. printf("]\n");
     func printfInterpStr(_ text: String) -> String {
-        if let tmpl = T.printfInterp {
-            return tmpl
-                .replacingOccurrences(of: "{fmt}", with: text)
-                .replacingOccurrences(of: "{args}", with: "")
-        }
-        return "printf(\"\(text)\\n\");"
+        return T.printfInterp
+            .replacingOccurrences(of: "{fmt}", with: text)
+            .replacingOccurrences(of: "{args}", with: "")
     }
 
     /// Print template by resolved type
@@ -295,12 +286,9 @@ public class CFamilyTranspiler: Transpiling {
                 }
             }
             let argStr = args.isEmpty ? "" : ", " + args.joined(separator: ", ")
-            if let tmpl = T.printfInterp {
-                return ind() + tmpl
-                    .replacingOccurrences(of: "{fmt}", with: fmt)
-                    .replacingOccurrences(of: "{args}", with: argStr)
-            }
-            return ind() + "printf(\"\(fmt)\\n\"\(argStr));"
+            return ind() + T.printfInterp
+                .replacingOccurrences(of: "{fmt}", with: fmt)
+                .replacingOccurrences(of: "{args}", with: argStr)
         }
         if let lit = e as? Literal, lit.value is String {
             return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
@@ -411,12 +399,9 @@ public class CFamilyTranspiler: Transpiling {
         }
         let fmtStr = "(" + partsFmt.joined(separator: ", ") + ")"
         let args = partsArgs.joined(separator: ", ")
-        if let tmpl = T.printfInterp {
-            return ind() + tmpl
-                .replacingOccurrences(of: "{fmt}", with: fmtStr)
-                .replacingOccurrences(of: "{args}", with: ", \(args)")
-        }
-        return ind() + "printf(\"\(fmtStr)\\n\", \(args));"
+        return ind() + T.printfInterp
+            .replacingOccurrences(of: "{fmt}", with: fmtStr)
+            .replacingOccurrences(of: "{args}", with: ", \(args)")
     }
 
     func varDeclToString(_ node: VarDecl) -> String {
