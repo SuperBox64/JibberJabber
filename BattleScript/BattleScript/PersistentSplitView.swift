@@ -92,6 +92,12 @@ struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresenta
         bottomItem.minimumThickness = bottomMinHeight
         controller.addSplitViewItem(bottomItem)
 
+        // Top panel holds size during window resize; bottom absorbs changes
+        topHost.view.setContentHuggingPriority(.defaultHigh, for: .vertical)
+        bottomHost.view.setContentHuggingPriority(.defaultLow, for: .vertical)
+        controller.splitView.setHoldingPriority(.defaultHigh, forSubviewAt: 0)
+        controller.splitView.setHoldingPriority(.defaultLow, forSubviewAt: 1)
+
         controller.splitView.autosaveName = autosaveName
 
         return controller
