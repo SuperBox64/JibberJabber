@@ -716,25 +716,11 @@ class AsmHighlighter: SyntaxHighlighting {
 // MARK: - AppleScript Highlighter
 
 class AppleScriptHighlighter: BaseSyntaxHighlighter {
-    override var keywords: [String] {
-        ["if", "then", "else", "repeat",
-         "while", "until", "return", "try", "error",
-         "exit", "not", "and", "or", "is", "as", "of", "in",
-         "the", "a", "an", "do"]
-    }
-    override var declarationKeywords: [String] {
-        ["tell", "end", "set", "to", "get", "on",
-         "with", "considering", "ignoring", "timeout", "transaction",
-         "using", "terms", "from",
-         "local", "global", "property", "script", "my", "it", "its",
-         "application", "display", "dialog", "log", "shell"]
-    }
-    override var typeKeywords: [String] {
-        ["true", "false", "missing", "value", "text", "integer", "real", "number",
-         "list", "record", "date", "file", "alias", "string", "boolean",
-         "class", "reference"]
-    }
-    override var singleLineCommentPrefix: String? { "--" }
+    private let T = loadTarget("applescript")
+    override var keywords: [String] { T.highlightKeywords }
+    override var declarationKeywords: [String] { T.highlightDeclKeywords }
+    override var typeKeywords: [String] { T.highlightTypeKeywords }
+    override var singleLineCommentPrefix: String? { T.highlightCommentPrefix }
     override var blockCommentStart: String? { nil }
     override var blockCommentEnd: String? { nil }
 }
