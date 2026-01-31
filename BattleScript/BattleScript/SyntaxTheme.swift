@@ -75,7 +75,7 @@ struct SyntaxTheme {
         color(xd: 0xD9C97C, xl: 0x272AD8, vd: 0xB5CEA8, vl: 0x098658)
     }
     static var comment: NSColor {
-        color(xd: 0x6C9C5A, xl: 0x536579, vd: 0x6A9955, vl: 0x008000)
+        color(xd: 0x6C8C5A, xl: 0x536579, vd: 0x6A9955, vl: 0x008000)
     }
     static var specialValue: NSColor {
         color(xd: 0x78C2B3, xl: 0x3E8087, vd: 0x569CD6, vl: 0x0000FF)
