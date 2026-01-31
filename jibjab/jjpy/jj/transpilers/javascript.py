@@ -72,20 +72,24 @@ class JavaScriptTranspiler:
         elif isinstance(node, ReturnStmt):
             return self.ind() + T['return'].replace('{value}', self.expr(node.value))
         elif isinstance(node, EnumDef):
-            # JavaScript: const Color = {Red: 'Red', Green: 'Green', Blue: 'Blue'};
             cases = ', '.join(f"{c}: '{c}'" for c in node.cases)
-            return self.ind() + f"const {node.name} = {{{cases}}};"
+            tmpl = T.get('enum', 'const {name} = { {cases} };')
+            return self.ind() + tmpl.replace('{name}', node.name).replace('{cases}', cases)
         return ""
 
     def expr(self, node: ASTNode) -> str:
         if isinstance(node, StringInterpolation):
-            tmpl = '`'
+            open_delim = T.get('interpOpen', '`')
+            close_delim = T.get('interpClose', '`')
+            var_open = T.get('interpVarOpen', '${')
+            var_close = T.get('interpVarClose', '}')
+            result = open_delim
             for kind, text in node.parts:
                 if kind == 'literal':
-                    tmpl += text.replace('`', '\\`')
+                    result += text.replace('`', '\\`')
                 else:
-                    tmpl += '${' + text + '}'
-            return tmpl + '`'
+                    result += f'{var_open}{text}{var_close}'
+            return result + close_delim
         if isinstance(node, Literal):
             if isinstance(node.value, str):
                 return repr(node.value).replace("'", '"')
