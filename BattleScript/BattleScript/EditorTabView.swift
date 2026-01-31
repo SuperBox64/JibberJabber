@@ -234,7 +234,7 @@ struct EditorTabView: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)
                             .background(highlighterStyle == style.rawValue ? Color.purple.opacity(0.3) : Color.clear)
-                            .foregroundColor(highlighterStyle == style.rawValue ? Color.white.opacity(0.85) : .secondary)
+                            .foregroundColor(highlighterStyle == style.rawValue ? Color.white.opacity(0.85) : Color.white.opacity(0.8))
                             .cornerRadius(4)
                     }
                     .buttonStyle(.plain)
@@ -242,6 +242,7 @@ struct EditorTabView: View {
                 .padding(.trailing, 4)
             }
             .padding(.vertical, 2)
+            .offset(y: 1)
             .background(Color.black.opacity(0.5))
         }
     }

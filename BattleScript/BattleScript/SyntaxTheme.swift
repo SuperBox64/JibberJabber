@@ -79,7 +79,7 @@ struct SyntaxTheme {
         color(xd: 0xB281EB, xl: 0x804FB8, vd: 0xDCDCAA, vl: 0x795E26)
     }
     static var preprocessor: NSColor {
-        color(xd: 0xFFA14F, xl: 0x78492A, vd: 0xC586C0, vl: 0xAF00DB)
+        color(xd: 0xFFA14F, xl: 0x78492A, vd: 0xC586C0, vl: 0x0000FF)
     }
     static var type: NSColor {
         color(xd: 0x4EB0CC, xl: 0x3E8087, vd: 0x4EC9B0, vl: 0x267F99)
@@ -91,10 +91,10 @@ struct SyntaxTheme {
         color(xd: 0xD0A8FF, xl: 0x713DA9, vd: 0x9CDCFE, vl: 0x001080)
     }
     static var directive: NSColor {
-        color(xd: 0xFFA14F, xl: 0x78492A, vd: 0xC586C0, vl: 0xAF00DB)
+        color(xd: 0xFFA14F, xl: 0x78492A, vd: 0xC586C0, vl: 0x0000FF)
     }
     static var objcDirective: NSColor {
-        color(xd: 0xFD8F3F, xl: 0x643820, vd: 0xC586C0, vl: 0xAF00DB)
+        color(xd: 0xFD8F3F, xl: 0x643820, vd: 0xC586C0, vl: 0x0000FF)
     }
     static var functionCall: NSColor {
         color(xd: 0xB281EB, xl: 0x804FB8, vd: 0xDCDCAA, vl: 0x795E26)
