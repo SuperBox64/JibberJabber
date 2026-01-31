@@ -61,9 +61,9 @@ class SwiftTranspiler:
             # Dict declaration
             if isinstance(node.value, DictLiteral):
                 self.dict_vars.add(node.name)
-                if not node.value.pairs:
-                    return self.ind() + f"var {node.name}: [String: Any] = [:]"
-                return self.ind() + f"var {node.name}: [String: Any] = {self.expr(node.value)}"
+                value = T.get('dictEmpty', '[:]') if not node.value.pairs else self.expr(node.value)
+                tmpl = T.get('varDict', T['var'])
+                return self.ind() + tmpl.replace('{name}', node.name).replace('{value}', value).replace('{type}', '')
             # Tuple declaration
             if isinstance(node.value, TupleLiteral):
                 self.tuple_vars.add(node.name)
@@ -96,8 +96,9 @@ class SwiftTranspiler:
                 result += f"\n{self.ind()}{T['blockEnd']}"
             return result
         elif isinstance(node, FuncDef):
-            # Swift requires typed parameters with _ to suppress argument labels
-            typed_params = ', '.join(f'_ {p}: Int' for p in node.params)
+            param_fmt = T.get('paramFormat', '{name}: {type}')
+            param_type = T.get('types', {}).get('Int', 'Int')
+            typed_params = ', '.join(param_fmt.replace('{name}', p).replace('{type}', param_type) for p in node.params)
             header = self.ind() + T['func'].replace('{name}', node.name).replace('{params}', typed_params)
             self.indent += 1
             body = '\n'.join(self.stmt(s) for s in node.body)
@@ -108,18 +109,23 @@ class SwiftTranspiler:
         elif isinstance(node, EnumDef):
             self.enums.add(node.name)
             cases = ', '.join(node.cases)
-            return self.ind() + f"enum {node.name} {{ case {cases} }}"
+            tmpl = T.get('enum', 'enum {name} { case {cases} }')
+            return self.ind() + tmpl.replace('{name}', node.name).replace('{cases}', cases)
         return ""
 
     def expr(self, node: ASTNode) -> str:
         if isinstance(node, StringInterpolation):
-            result = '"'
+            open_delim = T.get('interpOpen', '"')
+            close_delim = T.get('interpClose', '"')
+            var_open = T.get('interpVarOpen', '\\(')
+            var_close = T.get('interpVarClose', ')')
+            result = open_delim
             for kind, text in node.parts:
                 if kind == 'literal':
                     result += text.replace('\\', '\\\\').replace('"', '\\"')
                 else:
-                    result += f'\\({text})'
-            return result + '"'
+                    result += f'{var_open}{text}{var_close}'
+            return result + close_delim
         if isinstance(node, Literal):
             if isinstance(node.value, str):
                 # Swift uses double quotes for strings
@@ -135,15 +141,15 @@ class SwiftTranspiler:
                 return str(node.value)
             return str(node.value)
         elif isinstance(node, VarRef):
-            # If referencing an enum type directly, use .self
+            # If referencing an enum type directly
             if node.name in self.enums:
-                return f"{node.name}.self"
+                return T.get('enumSelf', '{name}.self').replace('{name}', node.name)
             return node.name
         elif isinstance(node, IndexAccess):
             # Check if this is enum access (e.g., Color["Red"] -> Color.Red)
             if isinstance(node.array, VarRef) and node.array.name in self.enums:
                 if isinstance(node.index, Literal) and isinstance(node.index.value, str):
-                    return f"{node.array.name}.{node.index.value}"
+                    return T.get('enumAccess', '{name}.{key}').replace('{name}', node.array.name).replace('{key}', node.index.value)
             # Tuple access: use .N dot syntax instead of [N]
             if isinstance(node.array, VarRef) and node.array.name in self.tuple_vars:
                 if isinstance(node.index, Literal) and isinstance(node.index.value, int):
@@ -168,7 +174,7 @@ class SwiftTranspiler:
             return f"[{elements}]"
         elif isinstance(node, DictLiteral):
             if not node.pairs:
-                return "[:]"
+                return T.get('dictEmpty', '[:]')
             pairs = ', '.join(f"{self.expr(k)}: {self.expr(v)}" for k, v in node.pairs)
             return f"[{pairs}]"
         elif isinstance(node, TupleLiteral):
@@ -179,9 +185,11 @@ class SwiftTranspiler:
             elements = ', '.join(self.expr(e) for e in node.elements)
             return f"({elements})"
         elif isinstance(node, BinaryOp):
-            # Use truncatingRemainder for float modulo in Swift
+            # Float modulo
             if node.op == '%' and (self.is_float_expr(node.left) or self.is_float_expr(node.right)):
-                return f"{self.expr(node.left)}.truncatingRemainder(dividingBy: {self.expr(node.right)})"
+                fm = T.get('floatMod')
+                if fm:
+                    return fm.replace('{left}', self.expr(node.left)).replace('{right}', self.expr(node.right))
             return f"({self.expr(node.left)} {node.op} {self.expr(node.right)})"
         elif isinstance(node, UnaryOp):
             return f"({node.op}{self.expr(node.operand)})"
