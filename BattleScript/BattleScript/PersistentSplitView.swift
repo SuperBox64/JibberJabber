@@ -1,6 +1,45 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Horizontal Split (Left sidebar | Right content)
+
+class HSplitController<Left: View, Right: View>: NSSplitViewController {
+    let leftView: Left
+    let rightView: Right
+    let leftMin: CGFloat
+    let leftMax: CGFloat
+
+    init(left: Left, right: Right, leftMin: CGFloat, leftMax: CGFloat) {
+        self.leftView = left
+        self.rightView = right
+        self.leftMin = leftMin
+        self.leftMax = leftMax
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        splitView.isVertical = true
+        splitView.dividerStyle = .thin
+
+        let leftHost = NSHostingController(rootView: leftView)
+        leftHost.view.widthAnchor.constraint(greaterThanOrEqualToConstant: leftMin).isActive = true
+        leftHost.view.widthAnchor.constraint(lessThanOrEqualToConstant: leftMax).isActive = true
+        let leftItem = NSSplitViewItem(viewController: leftHost)
+        leftItem.canCollapse = false
+        addSplitViewItem(leftItem)
+
+        let rightHost = NSHostingController(rootView: rightView)
+        rightHost.view.widthAnchor.constraint(greaterThanOrEqualToConstant: 400).isActive = true
+        let rightItem = NSSplitViewItem(viewController: rightHost)
+        addSplitViewItem(rightItem)
+
+        splitView.autosaveName = "MainHSplit"
+    }
+}
+
 struct PersistentHSplitView<Left: View, Right: View>: NSViewControllerRepresentable {
     let autosaveName: String
     let left: Left
@@ -22,45 +61,57 @@ struct PersistentHSplitView<Left: View, Right: View>: NSViewControllerRepresenta
         self.right = right()
     }
 
-    func makeNSViewController(context: Context) -> NSSplitViewController {
-        let controller = NSSplitViewController()
-        controller.splitView.isVertical = true
-        controller.splitView.dividerStyle = .thin
-
-        let leftHost = NSHostingController(rootView: left)
-        let leftItem = NSSplitViewItem(viewController: leftHost)
-        leftItem.canCollapse = false
-        leftItem.minimumThickness = 115
-        leftItem.maximumThickness = leftMaxWidth
-        controller.addSplitViewItem(leftItem)
-
-        let rightHost = NSHostingController(rootView: right)
-        let rightItem = NSSplitViewItem(viewController: rightHost)
-        rightItem.minimumThickness = 400
-        controller.addSplitViewItem(rightItem)
-
-        controller.splitView.autosaveName = autosaveName
-
-        return controller
+    func makeNSViewController(context: Context) -> NSViewController {
+        return HSplitController(left: left, right: right, leftMin: leftMinWidth, leftMax: leftMaxWidth)
     }
 
-    func updateNSViewController(_ controller: NSSplitViewController, context: Context) {
-        if let leftHost = controller.splitViewItems[0].viewController as? NSHostingController<Left> {
+    func updateNSViewController(_ controller: NSViewController, context: Context) {
+        guard let sc = controller as? HSplitController<Left, Right> else { return }
+        if let leftHost = sc.splitViewItems[0].viewController as? NSHostingController<Left> {
             leftHost.rootView = left
         }
-        if let rightHost = controller.splitViewItems[1].viewController as? NSHostingController<Right> {
+        if let rightHost = sc.splitViewItems[1].viewController as? NSHostingController<Right> {
             rightHost.rootView = right
         }
     }
 }
 
-class FixedTopSplitViewController: NSSplitViewController {
-    override func splitView(_ splitView: NSSplitView, shouldAdjustSizeOfSubview view: NSView) -> Bool {
-        // Keep the top (code editor) panel fixed; bottom absorbs resize
-        if view == splitView.subviews.first {
-            return false
-        }
-        return true
+// MARK: - Vertical Split (Top editor / Bottom output)
+
+class VSplitController<Top: View, Bottom: View>: NSSplitViewController {
+    let topView: Top
+    let bottomView: Bottom
+    let topMin: CGFloat
+    let bottomMin: CGFloat
+
+    init(top: Top, bottom: Bottom, topMin: CGFloat, bottomMin: CGFloat) {
+        self.topView = top
+        self.bottomView = bottom
+        self.topMin = topMin
+        self.bottomMin = bottomMin
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        splitView.isVertical = false
+        splitView.dividerStyle = .thin
+
+        let topHost = NSHostingController(rootView: topView)
+        topHost.view.heightAnchor.constraint(greaterThanOrEqualToConstant: topMin).isActive = true
+        let topItem = NSSplitViewItem(viewController: topHost)
+        topItem.canCollapse = false
+        addSplitViewItem(topItem)
+
+        let bottomHost = NSHostingController(rootView: bottomView)
+        bottomHost.view.heightAnchor.constraint(greaterThanOrEqualToConstant: bottomMin).isActive = true
+        let bottomItem = NSSplitViewItem(viewController: bottomHost)
+        bottomItem.canCollapse = false
+        addSplitViewItem(bottomItem)
+
+        splitView.autosaveName = "MainVSplit"
     }
 }
 
@@ -85,36 +136,16 @@ struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresenta
         self.bottom = bottom()
     }
 
-    func makeNSViewController(context: Context) -> FixedTopSplitViewController {
-        let controller = FixedTopSplitViewController()
-        controller.splitView.isVertical = false
-        controller.splitView.dividerStyle = .thin
-
-        let topHost = NSHostingController(rootView: top)
-        let topItem = NSSplitViewItem(viewController: topHost)
-        topItem.canCollapse = false
-        topItem.minimumThickness = topMinHeight
-        controller.addSplitViewItem(topItem)
-
-        let bottomHost = NSHostingController(rootView: bottom)
-        let bottomItem = NSSplitViewItem(viewController: bottomHost)
-        bottomItem.canCollapse = false
-        bottomItem.minimumThickness = bottomMinHeight
-        controller.addSplitViewItem(bottomItem)
-
-        controller.splitView.setHoldingPriority(.init(490), forSubviewAt: 0)
-        controller.splitView.setHoldingPriority(.init(200), forSubviewAt: 1)
-
-        controller.splitView.autosaveName = autosaveName
-
-        return controller
+    func makeNSViewController(context: Context) -> NSViewController {
+        return VSplitController(top: top, bottom: bottom, topMin: topMinHeight, bottomMin: bottomMinHeight)
     }
 
-    func updateNSViewController(_ controller: FixedTopSplitViewController, context: Context) {
-        if let topHost = controller.splitViewItems[0].viewController as? NSHostingController<Top> {
+    func updateNSViewController(_ controller: NSViewController, context: Context) {
+        guard let sc = controller as? VSplitController<Top, Bottom> else { return }
+        if let topHost = sc.splitViewItems[0].viewController as? NSHostingController<Top> {
             topHost.rootView = top
         }
-        if let bottomHost = controller.splitViewItems[1].viewController as? NSHostingController<Bottom> {
+        if let bottomHost = sc.splitViewItems[1].viewController as? NSHostingController<Bottom> {
             bottomHost.rootView = bottom
         }
     }

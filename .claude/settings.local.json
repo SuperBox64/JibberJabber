@@ -397,7 +397,8 @@
       "Bash(./jibjab/jjswift/.build/debug/jjswift:*)",
       "Bash(mkdir:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(plutil:*)"
+      "Bash(plutil:*)",
+      "Bash(defaults delete:*)"
     ]
   }
 }
