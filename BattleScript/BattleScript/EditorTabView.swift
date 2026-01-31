@@ -112,6 +112,7 @@ struct EditorTabView: View {
     @Binding var sourceCode: String
     @Binding var transpiledOutputs: [String: String]
     @Binding var userHasEdited: Bool
+    @Binding var editMode: Bool
     let isRunning: Bool
     let onRun: () -> Void
     let onStop: () -> Void
@@ -223,6 +224,24 @@ struct EditorTabView: View {
                     .contentShape(Rectangle())
                     .background(showLineNumbers ? Color.blue.opacity(0.3) : Color.clear)
                     .foregroundColor(showLineNumbers ? .primary : .secondary)
+                    .cornerRadius(4)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 4)
+                Button(action: {
+                    editMode.toggle()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: editMode ? "pencil.circle.fill" : "pencil.circle")
+                            .font(.system(.caption))
+                        Text("Edit")
+                            .font(.system(.caption, design: .monospaced))
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .contentShape(Rectangle())
+                    .background(editMode ? Color.orange.opacity(0.3) : Color.clear)
+                    .foregroundColor(editMode ? .primary : .secondary)
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
