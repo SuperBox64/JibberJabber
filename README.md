@@ -94,10 +94,10 @@ See [Language Spec](jibjab/SPEC.md) for the full pipeline diagram.
 ## More
 
 - [Quick Start & Commands (jjswift)](jibjab/README.md)
-- [jjpy Usage](jibjab/jjpy/README.md)
-- [Language Spec](jibjab/SPEC.md)
+- [jjpy Runtime & Usage](jibjab/jjpy/README.md)
+- [JJ Language Spec](jibjab/SPEC.md)
 - [Regression Tests](jibjab/TESTS.md)
-- [BattleScript IDE](BattleScript/README.md)
+- [BattleScript SwiftUI JJ Experimental IDE](BattleScript/README.md)
 
 ---
 
