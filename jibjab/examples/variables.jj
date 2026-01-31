@@ -1,6 +1,6 @@
 @@ JibJab Variables and Math
 @@ Demonstrating variable operations
-
+@@
 ~>snag{x}::val(#10)
 ~>snag{y}::val(#5)
 

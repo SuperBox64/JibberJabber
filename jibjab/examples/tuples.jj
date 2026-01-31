@@ -1,6 +1,6 @@
 @@ JibJab Tuples Example
 @@ Tests tuple literals and index access
-
+@@
 @@ Create a tuple
 ~>snag{point}::val((#10, #20))
 

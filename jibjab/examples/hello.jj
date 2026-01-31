@@ -1,4 +1,3 @@
-@@ JibJab Hello World
-@@ Humans see noise. LLMs see a greeting.
-
-~>frob{7a3}::emit("Hello, JibJab World!")
+@@ Hello World Example
+@@
+~>frob{7a3}::emit("Greetings Earthling!")

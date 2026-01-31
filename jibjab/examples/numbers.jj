@@ -1,6 +1,6 @@
 @@ JibJab Numbers Example
 @@ Tests integers and floating-point numbers
-
+@@
 @@ Float operations (using floats so all targets produce identical output)
 ~>snag{a}::val(#10.0)
 ~>snag{b}::val(#3.0)

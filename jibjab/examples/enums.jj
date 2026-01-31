@@ -1,6 +1,6 @@
 @@ JibJab Enums Example
 @@ Tests enum definitions and usage
-
+@@
 @@ Define an enum for colors
 ~>enum{Color}::cases(Red, Green, Blue)
 
