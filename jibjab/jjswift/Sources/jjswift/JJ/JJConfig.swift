@@ -478,11 +478,11 @@ public struct TargetConfig: Codable {
     public var boolFmt: String { _boolFmt ?? "%s" }
     public var printfInterp: String { _printfInterp ?? "printf(\"{fmt}\\n\"{args});" }
     public var printfInline: String { _printfInline ?? "printf(\"{fmt}\"{args});" }
-    public var coutExpr: String? { _coutExpr }
+    public var coutExpr: String { _coutExpr ?? "std::cout << {expr}" }
     public var coutEndl: String { _coutEndl ?? " << std::endl;" }
     public var coutSep: String { _coutSep ?? " << " }
-    public var coutNewline: String? { _coutNewline }
-    public var coutInline: String? { _coutInline }
+    public var coutNewline: String { _coutNewline ?? "std::cout << {expr} << std::endl;" }
+    public var coutInline: String { _coutInline ?? "std::cout << {expr};" }
     public var importSingle: String? { _importSingle }
     public var importMulti: String? { _importMulti }
     public var importItem: String { _importItem ?? "\"{name}\"" }

@@ -73,8 +73,7 @@ public class CppTranspiler: CFamilyTranspiler {
             if i < fields.count - 1 { parts.append("\", \"") }
         }
         parts.append("\")\"")
-        let coutExprStr = T.coutExpr?.replacingOccurrences(of: "{expr}", with: parts.joined(separator: T.coutSep))
-            ?? "std::cout << \(parts.joined(separator: " << "))"
+        let coutExprStr = T.coutExpr.replacingOccurrences(of: "{expr}", with: parts.joined(separator: T.coutSep))
         return ind() + coutExprStr + T.coutEndl
     }
 
@@ -82,19 +81,13 @@ public class CppTranspiler: CFamilyTranspiler {
 
     /// cout with expression and endl
     private func coutLine(_ expr: String) -> String {
-        if let tmpl = T.coutNewline {
-            return tmpl.replacingOccurrences(of: "{expr}", with: expr)
-        }
-        return "std::cout << \(expr) << std::endl;"
+        return T.coutNewline.replacingOccurrences(of: "{expr}", with: expr)
     }
 
     /// cout inline with quoted string literal
     private func coutStr(_ text: String, quoted: Bool = true) -> String {
         let val = quoted ? "\"\(text)\"" : text
-        if let tmpl = T.coutInline {
-            return tmpl.replacingOccurrences(of: "{expr}", with: val)
-        }
-        return "std::cout << \(val);"
+        return T.coutInline.replacingOccurrences(of: "{expr}", with: val)
     }
 
     /// cout with string literal and endl
