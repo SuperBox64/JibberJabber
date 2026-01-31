@@ -54,20 +54,6 @@ struct PersistentHSplitView<Left: View, Right: View>: NSViewControllerRepresenta
     }
 }
 
-class FixedTopSplitDelegate: NSObject, NSSplitViewDelegate {
-    func splitView(_ splitView: NSSplitView, resizeSubviewsWithOldSize oldSize: NSSize) {
-        guard splitView.subviews.count == 2 else { splitView.adjustSubviews(); return }
-        let topView = splitView.subviews[0]
-        let bottomView = splitView.subviews[1]
-        let divider = splitView.dividerThickness
-        let width = splitView.bounds.width
-        let topHeight = topView.frame.height
-        let bottomHeight = splitView.bounds.height - topHeight - divider
-        topView.frame = NSRect(x: 0, y: bottomHeight + divider, width: width, height: topHeight)
-        bottomView.frame = NSRect(x: 0, y: 0, width: width, height: max(0, bottomHeight))
-    }
-}
-
 struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresentable {
     let autosaveName: String
     let top: Top
@@ -89,15 +75,10 @@ struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresenta
         self.bottom = bottom()
     }
 
-    func makeCoordinator() -> FixedTopSplitDelegate {
-        FixedTopSplitDelegate()
-    }
-
     func makeNSViewController(context: Context) -> NSSplitViewController {
         let controller = NSSplitViewController()
         controller.splitView.isVertical = false
         controller.splitView.dividerStyle = .thin
-        controller.splitView.delegate = context.coordinator
 
         let topHost = NSHostingController(rootView: top)
         let topItem = NSSplitViewItem(viewController: topHost)
