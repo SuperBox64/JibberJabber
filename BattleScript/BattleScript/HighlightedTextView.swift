@@ -58,19 +58,22 @@ struct HighlightedTextView: NSViewRepresentable {
         if scrollView.rulersVisible != showLineNumbers {
             let showing = showLineNumbers
             if let ruler = scrollView.verticalRulerView {
+                let fullThickness: CGFloat = 36
                 if showing {
-                    ruler.alphaValue = 0
+                    ruler.ruleThickness = 0
                     scrollView.rulersVisible = true
+                    scrollView.tile()
                 }
                 NSAnimationContext.runAnimationGroup { ctx in
                     ctx.duration = 0.25
                     ctx.allowsImplicitAnimation = true
-                    ruler.animator().alphaValue = showing ? 1 : 0
+                    ruler.ruleThickness = showing ? fullThickness : 0
+                    scrollView.tile()
                 } completionHandler: {
                     if !showing {
                         scrollView.rulersVisible = false
+                        ruler.ruleThickness = fullThickness
                     }
-                    ruler.alphaValue = showing ? 1 : 0
                     ruler.needsDisplay = true
                 }
             }
