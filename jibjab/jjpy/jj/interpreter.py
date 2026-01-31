@@ -22,6 +22,25 @@ class Interpreter:
         self.locals: List[Dict[str, Any]] = [{}]
         self.functions: Dict[str, FuncDef] = {}
 
+    @staticmethod
+    def stringify(value) -> str:
+        if value is None:
+            return 'nil'
+        if isinstance(value, bool):
+            return 'true' if value else 'false'
+        if isinstance(value, float):
+            if value == int(value):
+                return str(int(value))
+            return str(value)
+        if isinstance(value, list):
+            return '[' + ', '.join(Interpreter.stringify(v) for v in value) + ']'
+        if isinstance(value, tuple):
+            return '(' + ', '.join(Interpreter.stringify(v) for v in value) + ')'
+        if isinstance(value, dict):
+            items = ', '.join(f'"{k}": {Interpreter.stringify(v)}' for k, v in value.items())
+            return '{' + items + '}'
+        return str(value)
+
     def run(self, program: Program):
         for stmt in program.statements:
             self.execute(stmt)
@@ -29,7 +48,7 @@ class Interpreter:
     def execute(self, node: ASTNode) -> Any:
         if isinstance(node, PrintStmt):
             value = self.evaluate(node.expr)
-            print(value)
+            print(self.stringify(value))
         elif isinstance(node, VarDecl):
             self.locals[-1][node.name] = self.evaluate(node.value)
         elif isinstance(node, LoopStmt):
@@ -88,7 +107,7 @@ class Interpreter:
                     found = False
                     for scope in reversed(self.locals):
                         if text in scope:
-                            result += str(scope[text])
+                            result += self.stringify(scope[text])
                             found = True
                             break
                     if not found:
