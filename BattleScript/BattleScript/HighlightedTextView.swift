@@ -57,9 +57,11 @@ struct HighlightedTextView: NSViewRepresentable {
         guard let textView = scrollView.documentView as? NSTextView else { return }
         if scrollView.rulersVisible != showLineNumbers {
             let showing = showLineNumbers
-            scrollView.rulersVisible = true
             if let ruler = scrollView.verticalRulerView {
-                if !showing {
+                if showing {
+                    ruler.frame.size.width = 0
+                    scrollView.rulersVisible = true
+                } else {
                     ruler.frame.size.width = ruler.requiredThickness
                 }
                 NSAnimationContext.runAnimationGroup { ctx in
@@ -68,7 +70,9 @@ struct HighlightedTextView: NSViewRepresentable {
                     ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                     ruler.animator().frame.size.width = showing ? ruler.requiredThickness : 0
                 } completionHandler: {
-                    scrollView.rulersVisible = showing
+                    if !showing {
+                        scrollView.rulersVisible = false
+                    }
                     ruler.needsDisplay = true
                 }
             }
