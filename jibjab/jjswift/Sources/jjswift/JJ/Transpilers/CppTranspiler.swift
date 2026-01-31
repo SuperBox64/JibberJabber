@@ -128,6 +128,10 @@ public class CppTranspiler: CFamilyTranspiler {
             if enums.contains(varRef.name) {
                 return ind() + "std::cout << \"\(enumDictString(varRef.name))\" << std::endl;"
             }
+            // Print whole array
+            if arrayVars.contains(varRef.name) {
+                return printWholeArray(varRef.name)
+            }
             if doubleVars.contains(varRef.name) {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
@@ -150,6 +154,16 @@ public class CppTranspiler: CFamilyTranspiler {
                     return ind() + "std::cout << \"\(strVal)\" << std::endl;"
                 }
             }
+            // Array element access
+            if let varRef = idx.array as? VarRef, let meta = arrayMeta[varRef.name], !meta.isNested {
+                return ind() + "std::cout << \(expr(e)) << std::endl;"
+            }
+            // Nested array element: matrix[0][1]
+            if let innerIdx = idx.array as? IndexAccess,
+               let varRef = innerIdx.array as? VarRef,
+               let meta = arrayMeta[varRef.name], meta.isNested {
+                return ind() + "std::cout << \(expr(e)) << std::endl;"
+            }
             // Dict or tuple access
             if let resolved = resolveAccess(idx) {
                 let (cppVar, _) = resolved
@@ -160,6 +174,35 @@ public class CppTranspiler: CFamilyTranspiler {
             return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
+    }
+
+    override func printWholeArray(_ name: String) -> String {
+        guard let meta = arrayMeta[name] else {
+            return ind() + "std::cout << \(name) << std::endl;"
+        }
+        if meta.isNested {
+            var lines: [String] = []
+            lines.append(ind() + "std::cout << \"[\";")
+            for i in 0..<meta.count {
+                if i > 0 { lines.append(ind() + "std::cout << \", \";") }
+                lines.append(ind() + "std::cout << \"[\";")
+                for j in 0..<meta.innerCount {
+                    if j > 0 { lines.append(ind() + "std::cout << \", \";") }
+                    lines.append(ind() + "std::cout << \(name)[\(i)][\(j)];")
+                }
+                lines.append(ind() + "std::cout << \"]\";")
+            }
+            lines.append(ind() + "std::cout << \"]\" << std::endl;")
+            return lines.joined(separator: "\n")
+        }
+        var lines: [String] = []
+        lines.append(ind() + "std::cout << \"[\";")
+        lines.append(ind() + "for (int _i = 0; _i < \(meta.count); _i++) {")
+        lines.append(ind() + "    if (_i > 0) std::cout << \", \";")
+        lines.append(ind() + "    std::cout << \(name)[_i];")
+        lines.append(ind() + "}")
+        lines.append(ind() + "std::cout << \"]\" << std::endl;")
+        return lines.joined(separator: "\n")
     }
 
     func printWholeTuple(_ name: String) -> String {

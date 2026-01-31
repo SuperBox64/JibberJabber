@@ -12,8 +12,18 @@ public class CFamilyTranspiler {
     var intVars = Set<String>()
     var dictVars = Set<String>()
     var tupleVars = Set<String>()
+    var arrayVars = Set<String>()
     var dictFields: [String: [String: (String, String)]] = [:]
     var tupleFields: [String: [(String, String)]] = [:]
+
+    struct ArrayMeta {
+        let elemType: String      // "int", "str", "double"
+        let count: Int
+        let isNested: Bool
+        let innerCount: Int       // only for nested
+        let innerElemType: String // only for nested
+    }
+    var arrayMeta: [String: ArrayMeta] = [:]
 
     public init(target: String) {
         T = loadTarget(target)
@@ -116,6 +126,10 @@ public class CFamilyTranspiler {
             if enums.contains(varRef.name) {
                 return ind() + "printf(\"%s\\n\", \"\(enumDictString(varRef.name))\");"
             }
+            // Whole array
+            if arrayVars.contains(varRef.name) {
+                return printWholeArray(varRef.name)
+            }
             if doubleVars.contains(varRef.name) {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
@@ -127,6 +141,18 @@ public class CFamilyTranspiler {
                     return ind() + "printf(\"%s\\n\", \"\(strVal)\");"
                 }
             }
+            // Array element access
+            if let varRef = idx.array as? VarRef, let meta = arrayMeta[varRef.name], !meta.isNested {
+                let fmt = meta.elemType == "str" ? "%s" : (meta.elemType == "double" ? "%g" : "%d")
+                return ind() + "printf(\"\(fmt)\\n\", \(expr(e)));"
+            }
+            // Nested array element: matrix[0][1]
+            if let innerIdx = idx.array as? IndexAccess,
+               let varRef = innerIdx.array as? VarRef,
+               let meta = arrayMeta[varRef.name], meta.isNested {
+                let fmt = meta.innerElemType == "str" ? "%s" : (meta.innerElemType == "double" ? "%g" : "%d")
+                return ind() + "printf(\"\(fmt)\\n\", \(expr(e)));"
+            }
         }
         if isFloatExpr(e) {
             return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
@@ -134,8 +160,50 @@ public class CFamilyTranspiler {
         return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
     }
 
+    func printWholeArray(_ name: String) -> String {
+        guard let meta = arrayMeta[name] else {
+            return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: name)
+        }
+        if meta.isNested {
+            var lines: [String] = []
+            lines.append(ind() + "printf(\"[\");")
+            for i in 0..<meta.count {
+                if i > 0 { lines.append(ind() + "printf(\", \");") }
+                lines.append(ind() + "printf(\"[\");")
+                for j in 0..<meta.innerCount {
+                    let fmt = meta.innerElemType == "str" ? "%s" : (meta.innerElemType == "double" ? "%g" : "%d")
+                    if j > 0 { lines.append(ind() + "printf(\", \");") }
+                    lines.append(ind() + "printf(\"\(fmt)\", \(name)[\(i)][\(j)]);")
+                }
+                lines.append(ind() + "printf(\"]\");")
+            }
+            lines.append(ind() + "printf(\"]\\n\");")
+            return lines.joined(separator: "\n")
+        }
+        let fmt = meta.elemType == "str" ? "%s" : (meta.elemType == "double" ? "%g" : "%d")
+        var lines: [String] = []
+        lines.append(ind() + "printf(\"[\");")
+        lines.append(ind() + "for (int _i = 0; _i < \(meta.count); _i++) {")
+        lines.append(ind() + "    if (_i > 0) printf(\", \");")
+        lines.append(ind() + "    printf(\"\(fmt)\", \(name)[_i]);")
+        lines.append(ind() + "}")
+        lines.append(ind() + "printf(\"]\\n\");")
+        return lines.joined(separator: "\n")
+    }
+
     func varDeclToString(_ node: VarDecl) -> String {
         if let arr = node.value as? ArrayLiteral {
+            arrayVars.insert(node.name)
+            if let firstElem = arr.elements.first, firstElem is ArrayLiteral {
+                let inner = firstElem as! ArrayLiteral
+                let jjType = inner.elements.first.map { inferType($0) } ?? "Int"
+                let iType = jjType == "String" ? "str" : (jjType == "Double" ? "double" : "int")
+                arrayMeta[node.name] = ArrayMeta(elemType: "nested", count: arr.elements.count, isNested: true, innerCount: inner.elements.count, innerElemType: iType)
+            } else {
+                let jjType = arr.elements.first.map { inferType($0) } ?? "Int"
+                let eType = jjType == "String" ? "str" : (jjType == "Double" ? "double" : "int")
+                arrayMeta[node.name] = ArrayMeta(elemType: eType, count: arr.elements.count, isNested: false, innerCount: 0, innerElemType: "")
+            }
             return varArrayToString(node, arr)
         }
         if let tuple = node.value as? TupleLiteral {

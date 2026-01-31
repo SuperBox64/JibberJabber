@@ -36,6 +36,10 @@ public class ObjCTranspiler: CFamilyTranspiler {
             if enums.contains(varRef.name) {
                 return ind() + "printf(\"%s\\n\", \"\(enumDictString(varRef.name))\");"
             }
+            // Print whole array
+            if arrayVars.contains(varRef.name) {
+                return printWholeArray(varRef.name)
+            }
             if doubleVars.contains(varRef.name) {
                 return ind() + "printf(\"%f\\n\", \(expr(e)));"
             }
@@ -54,12 +58,76 @@ public class ObjCTranspiler: CFamilyTranspiler {
                     return ind() + "printf(\"%s\\n\", \"\(strVal)\");"
                 }
             }
+            // Array element access
+            if let varRef = idx.array as? VarRef, let meta = arrayMeta[varRef.name], !meta.isNested {
+                if meta.elemType == "str" {
+                    return ind() + "printf(\"%s\\n\", [\(varRef.name)[\(expr(idx.index))] UTF8String]);"
+                } else if meta.elemType == "double" {
+                    return ind() + "printf(\"%g\\n\", [\(varRef.name)[\(expr(idx.index))] doubleValue]);"
+                } else {
+                    return ind() + "printf(\"%d\\n\", [\(varRef.name)[\(expr(idx.index))] intValue]);"
+                }
+            }
+            // Nested array element: matrix[0][1]
+            if let innerIdx = idx.array as? IndexAccess,
+               let varRef = innerIdx.array as? VarRef,
+               let meta = arrayMeta[varRef.name], meta.isNested {
+                if meta.innerElemType == "str" {
+                    return ind() + "printf(\"%s\\n\", [\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))] UTF8String]);"
+                } else if meta.innerElemType == "double" {
+                    return ind() + "printf(\"%g\\n\", [\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))] doubleValue]);"
+                } else {
+                    return ind() + "printf(\"%d\\n\", [\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))] intValue]);"
+                }
+            }
             return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if isFloatExpr(e) {
             return ind() + "printf(\"%f\\n\", \(expr(e)));"
         }
         return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
+    }
+
+    override func printWholeArray(_ name: String) -> String {
+        guard let meta = arrayMeta[name] else {
+            return ind() + "NSLog(@\"%@\", \(name));"
+        }
+        if meta.isNested {
+            var lines: [String] = []
+            lines.append(ind() + "printf(\"[\");")
+            lines.append(ind() + "for (NSUInteger _i = 0; _i < [\(name) count]; _i++) {")
+            lines.append(ind() + "    if (_i > 0) printf(\", \");")
+            lines.append(ind() + "    NSArray *_row = \(name)[_i];")
+            lines.append(ind() + "    printf(\"[\");")
+            lines.append(ind() + "    for (NSUInteger _j = 0; _j < [_row count]; _j++) {")
+            lines.append(ind() + "        if (_j > 0) printf(\", \");")
+            if meta.innerElemType == "str" {
+                lines.append(ind() + "        printf(\"%s\", [_row[_j] UTF8String]);")
+            } else if meta.innerElemType == "double" {
+                lines.append(ind() + "        printf(\"%g\", [_row[_j] doubleValue]);")
+            } else {
+                lines.append(ind() + "        printf(\"%d\", [_row[_j] intValue]);")
+            }
+            lines.append(ind() + "    }")
+            lines.append(ind() + "    printf(\"]\");")
+            lines.append(ind() + "}")
+            lines.append(ind() + "printf(\"]\\n\");")
+            return lines.joined(separator: "\n")
+        }
+        var lines: [String] = []
+        lines.append(ind() + "printf(\"[\");")
+        lines.append(ind() + "for (NSUInteger _i = 0; _i < [\(name) count]; _i++) {")
+        lines.append(ind() + "    if (_i > 0) printf(\", \");")
+        if meta.elemType == "str" {
+            lines.append(ind() + "    printf(\"%s\", [\(name)[_i] UTF8String]);")
+        } else if meta.elemType == "double" {
+            lines.append(ind() + "    printf(\"%g\", [\(name)[_i] doubleValue]);")
+        } else {
+            lines.append(ind() + "    printf(\"%d\", [\(name)[_i] intValue]);")
+        }
+        lines.append(ind() + "}")
+        lines.append(ind() + "printf(\"]\\n\");")
+        return lines.joined(separator: "\n")
     }
 
     override func varArrayToString(_ node: VarDecl, _ arr: ArrayLiteral) -> String {

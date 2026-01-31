@@ -99,6 +99,10 @@ public class CTranspiler: CFamilyTranspiler {
             if enums.contains(varRef.name) {
                 return ind() + "printf(\"%s\\n\", \"\(enumDictString(varRef.name))\");"
             }
+            // Print whole array
+            if arrayVars.contains(varRef.name) {
+                return printWholeArray(varRef.name)
+            }
             if doubleVars.contains(varRef.name) {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
@@ -120,6 +124,18 @@ public class CTranspiler: CFamilyTranspiler {
                 if let lit = idx.index as? Literal, let strVal = lit.value as? String {
                     return ind() + "printf(\"%s\\n\", \"\(strVal)\");"
                 }
+            }
+            // Array element access
+            if let varRef = idx.array as? VarRef, let meta = arrayMeta[varRef.name], !meta.isNested {
+                let fmt = meta.elemType == "str" ? "%s" : (meta.elemType == "double" ? "%g" : "%d")
+                return ind() + "printf(\"\(fmt)\\n\", \(expr(e)));"
+            }
+            // Nested array element: matrix[0][1]
+            if let innerIdx = idx.array as? IndexAccess,
+               let varRef = innerIdx.array as? VarRef,
+               let meta = arrayMeta[varRef.name], meta.isNested {
+                let fmt = meta.innerElemType == "str" ? "%s" : (meta.innerElemType == "double" ? "%g" : "%d")
+                return ind() + "printf(\"\(fmt)\\n\", \(expr(e)));"
             }
             // Dict or tuple access
             if let resolved = resolveAccess(idx) {
