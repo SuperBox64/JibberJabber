@@ -56,19 +56,21 @@ struct HighlightedTextView: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
         if scrollView.rulersVisible != showLineNumbers {
-            NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 0.3
-                ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                if let ruler = scrollView.verticalRulerView {
-                    let targetWidth: CGFloat = showLineNumbers ? ruler.requiredThickness : 0
-                    ruler.animator().frame.size.width = targetWidth
+            let showing = showLineNumbers
+            scrollView.rulersVisible = true
+            if let ruler = scrollView.verticalRulerView {
+                if !showing {
+                    ruler.frame.size.width = ruler.requiredThickness
                 }
-            } completionHandler: {
-                scrollView.rulersVisible = self.showLineNumbers
-                scrollView.verticalRulerView?.needsDisplay = true
-            }
-            if showLineNumbers {
-                scrollView.rulersVisible = true
+                NSAnimationContext.runAnimationGroup { ctx in
+                    ctx.duration = 0.3
+                    ctx.allowsImplicitAnimation = true
+                    ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                    ruler.animator().frame.size.width = showing ? ruler.requiredThickness : 0
+                } completionHandler: {
+                    scrollView.rulersVisible = showing
+                    ruler.needsDisplay = true
+                }
             }
         }
 
