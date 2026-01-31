@@ -34,7 +34,7 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Examples")
                     .font(.headline)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 20)
                     .padding(.top, 9)
                     .padding(.bottom, 9.5)
                 List(examples, id: \.file, selection: $selectedExample) { example in
