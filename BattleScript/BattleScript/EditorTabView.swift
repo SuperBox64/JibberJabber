@@ -220,6 +220,7 @@ struct EditorTabView: View {
                     }
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
+                    .contentShape(Rectangle())
                     .background(showLineNumbers ? Color.blue.opacity(0.3) : Color.clear)
                     .foregroundColor(showLineNumbers ? .primary : .secondary)
                     .cornerRadius(4)
@@ -237,6 +238,7 @@ struct EditorTabView: View {
                             .fontWeight(highlighterStyle == style.rawValue ? .bold : .regular)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)
+                            .contentShape(Rectangle())
                             .background(highlighterStyle == style.rawValue ? Color.purple.opacity(0.3) : Color.clear)
                             .foregroundColor(highlighterStyle == style.rawValue ? .primary : .secondary)
                             .cornerRadius(4)
