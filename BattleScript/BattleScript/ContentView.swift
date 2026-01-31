@@ -39,6 +39,7 @@ struct ContentView: View {
                     .padding(.bottom, 9.5)
                 List(examples, id: \.file, selection: $selectedExample) { example in
                     Text(example.name)
+                        .padding(.leading, 4)
                         .tag(example.file)
                 }
                 .listStyle(.sidebar)
