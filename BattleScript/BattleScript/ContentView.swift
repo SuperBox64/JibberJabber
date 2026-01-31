@@ -66,7 +66,7 @@ struct ContentView: View {
                 OutputView(output: runOutput, isRunning: isRunning)
             }
         }
-        .frame(minWidth: 900, minHeight: 600)
+        .frame(minWidth: 540, minHeight: 600)
         .overlay {
             DependencyOverlay(status: dependencyStatus, isVisible: $showDependencyCheck)
         }
