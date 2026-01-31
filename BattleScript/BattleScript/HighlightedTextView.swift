@@ -59,22 +59,31 @@ struct HighlightedTextView: NSViewRepresentable {
             let showing = showLineNumbers
             if let ruler = scrollView.verticalRulerView {
                 let fullThickness: CGFloat = 36
+                let steps = 12
+                let duration = 0.2
+                let interval = duration / Double(steps)
                 if showing {
                     ruler.ruleThickness = 0
                     scrollView.rulersVisible = true
                     scrollView.tile()
                 }
-                NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.25
-                    ctx.allowsImplicitAnimation = true
-                    ruler.ruleThickness = showing ? fullThickness : 0
+                let startThickness = ruler.ruleThickness
+                let endThickness: CGFloat = showing ? fullThickness : 0
+                var step = 0
+                Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { timer in
+                    step += 1
+                    let t = min(Double(step) / Double(steps), 1.0)
+                    let eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+                    ruler.ruleThickness = startThickness + (endThickness - startThickness) * eased
                     scrollView.tile()
-                } completionHandler: {
-                    if !showing {
-                        scrollView.rulersVisible = false
-                        ruler.ruleThickness = fullThickness
+                    if step >= steps {
+                        timer.invalidate()
+                        if !showing {
+                            scrollView.rulersVisible = false
+                            ruler.ruleThickness = fullThickness
+                        }
+                        ruler.needsDisplay = true
                     }
-                    ruler.needsDisplay = true
                 }
             }
         }
