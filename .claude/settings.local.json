@@ -388,7 +388,12 @@
       "Bash(fi)",
       "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber add .gitignore)",
       "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber add -A)",
-      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber commit -m \"$\\(cat <<''EOF''\nAdd .gitignore and remove tracked build artifacts\n\nRemove compiled AppleScript files \\(a.scpt\\), .DS_Store files,\nxcuserdata, and add .gitignore covering macOS, Xcode, SPM build\nartifacts, and compiled output files.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber commit -m \"$\\(cat <<''EOF''\nAdd .gitignore and remove tracked build artifacts\n\nRemove compiled AppleScript files \\(a.scpt\\), .DS_Store files,\nxcuserdata, and add .gitignore covering macOS, Xcode, SPM build\nartifacts, and compiled output files.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(./test_example.sh:*)",
+      "Bash(./regression.sh:*)",
+      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber diff --stat)",
+      "Bash(for lang in py js c cpp swift objc objcpp go)",
+      "Bash(do echo \"=== numbers: $lang ===\")"
     ]
   }
 }
