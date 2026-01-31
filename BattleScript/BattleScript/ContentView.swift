@@ -71,6 +71,7 @@ struct ContentView: View {
             DependencyOverlay(status: dependencyStatus, isVisible: $showDependencyCheck)
         }
         .onAppear {
+            loadExample(selectedExample)
             DispatchQueue.global(qos: .userInitiated).async {
                 let status = DependencyChecker.check()
                 DispatchQueue.main.async {
