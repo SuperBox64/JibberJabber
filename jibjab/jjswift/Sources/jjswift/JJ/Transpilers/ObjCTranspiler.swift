@@ -70,12 +70,6 @@ public class ObjCTranspiler: CFamilyTranspiler {
         return ind() + "NSArray *\(node.name) = \(expr(node.value));"
     }
 
-    override func enumToString(_ node: EnumDef) -> String {
-        enums.insert(node.name)
-        let cases = node.cases.joined(separator: ", ")
-        return ind() + "typedef NS_ENUM(NSInteger, \(node.name)) { \(cases) };"
-    }
-
     override func expr(_ node: ASTNode) -> String {
         if let idx = node as? IndexAccess {
             // Dict access: use @"key" syntax

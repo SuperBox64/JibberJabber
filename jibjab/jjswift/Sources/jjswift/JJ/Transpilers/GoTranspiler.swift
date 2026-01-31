@@ -95,7 +95,7 @@ public class GoTranspiler: CFamilyTranspiler {
             }
             let elemType: String
             if let lit = firstElem as? Literal, lit.value is String {
-                elemType = "string"
+                elemType = T.stringType
             } else {
                 elemType = getTargetType(inferType(firstElem))
             }
@@ -135,7 +135,7 @@ public class GoTranspiler: CFamilyTranspiler {
                         let first = arrVal.elements[0]
                         let elemType: String
                         if let lit = first as? Literal, lit.value is String {
-                            elemType = "string"
+                            elemType = T.stringType
                         } else {
                             elemType = getTargetType(inferType(first))
                         }
@@ -260,9 +260,11 @@ public class GoTranspiler: CFamilyTranspiler {
             if let resolved = resolveAccess(idx) { return resolved.0 }
         }
         if let binaryOp = node as? BinaryOp {
-            if binaryOp.op == "%" && (isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)) {
+            if binaryOp.op == "%" && (isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)),
+               let fm = T.floatMod {
                 needsMath = true
-                return "math.Mod(\(expr(binaryOp.left)), \(expr(binaryOp.right)))"
+                return fm.replacingOccurrences(of: "{left}", with: expr(binaryOp.left))
+                         .replacingOccurrences(of: "{right}", with: expr(binaryOp.right))
             }
         }
         return super.expr(node)

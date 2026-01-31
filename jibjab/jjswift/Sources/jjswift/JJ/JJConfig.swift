@@ -120,6 +120,12 @@ public struct TargetConfig: Codable {
     private let _lte: String?
     private let _gte: String?
     private let _mod: String?
+    private let _stringType: String?
+    private let _floatMod: String?
+    private let _enum: String?
+    private let _enumStyle: String?
+    private let _collectionStyle: String?
+    private let _varShort: String?
     public let main: String?
     public let compile: [String]?
     public let run: [String]?
@@ -144,6 +150,12 @@ public struct TargetConfig: Codable {
         case _lte = "lte"
         case _gte = "gte"
         case _mod = "mod"
+        case _stringType = "stringType"
+        case _floatMod = "floatMod"
+        case _enum = "enum"
+        case _enumStyle = "enumStyle"
+        case _collectionStyle = "collectionStyle"
+        case _varShort = "varShort"
         // true/false/nil handled specially
     }
 
@@ -186,6 +198,12 @@ public struct TargetConfig: Codable {
         _lte = try container.decodeIfPresent(String.self, forKey: ._lte)
         _gte = try container.decodeIfPresent(String.self, forKey: ._gte)
         _mod = try container.decodeIfPresent(String.self, forKey: ._mod)
+        _stringType = try container.decodeIfPresent(String.self, forKey: ._stringType)
+        _floatMod = try container.decodeIfPresent(String.self, forKey: ._floatMod)
+        _enum = try container.decodeIfPresent(String.self, forKey: ._enum)
+        _enumStyle = try container.decodeIfPresent(String.self, forKey: ._enumStyle)
+        _collectionStyle = try container.decodeIfPresent(String.self, forKey: ._collectionStyle)
+        _varShort = try container.decodeIfPresent(String.self, forKey: ._varShort)
 
         // Handle true/false/nil with special decoder keys
         let additionalContainer = try decoder.container(keyedBy: AdditionalCodingKeys.self)
@@ -217,6 +235,12 @@ public struct TargetConfig: Codable {
     public var lte: String { _lte ?? "<=" }
     public var gte: String { _gte ?? ">=" }
     public var mod: String { _mod ?? "%" }
+    public var stringType: String { _stringType ?? "const char*" }
+    public var floatMod: String? { _floatMod }
+    public var enumTemplate: String? { _enum }
+    public var enumStyle: String { _enumStyle ?? "template" }
+    public var collectionStyle: String { _collectionStyle ?? "expand" }
+    public var varShort: String? { _varShort }
 }
 
 /// Environment overrides for JJLib

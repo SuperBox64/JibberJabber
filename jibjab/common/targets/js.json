@@ -19,6 +19,8 @@
   "nil": "null",
   "eq": "===",
   "neq": "!==",
+  "enum": "const {name} = { {cases} };",
+  "collectionStyle": "native",
   "compile": ["qjsc", "-o", "{out}", "{src}"],
   "run": ["qjs", "{src}"],
   "types": {

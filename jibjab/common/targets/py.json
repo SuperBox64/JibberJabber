@@ -19,6 +19,8 @@
   "and": "and",
   "or": "or",
   "not": "not ",
+  "enum": "{name} = { {cases} }",
+  "collectionStyle": "native",
   "run": ["python3", "{src}"],
   "types": {
     "Int": "int",

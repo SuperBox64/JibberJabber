@@ -21,6 +21,10 @@
   "false": "NO",
   "nil": "nil",
   "main": "int main(int argc, const char * argv[]) {\n    @autoreleasepool {\n{body}    }\n    return 0;\n}",
+  "stringType": "NSString *",
+  "floatMod": "fmod({left}, {right})",
+  "enum": "typedef NS_ENUM(NSInteger, {name}) { {cases} };",
+  "collectionStyle": "foundation",
   "compile": ["clang", "-framework", "Foundation", "{src}", "-o", "{out}"],
   "types": {
     "Int": "NSInteger",

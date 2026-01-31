@@ -48,7 +48,7 @@ public class CppTranspiler: CFamilyTranspiler {
                 let cppVar = "\(node.name)_\(key)"
                 if let vLit = v as? Literal {
                     if let strVal = vLit.value as? String {
-                        lines.append(ind() + "std::string \(cppVar) = \"\(strVal)\";")
+                        lines.append(ind() + "\(T.stringType) \(cppVar) = \"\(strVal)\";")
                         dictFields[node.name, default: [:]][key] = (cppVar, "str")
                     } else if let boolVal = vLit.value as? Bool {
                         let val = boolVal ? "true" : "false"
@@ -66,7 +66,7 @@ public class CppTranspiler: CFamilyTranspiler {
                         let first = arrVal.elements[0]
                         let elemType: String
                         if let lit = first as? Literal, lit.value is String {
-                            elemType = "std::string"
+                            elemType = T.stringType
                         } else {
                             elemType = getTargetType(inferType(first))
                         }
@@ -93,7 +93,7 @@ public class CppTranspiler: CFamilyTranspiler {
             let cppVar = "\(node.name)_\(i)"
             if let lit = e as? Literal {
                 if let strVal = lit.value as? String {
-                    lines.append(ind() + "std::string \(cppVar) = \"\(strVal)\";")
+                    lines.append(ind() + "\(T.stringType) \(cppVar) = \"\(strVal)\";")
                     tupleFields[node.name]?.append((cppVar, "str"))
                 } else if let boolVal = lit.value as? Bool {
                     let val = boolVal ? "true" : "false"

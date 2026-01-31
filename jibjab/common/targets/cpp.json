@@ -22,6 +22,10 @@
   "false": "false",
   "nil": "0",
   "main": "int main() {\n{body}    return 0;\n}",
+  "stringType": "std::string",
+  "floatMod": "fmod({left}, {right})",
+  "enum": "enum {name} { {cases} };",
+  "collectionStyle": "expand",
   "compile": ["clang++", "{src}", "-o", "{out}"],
   "types": {
     "Int": "int",

@@ -18,6 +18,9 @@
   "true": "true",
   "false": "false",
   "nil": "nil",
+  "floatMod": "{left}.truncatingRemainder(dividingBy: {right})",
+  "enum": "enum {name} { case {cases} }",
+  "collectionStyle": "native",
   "compile": ["swiftc", "{src}", "-o", "{out}"],
   "types": {
     "Int": "Int",

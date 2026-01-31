@@ -28,6 +28,8 @@
   "lte": "≤",
   "gte": "≥",
   "mod": "mod",
+  "enumStyle": "property",
+  "collectionStyle": "native",
   "compile": ["osacompile", "-o", "{out}", "{src}"],
   "run": ["osascript", "{src}"],
   "types": {

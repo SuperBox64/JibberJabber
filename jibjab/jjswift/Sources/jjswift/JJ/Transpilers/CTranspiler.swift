@@ -19,7 +19,7 @@ public class CTranspiler: CFamilyTranspiler {
                 let cVar = "\(node.name)_\(key)"
                 if let vLit = v as? Literal {
                     if let strVal = vLit.value as? String {
-                        lines.append(ind() + "const char* \(cVar) = \"\(strVal)\";")
+                        lines.append(ind() + "\(T.stringType) \(cVar) = \"\(strVal)\";")
                         dictFields[node.name, default: [:]][key] = (cVar, "str")
                     } else if let boolVal = vLit.value as? Bool {
                         let val = boolVal ? 1 : 0
@@ -37,7 +37,7 @@ public class CTranspiler: CFamilyTranspiler {
                         let first = arrVal.elements[0]
                         let elemType: String
                         if let lit = first as? Literal, lit.value is String {
-                            elemType = "const char*"
+                            elemType = T.stringType
                         } else {
                             elemType = getTargetType(inferType(first))
                         }
@@ -64,7 +64,7 @@ public class CTranspiler: CFamilyTranspiler {
             let cVar = "\(node.name)_\(i)"
             if let lit = e as? Literal {
                 if let strVal = lit.value as? String {
-                    lines.append(ind() + "const char* \(cVar) = \"\(strVal)\";")
+                    lines.append(ind() + "\(T.stringType) \(cVar) = \"\(strVal)\";")
                     tupleFields[node.name]?.append((cVar, "str"))
                 } else if let boolVal = lit.value as? Bool {
                     let val = boolVal ? 1 : 0

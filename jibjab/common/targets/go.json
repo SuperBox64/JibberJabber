@@ -21,6 +21,11 @@
   "false": "false",
   "nil": "0",
   "main": "func main() {\n{body}}",
+  "stringType": "string",
+  "floatMod": "math.Mod({left}, {right})",
+  "enumStyle": "iota",
+  "collectionStyle": "expand",
+  "varShort": "{name} := {value}",
   "compile": ["go", "build", "-o", "{out}", "{src}"],
   "types": {
     "Int": "int",

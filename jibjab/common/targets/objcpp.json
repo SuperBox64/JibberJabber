@@ -22,6 +22,10 @@
   "false": "false",
   "nil": "nil",
   "main": "int main(int argc, const char * argv[]) {\n    @autoreleasepool {\n{body}    }\n    return 0;\n}",
+  "stringType": "std::string",
+  "floatMod": "fmod({left}, {right})",
+  "enum": "enum {name} { {cases} };",
+  "collectionStyle": "expand",
   "compile": ["clang++", "-framework", "Foundation", "{src}", "-o", "{out}"],
   "types": {
     "Int": "int",

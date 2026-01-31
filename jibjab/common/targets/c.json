@@ -21,6 +21,10 @@
   "false": "0",
   "nil": "0",
   "main": "int main() {\n{body}    return 0;\n}",
+  "stringType": "const char*",
+  "floatMod": "fmod({left}, {right})",
+  "enum": "enum {name} { {cases} };",
+  "collectionStyle": "expand",
   "compile": ["clang", "{src}", "-o", "{out}"],
   "types": {
     "Int": "int",

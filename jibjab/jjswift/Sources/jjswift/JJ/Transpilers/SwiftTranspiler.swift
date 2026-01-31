@@ -113,6 +113,10 @@ public class SwiftTranspiler {
         } else if let enumDef = node as? EnumDef {
             enums.insert(enumDef.name)
             let cases = enumDef.cases.joined(separator: ", ")
+            if let tmpl = T.enumTemplate {
+                return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
+                                   .replacingOccurrences(of: "{cases}", with: cases)
+            }
             return ind() + "enum \(enumDef.name) { case \(cases) }"
         }
         return ""
@@ -139,9 +143,10 @@ public class SwiftTranspiler {
             }
             return varRef.name
         } else if let binaryOp = node as? BinaryOp {
-            // Use truncatingRemainder for float modulo in Swift
-            if binaryOp.op == "%" && (isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)) {
-                return "\(expr(binaryOp.left)).truncatingRemainder(dividingBy: \(expr(binaryOp.right)))"
+            if binaryOp.op == "%" && (isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)),
+               let fm = T.floatMod {
+                return fm.replacingOccurrences(of: "{left}", with: expr(binaryOp.left))
+                         .replacingOccurrences(of: "{right}", with: expr(binaryOp.right))
             }
             return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"
         } else if let unaryOp = node as? UnaryOp {

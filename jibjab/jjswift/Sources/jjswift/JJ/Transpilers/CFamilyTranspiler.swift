@@ -157,7 +157,7 @@ public class CFamilyTranspiler {
             }
             let elemType: String
             if let lit = firstElem as? Literal, lit.value is String {
-                elemType = "const char*"
+                elemType = T.stringType
             } else {
                 elemType = getTargetType(inferType(firstElem))
             }
@@ -171,7 +171,7 @@ public class CFamilyTranspiler {
         if let firstElem = tuple.elements.first {
             let elemType: String
             if let lit = firstElem as? Literal, lit.value is String {
-                elemType = "const char*"
+                elemType = T.stringType
             } else {
                 elemType = getTargetType(inferType(firstElem))
             }
@@ -236,6 +236,10 @@ public class CFamilyTranspiler {
     func enumToString(_ node: EnumDef) -> String {
         enums.insert(node.name)
         let cases = node.cases.joined(separator: ", ")
+        if let tmpl = T.enumTemplate {
+            return ind() + tmpl.replacingOccurrences(of: "{name}", with: node.name)
+                               .replacingOccurrences(of: "{cases}", with: cases)
+        }
         return ind() + "enum \(node.name) { \(cases) };"
     }
 
@@ -291,8 +295,10 @@ public class CFamilyTranspiler {
             }
             return "\(expr(idx.array))[\(expr(idx.index))]"
         } else if let binaryOp = node as? BinaryOp {
-            if binaryOp.op == "%" && (isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)) {
-                return "fmod(\(expr(binaryOp.left)), \(expr(binaryOp.right)))"
+            if binaryOp.op == "%" && (isFloatExpr(binaryOp.left) || isFloatExpr(binaryOp.right)),
+               let fm = T.floatMod {
+                return fm.replacingOccurrences(of: "{left}", with: expr(binaryOp.left))
+                         .replacingOccurrences(of: "{right}", with: expr(binaryOp.right))
             }
             return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"
         } else if let unaryOp = node as? UnaryOp {
