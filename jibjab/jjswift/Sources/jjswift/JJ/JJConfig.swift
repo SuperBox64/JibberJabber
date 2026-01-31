@@ -126,6 +126,8 @@ public struct TargetConfig: Codable {
     private let _enumStyle: String?
     private let _collectionStyle: String?
     private let _varShort: String?
+    private let _expandBoolAsInt: Bool?
+    private let _expandStringType: String?
     public let main: String?
     public let compile: [String]?
     public let run: [String]?
@@ -156,6 +158,8 @@ public struct TargetConfig: Codable {
         case _enumStyle = "enumStyle"
         case _collectionStyle = "collectionStyle"
         case _varShort = "varShort"
+        case _expandBoolAsInt = "expandBoolAsInt"
+        case _expandStringType = "expandStringType"
         // true/false/nil handled specially
     }
 
@@ -204,6 +208,8 @@ public struct TargetConfig: Codable {
         _enumStyle = try container.decodeIfPresent(String.self, forKey: ._enumStyle)
         _collectionStyle = try container.decodeIfPresent(String.self, forKey: ._collectionStyle)
         _varShort = try container.decodeIfPresent(String.self, forKey: ._varShort)
+        _expandBoolAsInt = try container.decodeIfPresent(Bool.self, forKey: ._expandBoolAsInt)
+        _expandStringType = try container.decodeIfPresent(String.self, forKey: ._expandStringType)
 
         // Handle true/false/nil with special decoder keys
         let additionalContainer = try decoder.container(keyedBy: AdditionalCodingKeys.self)
@@ -241,6 +247,8 @@ public struct TargetConfig: Codable {
     public var enumStyle: String { _enumStyle ?? "template" }
     public var collectionStyle: String { _collectionStyle ?? "expand" }
     public var varShort: String? { _varShort }
+    public var expandBoolAsInt: Bool { _expandBoolAsInt ?? false }
+    public var expandStringType: String { _expandStringType ?? stringType }
 }
 
 /// Environment overrides for JJLib

@@ -26,6 +26,8 @@
   "floatMod": "fmod({left}, {right})",
   "enum": "enum {name} { {cases} };",
   "collectionStyle": "expand",
+  "expandBoolAsInt": true,
+  "expandStringType": "const char*",
   "compile": ["clang++", "-framework", "Foundation", "{src}", "-o", "{out}"],
   "types": {
     "Int": "int",

@@ -46,6 +46,93 @@ public class CFamilyTranspiler {
         return T.types?[jjType] ?? "int"
     }
 
+    // --- Helpers for consolidated dict/tuple expansion ---
+
+    /// String type for expanded dict/tuple string fields (ObjC uses const char* instead of NSString *)
+    func expandedStringType() -> String {
+        return T.expandStringType
+    }
+
+    /// Bool type and value for expanded dict/tuple fields
+    func boolExpandType() -> String {
+        return T.expandBoolAsInt ? "int" : "bool"
+    }
+
+    func boolExpandValue(_ val: Bool) -> String {
+        if T.expandBoolAsInt {
+            return val ? "1" : "0"
+        }
+        return val ? T.true : T.false
+    }
+
+    /// Build a variable declaration for expanded dict/tuple fields
+    func expandedVarDecl(name: String, targetType: String, value: String) -> String {
+        if let short = T.varShort {
+            return ind() + short
+                .replacingOccurrences(of: "{name}", with: name)
+                .replacingOccurrences(of: "{value}", with: value)
+        }
+        return ind() + T.var
+            .replacingOccurrences(of: "{type}", with: targetType)
+            .replacingOccurrences(of: "{name}", with: name)
+            .replacingOccurrences(of: "{value}", with: value)
+    }
+
+    /// Build an array declaration for dict fields containing arrays
+    func expandedArrayDecl(name: String, arr: ArrayLiteral) -> String {
+        if let short = T.varShort {
+            // Go style: name := []type{elements}
+            if !arr.elements.isEmpty {
+                let first = arr.elements[0]
+                let elemType: String
+                if let lit = first as? Literal, lit.value is String {
+                    elemType = T.stringType
+                } else {
+                    elemType = getTargetType(inferType(first))
+                }
+                let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+                return ind() + short
+                    .replacingOccurrences(of: "{name}", with: name)
+                    .replacingOccurrences(of: "{value}", with: "[]\(elemType){\(elements)}")
+            }
+            return ind() + short
+                .replacingOccurrences(of: "{name}", with: name)
+                .replacingOccurrences(of: "{value}", with: "[]int{}")
+        }
+        // C style: type name[] = {elements}
+        if !arr.elements.isEmpty {
+            let first = arr.elements[0]
+            let elemType: String
+            if let lit = first as? Literal, lit.value is String {
+                elemType = expandedStringType()
+            } else {
+                let jjType = inferType(first)
+                elemType = jjType == "Double" ? "double" : "int"
+            }
+            let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+            return ind() + "\(elemType) \(name)[] = {\(elements)};"
+        }
+        return ind() + "int \(name)[] = {};"
+    }
+
+    /// Format specifier for printf-style targets
+    func fmtSpecifier(_ type: String) -> String {
+        switch type {
+        case "str": return "%s"
+        case "double": return "%g"
+        default: return "%d"
+        }
+    }
+
+    /// Print template by resolved type
+    func printTemplateForType(_ type: String) -> String {
+        switch type {
+        case "str": return T.printStr
+        case "double": return T.printFloat
+        default: return T.printInt
+        }
+    }
+
     func stripOuterParens(_ s: String) -> String {
         if s.hasPrefix("(") && s.hasSuffix(")") {
             return String(s.dropFirst().dropLast())
@@ -127,11 +214,11 @@ public class CFamilyTranspiler {
         if let varRef = e as? VarRef {
             // Enum variable - print name via names array
             if let enumName = enumVarTypes[varRef.name] {
-                return ind() + "printf(\"%s\\n\", \(enumName)_names[\(varRef.name)]);"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\(enumName)_names[\(varRef.name)]")
             }
             // Full enum - print dict representation
             if enums.contains(varRef.name) {
-                return ind() + "printf(\"%s\\n\", \"\(enumDictString(varRef.name))\");"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"\(enumDictString(varRef.name))\"")
             }
             // Whole array
             if arrayVars.contains(varRef.name) {
@@ -140,25 +227,39 @@ public class CFamilyTranspiler {
             if doubleVars.contains(varRef.name) {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
+            // Whole dict
+            if dictVars.contains(varRef.name) {
+                if let fields = dictFields[varRef.name], fields.isEmpty {
+                    return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"{}\"")
+                }
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"\(varRef.name)\"")
+            }
+            // Whole tuple
+            if tupleVars.contains(varRef.name) {
+                return printWholeTuple(varRef.name)
+            }
         }
         if let idx = e as? IndexAccess {
             // Enum access - print case name as string
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
                 if let lit = idx.index as? Literal, let strVal = lit.value as? String {
-                    return ind() + "printf(\"%s\\n\", \"\(strVal)\");"
+                    return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"\(strVal)\"")
                 }
             }
             // Array element access
             if let varRef = idx.array as? VarRef, let meta = arrayMeta[varRef.name], !meta.isNested {
-                let fmt = meta.elemType == "str" ? "%s" : (meta.elemType == "double" ? "%g" : "%d")
-                return ind() + "printf(\"\(fmt)\\n\", \(expr(e)));"
+                return ind() + printTemplateForType(meta.elemType).replacingOccurrences(of: "{expr}", with: expr(e))
             }
             // Nested array element: matrix[0][1]
             if let innerIdx = idx.array as? IndexAccess,
                let varRef = innerIdx.array as? VarRef,
                let meta = arrayMeta[varRef.name], meta.isNested {
-                let fmt = meta.innerElemType == "str" ? "%s" : (meta.innerElemType == "double" ? "%g" : "%d")
-                return ind() + "printf(\"\(fmt)\\n\", \(expr(e)));"
+                return ind() + printTemplateForType(meta.innerElemType).replacingOccurrences(of: "{expr}", with: expr(e))
+            }
+            // Dict or tuple access
+            if let resolved = resolveAccess(idx) {
+                let (cVar, typ) = resolved
+                return ind() + printTemplateForType(typ).replacingOccurrences(of: "{expr}", with: cVar)
             }
         }
         if isFloatExpr(e) {
@@ -196,6 +297,21 @@ public class CFamilyTranspiler {
         lines.append(ind() + "}")
         lines.append(ind() + "printf(\"]\\n\");")
         return lines.joined(separator: "\n")
+    }
+
+    func printWholeTuple(_ name: String) -> String {
+        guard let fields = tupleFields[name], !fields.isEmpty else {
+            return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"()\"")
+        }
+        var partsFmt: [String] = []
+        var partsArgs: [String] = []
+        for (cVar, typ) in fields {
+            partsFmt.append(fmtSpecifier(typ))
+            partsArgs.append(cVar)
+        }
+        let fmt = "(" + partsFmt.joined(separator: ", ") + ")\\n"
+        let args = partsArgs.joined(separator: ", ")
+        return ind() + "printf(\"\(fmt)\", \(args));"
     }
 
     func varDeclToString(_ node: VarDecl) -> String {
@@ -259,21 +375,65 @@ public class CFamilyTranspiler {
     }
 
     func varTupleToString(_ node: VarDecl, _ tuple: TupleLiteral) -> String {
-        if let firstElem = tuple.elements.first {
-            let elemType: String
-            if let lit = firstElem as? Literal, lit.value is String {
-                elemType = T.stringType
-            } else {
-                elemType = getTargetType(inferType(firstElem))
-            }
-            let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
-            return ind() + "\(elemType) \(node.name)[] = {\(elements)};"
+        var lines: [String] = []
+        tupleFields[node.name] = []
+        if tuple.elements.isEmpty {
+            return ind() + "// empty tuple \(node.name)"
         }
-        return ind() + "int \(node.name)[] = {};"
+        for (i, e) in tuple.elements.enumerated() {
+            let varName = "\(node.name)_\(i)"
+            if let lit = e as? Literal {
+                if let strVal = lit.value as? String {
+                    lines.append(expandedVarDecl(name: varName, targetType: expandedStringType(), value: "\"\(strVal)\""))
+                    tupleFields[node.name]?.append((varName, "str"))
+                } else if let boolVal = lit.value as? Bool {
+                    lines.append(expandedVarDecl(name: varName, targetType: boolExpandType(), value: boolExpandValue(boolVal)))
+                    tupleFields[node.name]?.append((varName, T.expandBoolAsInt ? "int" : "bool"))
+                } else if let intVal = lit.value as? Int {
+                    lines.append(expandedVarDecl(name: varName, targetType: getTargetType("Int"), value: "\(intVal)"))
+                    tupleFields[node.name]?.append((varName, "int"))
+                } else if let doubleVal = lit.value as? Double {
+                    lines.append(expandedVarDecl(name: varName, targetType: getTargetType("Double"), value: "\(doubleVal)"))
+                    tupleFields[node.name]?.append((varName, "double"))
+                }
+            } else {
+                lines.append(expandedVarDecl(name: varName, targetType: getTargetType("Int"), value: expr(e)))
+                tupleFields[node.name]?.append((varName, "int"))
+            }
+        }
+        return lines.joined(separator: "\n")
     }
 
     func varDictToString(_ node: VarDecl) -> String {
-        return ind() + "// dict \(node.name) not supported in C"
+        guard let dict = node.value as? DictLiteral else { return "" }
+        var lines: [String] = []
+        dictFields[node.name] = [:]
+        if dict.pairs.isEmpty {
+            return ind() + "// empty dict \(node.name)"
+        }
+        for (k, v) in dict.pairs {
+            guard let kLit = k as? Literal, let key = kLit.value as? String else { continue }
+            let varName = "\(node.name)_\(key)"
+            if let vLit = v as? Literal {
+                if let strVal = vLit.value as? String {
+                    lines.append(expandedVarDecl(name: varName, targetType: expandedStringType(), value: "\"\(strVal)\""))
+                    dictFields[node.name, default: [:]][key] = (varName, "str")
+                } else if let boolVal = vLit.value as? Bool {
+                    lines.append(expandedVarDecl(name: varName, targetType: boolExpandType(), value: boolExpandValue(boolVal)))
+                    dictFields[node.name, default: [:]][key] = (varName, T.expandBoolAsInt ? "int" : "bool")
+                } else if let intVal = vLit.value as? Int {
+                    lines.append(expandedVarDecl(name: varName, targetType: getTargetType("Int"), value: "\(intVal)"))
+                    dictFields[node.name, default: [:]][key] = (varName, "int")
+                } else if let doubleVal = vLit.value as? Double {
+                    lines.append(expandedVarDecl(name: varName, targetType: getTargetType("Double"), value: "\(doubleVal)"))
+                    dictFields[node.name, default: [:]][key] = (varName, "double")
+                }
+            } else if let arrVal = v as? ArrayLiteral {
+                lines.append(expandedArrayDecl(name: varName, arr: arrVal))
+                dictFields[node.name, default: [:]][key] = (varName, "array")
+            }
+        }
+        return lines.joined(separator: "\n")
     }
 
     func loopToString(_ node: LoopStmt) -> String {

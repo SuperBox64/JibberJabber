@@ -25,6 +25,7 @@
   "floatMod": "fmod({left}, {right})",
   "enum": "enum {name} { {cases} };",
   "collectionStyle": "expand",
+  "expandBoolAsInt": true,
   "compile": ["clang", "{src}", "-o", "{out}"],
   "types": {
     "Int": "int",

@@ -25,6 +25,8 @@
   "floatMod": "fmod({left}, {right})",
   "enum": "typedef NS_ENUM(NSInteger, {name}) { {cases} };",
   "collectionStyle": "foundation",
+  "expandBoolAsInt": true,
+  "expandStringType": "const char*",
   "compile": ["clang", "-framework", "Foundation", "{src}", "-o", "{out}"],
   "types": {
     "Int": "NSInteger",

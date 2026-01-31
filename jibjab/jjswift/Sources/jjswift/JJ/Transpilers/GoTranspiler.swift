@@ -111,84 +111,6 @@ public class GoTranspiler: CFamilyTranspiler {
         return ind() + "\(node.name) := []int{}"
     }
 
-    override func varDictToString(_ node: VarDecl) -> String {
-        guard let dict = node.value as? DictLiteral else { return "" }
-        var lines: [String] = []
-        dictFields[node.name] = [:]
-        if dict.pairs.isEmpty {
-            return ind() + "// empty dict \(node.name)"
-        }
-        for (k, v) in dict.pairs {
-            if let kLit = k as? Literal, let key = kLit.value as? String {
-                let goVar = "\(node.name)_\(key)"
-                if let vLit = v as? Literal {
-                    if let strVal = vLit.value as? String {
-                        lines.append(ind() + "\(goVar) := \"\(strVal)\"")
-                        dictFields[node.name, default: [:]][key] = (goVar, "str")
-                    } else if let boolVal = vLit.value as? Bool {
-                        let val = boolVal ? "true" : "false"
-                        lines.append(ind() + "\(goVar) := \(val)")
-                        dictFields[node.name, default: [:]][key] = (goVar, "bool")
-                    } else if let intVal = vLit.value as? Int {
-                        lines.append(ind() + "\(goVar) := \(intVal)")
-                        dictFields[node.name, default: [:]][key] = (goVar, "int")
-                    } else if let doubleVal = vLit.value as? Double {
-                        lines.append(ind() + "\(goVar) := \(doubleVal)")
-                        dictFields[node.name, default: [:]][key] = (goVar, "double")
-                    }
-                } else if let arrVal = v as? ArrayLiteral {
-                    if !arrVal.elements.isEmpty {
-                        let first = arrVal.elements[0]
-                        let elemType: String
-                        if let lit = first as? Literal, lit.value is String {
-                            elemType = T.stringType
-                        } else {
-                            elemType = getTargetType(inferType(first))
-                        }
-                        let elements = arrVal.elements.map { expr($0) }.joined(separator: ", ")
-                        lines.append(ind() + "\(goVar) := []\(elemType){\(elements)}")
-                        dictFields[node.name, default: [:]][key] = (goVar, "array")
-                    } else {
-                        lines.append(ind() + "\(goVar) := []int{}")
-                        dictFields[node.name, default: [:]][key] = (goVar, "array")
-                    }
-                }
-            }
-        }
-        return lines.joined(separator: "\n")
-    }
-
-    override func varTupleToString(_ node: VarDecl, _ tuple: TupleLiteral) -> String {
-        var lines: [String] = []
-        tupleFields[node.name] = []
-        if tuple.elements.isEmpty {
-            return ind() + "// empty tuple \(node.name)"
-        }
-        for (i, e) in tuple.elements.enumerated() {
-            let goVar = "\(node.name)_\(i)"
-            if let lit = e as? Literal {
-                if let strVal = lit.value as? String {
-                    lines.append(ind() + "\(goVar) := \"\(strVal)\"")
-                    tupleFields[node.name]?.append((goVar, "str"))
-                } else if let boolVal = lit.value as? Bool {
-                    let val = boolVal ? "true" : "false"
-                    lines.append(ind() + "\(goVar) := \(val)")
-                    tupleFields[node.name]?.append((goVar, "bool"))
-                } else if let intVal = lit.value as? Int {
-                    lines.append(ind() + "\(goVar) := \(intVal)")
-                    tupleFields[node.name]?.append((goVar, "int"))
-                } else if let doubleVal = lit.value as? Double {
-                    lines.append(ind() + "\(goVar) := \(doubleVal)")
-                    tupleFields[node.name]?.append((goVar, "double"))
-                }
-            } else {
-                lines.append(ind() + "\(goVar) := \(expr(e))")
-                tupleFields[node.name]?.append((goVar, "int"))
-            }
-        }
-        return lines.joined(separator: "\n")
-    }
-
     override func printStmtToString(_ node: PrintStmt) -> String {
         let e = node.expr
         if let lit = e as? Literal, lit.value is String {
@@ -238,7 +160,7 @@ public class GoTranspiler: CFamilyTranspiler {
         return ind() + "fmt.Println(\(expr(e)))"
     }
 
-    func printWholeTuple(_ name: String) -> String {
+    override func printWholeTuple(_ name: String) -> String {
         guard let fields = tupleFields[name], !fields.isEmpty else {
             return ind() + "fmt.Println(\"()\")"
         }
