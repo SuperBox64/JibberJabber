@@ -55,8 +55,22 @@ struct HighlightedTextView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
-        scrollView.rulersVisible = showLineNumbers
-        scrollView.verticalRulerView?.needsDisplay = true
+        if scrollView.rulersVisible != showLineNumbers {
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.3
+                ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                if let ruler = scrollView.verticalRulerView {
+                    let targetWidth: CGFloat = showLineNumbers ? ruler.requiredThickness : 0
+                    ruler.animator().frame.size.width = targetWidth
+                }
+            } completionHandler: {
+                scrollView.rulersVisible = self.showLineNumbers
+                scrollView.verticalRulerView?.needsDisplay = true
+            }
+            if showLineNumbers {
+                scrollView.rulersVisible = true
+            }
+        }
 
         // Update language if tab changed
         context.coordinator.updateLanguage(language)

@@ -56,8 +56,22 @@ struct CodeEditor: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
-        scrollView.rulersVisible = showLineNumbers
-        scrollView.verticalRulerView?.needsDisplay = true
+        if scrollView.rulersVisible != showLineNumbers {
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.3
+                ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                if let ruler = scrollView.verticalRulerView {
+                    let targetWidth: CGFloat = showLineNumbers ? ruler.requiredThickness : 0
+                    ruler.animator().frame.size.width = targetWidth
+                }
+            } completionHandler: {
+                scrollView.rulersVisible = self.showLineNumbers
+                scrollView.verticalRulerView?.needsDisplay = true
+            }
+            if showLineNumbers {
+                scrollView.rulersVisible = true
+            }
+        }
         if textView.string != text {
             let sel = textView.selectedRange()
             textView.string = text
@@ -211,9 +225,7 @@ struct EditorTabView: View {
             // Bottom bar with line numbers toggle + style picker
             HStack(spacing: 0) {
                 Button(action: {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        showLineNumbers.toggle()
-                    }
+                    showLineNumbers.toggle()
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: showLineNumbers ? "number.square.fill" : "number.square")
