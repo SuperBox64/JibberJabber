@@ -7,6 +7,7 @@
 #
 # Filters (mix and match any combination):
 #   base               = run, compile, asm
+#   match              = jjpy vs jjswift runtime output comparison
 #   <target>            = build + exec for that target
 #                         (py js c cpp swift objc objcpp go)
 #   (no filters)        = everything
@@ -14,6 +15,7 @@
 # Examples:
 #        ./regression.sh -vg go             (go only)
 #        ./regression.sh -vg base           (run, compile, asm only)
+#        ./regression.sh -vg match          (cross-impl comparison only)
 #        ./regression.sh -vg base go        (run, compile, asm, go)
 #        ./regression.sh -vg c go swift     (c, go, swift)
 set -o pipefail
@@ -83,11 +85,14 @@ for impl in jjpy jjswift; do
         if [ "$VERBOSE" -eq 1 ]; then
             ep=0; ef=0
             for f in "$RD/${impl}_${ex}_"*; do
+                [ -f "$f" ] || continue
                 v=$(cat "$f")
                 [ "$v" = "P" ] && ep=$((ep+1))
                 [ "$v" = "F" ] && ef=$((ef+1))
             done
-            if [ "$ef" -eq 0 ]; then
+            if [ "$ep" -eq 0 ] && [ "$ef" -eq 0 ]; then
+                :  # no tests ran for this example
+            elif [ "$ef" -eq 0 ]; then
                 echo "  $ex: $ep/$ep PASS"
             else
                 echo "  $ex: $ep passed, $ef FAILED"
@@ -96,6 +101,28 @@ for impl in jjpy jjswift; do
     done
     [ "$VERBOSE" -eq 1 ] && echo ""
 done
+
+# Cross-implementation comparison: jjpy run vs jjswift run
+if in_filters "base" || in_filters "match"; then
+    JJPY_DIR="$SCRIPT_DIR/jibjab/jjpy"
+    JJSWIFT_DIR="$SCRIPT_DIR/jibjab/jjswift"
+    JJSWIFT="$JJSWIFT_DIR/.build/debug/jjswift"
+    [ "$VERBOSE" -eq 1 ] && echo "[jjpy vs jjswift]"
+    for ex in numbers fizzbuzz fibonacci variables enums dictionaries tuples arrays comparisons hello; do
+        py_out=$(cd "$JJPY_DIR" && python3 jj.py run "../examples/$ex.jj" 2>&1)
+        sw_out=$(cd "$JJSWIFT_DIR" && "$JJSWIFT" run "../examples/$ex.jj" 2>&1)
+        if [ "$py_out" = "$sw_out" ]; then
+            echo "P" > "$RD/match_${ex}"
+            TOTAL_P=$((TOTAL_P + 1))
+            [ "$VERBOSE" -eq 1 ] && echo "  $ex: MATCH"
+        else
+            echo "F" > "$RD/match_${ex}"
+            TOTAL_F=$((TOTAL_F + 1))
+            [ "$VERBOSE" -eq 1 ] && echo "  $ex: MISMATCH"
+        fi
+    done
+    [ "$VERBOSE" -eq 1 ] && echo ""
+fi
 
 echo "TOTAL: $TOTAL_P passed, $TOTAL_F failed"
 
@@ -131,6 +158,17 @@ if [ "$DOGRID" -eq 1 ]; then
         done
         echo ""
     done
+
+    # Cross-implementation match grid
+    echo "[jjpy vs jjswift runtime match]"
+    echo "              match"
+    echo "              -----"
+    for ex in numbers fizzbuzz fibonacci variables enums dictionaries tuples arrays comparisons hello; do
+        pad="$(printf '%-13s' "$ex")"
+        echo "$pad $(sym "match_${ex}")"
+    done
+    echo ""
+
     echo "TOTAL: $TOTAL_P passed, $TOTAL_F failed"
     } > "$GRID"
 
