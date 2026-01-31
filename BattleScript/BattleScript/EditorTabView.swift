@@ -211,7 +211,7 @@ struct EditorTabView: View {
             // Bottom bar with line numbers toggle + style picker
             HStack(spacing: 0) {
                 Button(action: {
-                    withAnimation(.easeInOut(duration: 0.25)) {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                         showLineNumbers.toggle()
                     }
                 }) {
