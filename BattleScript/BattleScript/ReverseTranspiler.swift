@@ -113,31 +113,32 @@ private func indent(_ level: Int) -> String {
 // MARK: - Python Reverse Transpiler
 
 class PythonReverseTranspiler: ReverseTranspiling {
-    private let pyTarget = loadTarget("py")
+    private let target = loadTarget("py")
 
-    private static let printRegex = try? NSRegularExpression(pattern: "^(\\s*)print\\((.+)\\)$")
-    private static let varRegex = try? NSRegularExpression(pattern: "^(\\s*)([a-zA-Z_][a-zA-Z0-9_]*)\\s*=\\s*(.+)$")
-    private static let forRegex = try? NSRegularExpression(pattern: "^(\\s*)for\\s+(\\w+)\\s+in\\s+range\\((\\d+),\\s*(\\d+)\\):$")
-    private static let ifRegex = try? NSRegularExpression(pattern: "^(\\s*)if\\s+(.+):$")
-    private static let elseRegex = try? NSRegularExpression(pattern: "^(\\s*)else:$")
-    private static let defRegex = try? NSRegularExpression(pattern: "^(\\s*)def\\s+(\\w+)\\(([^)]*)\\):$")
-    private static let returnRegex = try? NSRegularExpression(pattern: "^(\\s*)return\\s+(.+)$")
-    private static let commentRegex = try? NSRegularExpression(pattern: "^(\\s*)#\\s*(.*)$")
+    private static let pyTarget = loadTarget("py")
+    private static let printRegex = ReversePatterns.printPattern(pyTarget)
+    private static let varRegex = ReversePatterns.varPattern(pyTarget)
+    private static let forRegex = ReversePatterns.forPattern(pyTarget)
+    private static let ifRegex = ReversePatterns.ifPattern(pyTarget)
+    private static let elseRegex = ReversePatterns.elsePattern(pyTarget)
+    private static let defRegex = ReversePatterns.funcPattern(pyTarget)
+    private static let returnRegex = ReversePatterns.returnPattern(pyTarget)
+    private static let commentRegex = ReversePatterns.commentPattern(pyTarget)
 
-    private static let printBoolRegex = try? NSRegularExpression(
-        pattern: #"^(\s*)print\(str\((\w+)\)\.lower\(\)\)$"#
-    )
-    private static let fstringBoolRegex = try? NSRegularExpression(
-        pattern: #"\{str\((\w+)\)\.lower\(\)\}"#
-    )
+    private static let printBoolRegex = ReversePatterns.pythonPrintBoolPattern(pyTarget)
+    private static let fstringBoolRegex = ReversePatterns.pythonFStringBoolPattern(pyTarget)
 
     func reverseTranspile(_ code: String) -> String? {
         var lines = code.components(separatedBy: "\n")
 
-        // Strip header
+        // Strip header using config
+        let headerPats = ReversePatterns.headerPatterns(target)
         lines = lines.filter { line in
-            !line.hasPrefix("#!/usr/bin/env python3") &&
-            !line.hasPrefix("# Transpiled from JibJab")
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            for pattern in headerPats {
+                if trimmed.hasPrefix(pattern) || trimmed == pattern { return false }
+            }
+            return true
         }
 
         // Pre-process: simplify bool patterns
@@ -161,12 +162,13 @@ class PythonReverseTranspiler: ReverseTranspiling {
 
         // Replace Python-specific booleans/operators using target config
         var text = lines.joined(separator: "\n")
-        text = replaceOutsideStrings(text, pyTarget.true, JJ.keywords.true)
-        text = replaceOutsideStrings(text, pyTarget.false, JJ.keywords.false)
-        text = replaceOutsideStrings(text, pyTarget.nil, JJ.keywords.nil)
-        text = replaceOutsideStrings(text, " \(pyTarget.and) ", " \(JJ.operators.and.symbol) ")
-        text = replaceOutsideStrings(text, " \(pyTarget.or) ", " \(JJ.operators.or.symbol) ")
-        text = replaceOutsideStrings(text, pyTarget.not, JJ.operators.not.symbol + " ")
+        text = replaceOutsideStrings(text, target.true, JJ.keywords.true)
+        text = replaceOutsideStrings(text, target.false, JJ.keywords.false)
+        text = replaceOutsideStrings(text, target.nil, JJ.keywords.nil)
+        // Replace operators from config
+        for (find, replace) in ReversePatterns.operatorReplacements(target) {
+            text = replaceOutsideStrings(text, find, replace)
+        }
         lines = text.components(separatedBy: "\n")
 
         var result: [String] = []
@@ -190,41 +192,43 @@ class PythonReverseTranspiler: ReverseTranspiling {
             let range = NSRange(location: 0, length: nsLine.length)
 
             if let m = Self.commentRegex?.firstMatch(in: trimmed, range: range) {
-                let comment = nsLine.substring(with: m.range(at: 2))
+                let comment = nsLine.substring(with: m.range(at: 1))
                 result.append("\(indent(indentLevel))\(JJEmit.comment) \(comment)")
             } else if let m = Self.defRegex?.firstMatch(in: trimmed, range: range) {
-                let name = nsLine.substring(with: m.range(at: 2))
-                let params = nsLine.substring(with: m.range(at: 3))
+                let name = nsLine.substring(with: m.range(at: 1))
+                let params = nsLine.substring(with: m.range(at: 2))
                 result.append("\(indent(indentLevel))\(JJEmit.morph(name, params))")
                 indentLevel += 1
             } else if let m = Self.forRegex?.firstMatch(in: trimmed, range: range) {
-                let v = nsLine.substring(with: m.range(at: 2))
-                let start = nsLine.substring(with: m.range(at: 3))
-                let end = nsLine.substring(with: m.range(at: 4))
+                let v = nsLine.substring(with: m.range(at: 1))
+                let start = nsLine.substring(with: m.range(at: 2))
+                let end = nsLine.substring(with: m.range(at: 3))
                 result.append("\(indent(indentLevel))\(JJEmit.loop(v, start, end))")
                 indentLevel += 1
             } else if let m = Self.ifRegex?.firstMatch(in: trimmed, range: range) {
-                let cond = reverseExpr(nsLine.substring(with: m.range(at: 2)))
+                let cond = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(indent(indentLevel))\(JJEmit.when(cond))")
                 indentLevel += 1
             } else if Self.elseRegex?.firstMatch(in: trimmed, range: range) != nil {
                 result.append("\(indent(indentLevel))\(JJEmit.else)")
                 indentLevel += 1
             } else if let m = Self.returnRegex?.firstMatch(in: trimmed, range: range) {
-                let val = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, style: .python)))")
+                let val = reverseExpr(nsLine.substring(with: m.range(at: 1)))
+                result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, target: target)))")
             } else if let m = Self.printRegex?.firstMatch(in: trimmed, range: range) {
-                let expr = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, style: .python)))")
+                let expr = reverseExpr(nsLine.substring(with: m.range(at: 1)))
+                result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, target: target)))")
             } else if let m = Self.varRegex?.firstMatch(in: trimmed, range: range) {
-                let name = nsLine.substring(with: m.range(at: 2))
+                let name = nsLine.substring(with: m.range(at: 1))
                 // Skip if the name is a known keyword
-                if ["for", "if", "else", "def", "return", "print", "while"].contains(name) { continue }
-                let val = reverseExpr(nsLine.substring(with: m.range(at: 3)))
-                result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(val, style: .python)))")
+                let known = ReversePatterns.knownFunctions(target)
+                let pyKeywords: Set<String> = ["for", "if", "else", "def", "return", "while"]
+                if known.contains(name) || pyKeywords.contains(name) { continue }
+                let val = reverseExpr(nsLine.substring(with: m.range(at: 2)))
+                result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(val, target: target)))")
             } else {
                 // Try to reverse standalone function calls
-                let reversed = reverseFuncCalls(trimmed, style: .python)
+                let reversed = reverseFuncCalls(trimmed, target: target)
                 result.append("\(indent(indentLevel))\(reversed)")
             }
         }
@@ -244,20 +248,21 @@ class PythonReverseTranspiler: ReverseTranspiling {
 
 enum CallStyle {
     case python, cFamily, swift, go, javascript, applescript
+
+    init(from name: String) {
+        switch name {
+        case "python": self = .python
+        case "swift": self = .swift
+        case "go": self = .go
+        case "javascript": self = .javascript
+        case "applescript": self = .applescript
+        default: self = .cFamily
+        }
+    }
 }
 
-private func reverseFuncCalls(_ expr: String, style: CallStyle) -> String {
-    // Match function calls: name(args)
-    // But skip known language functions (print, printf, console.log, fmt.Println)
-    let knownFuncs: Set<String>
-    switch style {
-    case .python: knownFuncs = ["print", "range", "len", "int", "float", "str"]
-    case .cFamily: knownFuncs = ["printf", "main", "scanf", "malloc", "free", "NSLog"]
-    case .swift: knownFuncs = ["print", "Int", "String", "Double"]
-    case .go: knownFuncs = ["main"]
-    case .javascript: knownFuncs = ["console"]
-    case .applescript: knownFuncs = ["log", "display"]
-    }
+private func reverseFuncCalls(_ expr: String, target: TargetConfig) -> String {
+    let knownFuncs = ReversePatterns.knownFunctions(target)
 
     guard let pattern = try? NSRegularExpression(pattern: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\(([^)]*)\\)") else { return expr }
     let nsExpr = expr as NSString
@@ -299,6 +304,7 @@ private func replaceOutsideStrings(_ text: String, _ find: String, _ replace: St
 
 class BraceReverseTranspiler: ReverseTranspiling {
     struct Config {
+        var target: TargetConfig
         var headerPatterns: [String] = []
         var hasMainWrapper: Bool = false
         var mainPattern: String = "int main()"
@@ -349,6 +355,10 @@ class BraceReverseTranspiler: ReverseTranspiling {
         text = replaceOutsideStrings(text, config.falseValue, JJ.keywords.false)
         if config.nilValue != "0" {
             text = replaceOutsideStrings(text, config.nilValue, JJ.keywords.nil)
+        }
+        // Replace target-specific operators
+        for (find, replace) in ReversePatterns.operatorReplacements(config.target) {
+            text = replaceOutsideStrings(text, find, replace)
         }
         lines = text.components(separatedBy: "\n")
 
@@ -435,7 +445,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
                 var val = nsLine.substring(with: m.range(at: 1))
                 if val.hasSuffix(";") { val = String(val.dropLast()) }
                 val = reverseExpr(val)
-                result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, style: config.callStyle)))")
+                result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, target: config.target)))")
                 continue
             }
 
@@ -453,24 +463,42 @@ class BraceReverseTranspiler: ReverseTranspiling {
                     continue
                 }
                 let expr = reverseExpr(captured)
-                result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, style: config.callStyle)))")
+                result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, target: config.target)))")
                 continue
             }
 
             // Variable declaration
             if let m = config.varPattern?.firstMatch(in: trimmed, range: range) {
-                let name = nsLine.substring(with: m.range(at: 1))
-                var val = nsLine.substring(with: m.range(at: 2))
-                if val.hasSuffix(";") { val = String(val.dropLast()) }
-                val = reverseExpr(val)
-                result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(val, style: config.callStyle)))")
-                continue
+                // Find the first valid capture groups for name and value
+                var name: String?
+                var val: String?
+                for g in stride(from: 1, to: m.numberOfRanges, by: 2) {
+                    if m.range(at: g).location != NSNotFound && m.numberOfRanges > g + 1 && m.range(at: g + 1).location != NSNotFound {
+                        name = nsLine.substring(with: m.range(at: g))
+                        val = nsLine.substring(with: m.range(at: g + 1))
+                        break
+                    }
+                }
+                // Fallback to groups 1 and 2
+                if name == nil && m.range(at: 1).location != NSNotFound {
+                    name = nsLine.substring(with: m.range(at: 1))
+                    if m.numberOfRanges > 2 && m.range(at: 2).location != NSNotFound {
+                        val = nsLine.substring(with: m.range(at: 2))
+                    }
+                }
+                if let name = name, let val = val {
+                    var cleanVal = val
+                    if cleanVal.hasSuffix(";") { cleanVal = String(cleanVal.dropLast()) }
+                    cleanVal = reverseExpr(cleanVal)
+                    result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(cleanVal, target: config.target)))")
+                    continue
+                }
             }
 
             // Unrecognized - pass through as comment
             var cleaned = trimmed
             if cleaned.hasSuffix(";") { cleaned = String(cleaned.dropLast()) }
-            result.append("\(indent(indentLevel))\(reverseFuncCalls(reverseExpr(cleaned), style: config.callStyle))")
+            result.append("\(indent(indentLevel))\(reverseFuncCalls(reverseExpr(cleaned), target: config.target))")
         }
 
         // Close remaining blocks
@@ -522,9 +550,20 @@ class CFamilyPrintfReverseTranspiler: BraceReverseTranspiler {
         pattern: #"^(\s*)printf\("(.+)\\n"(?:,\s*(.+))?\);$"#
     )
 
-    private static let boolTernaryPrintf = try? NSRegularExpression(
-        pattern: #"^(\s*)printf\("%s\\n",\s*(\w+)\s*\?\s*"true"\s*:\s*"false"\);$"#
-    )
+    let printfTarget: TargetConfig
+
+    init(config: Config, printfTarget: TargetConfig) {
+        self.printfTarget = printfTarget
+        super.init(config: config)
+    }
+
+    private lazy var boolTernaryPrintf: NSRegularExpression? = {
+        ReversePatterns.printfBoolTernaryPattern(printfTarget)
+    }()
+
+    private lazy var inlineBoolTernary: NSRegularExpression? = {
+        ReversePatterns.inlineBoolTernaryPattern()
+    }()
 
     override func reverseTranspile(_ code: String) -> String? {
         var lines = code.components(separatedBy: "\n")
@@ -535,7 +574,7 @@ class CFamilyPrintfReverseTranspiler: BraceReverseTranspiler {
             let range = NSRange(location: 0, length: ns.length)
 
             // Bool ternary: printf("%s\n", x ? "true" : "false"); → printf("%d\n", x);
-            if let m = Self.boolTernaryPrintf?.firstMatch(in: trimmed, range: range) {
+            if let m = boolTernaryPrintf?.firstMatch(in: trimmed, range: range) {
                 let varName = ns.substring(with: m.range(at: 2))
                 lines[i] = "\(leading)printf(\"%d\\n\", \(varName));"
                 continue
@@ -554,9 +593,8 @@ class CFamilyPrintfReverseTranspiler: BraceReverseTranspiler {
                             result = result.replacingCharacters(in: r, with: "{\(arg)}")
                         }
                     }
-                    // Strip ternary bool expressions: {x ? "true" : "false"} → {x}
-                    let boolTernary = try? NSRegularExpression(pattern: #"\{(\w+) \? "true" : "false"\}"#)
-                    if let bt = boolTernary {
+                    // Strip ternary bool expressions using config-derived pattern
+                    if let bt = inlineBoolTernary {
                         result = bt.stringByReplacingMatches(in: result, range: NSRange(result.startIndex..., in: result), withTemplate: "{$1}")
                     }
                     lines[i] = "\(leading)printf(\"%s\\n\", \"\(result)\");"
@@ -592,40 +630,51 @@ class CFamilyPrintfReverseTranspiler: BraceReverseTranspiler {
 
 class CReverseTranspiler: CFamilyPrintfReverseTranspiler {
     init() {
+        let target = loadTarget("c")
         super.init(config: Config(
-            headerPatterns: ["// Transpiled from JibJab", "#include"],
-            hasMainWrapper: true,
-            mainPattern: "int main()",
-            printPattern: try? NSRegularExpression(pattern: "^printf\\(\"%[dslf]\\\\n\",\\s*(.+)\\);$"),
-            varPattern: try? NSRegularExpression(pattern: "^(?:int|float|double|char|long|unsigned|short|auto)\\s+(\\w+)\\s*=\\s*(.+);$"),
-            forPattern: try? NSRegularExpression(pattern: "^for\\s*\\(int\\s+(\\w+)\\s*=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
-            ifPattern: try? NSRegularExpression(pattern: "^if\\s*\\((.+)\\)\\s*\\{$"),
-            funcPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double)\\s+(\\w+)\\(([^)]*)\\)\\s*\\{$"),
-            callStyle: .cFamily,
-            forwardDeclPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double)\\s+\\w+\\([^)]*\\);$"),
-            autoreleasepoolWrapper: false
-        ))
+            target: target,
+            headerPatterns: ReversePatterns.headerPatterns(target),
+            hasMainWrapper: target.main != nil,
+            mainPattern: ReversePatterns.mainSignature(target) ?? "int main()",
+            printPattern: ReversePatterns.printPattern(target),
+            varPattern: ReversePatterns.varPattern(target),
+            forPattern: ReversePatterns.forPattern(target),
+            ifPattern: ReversePatterns.ifPattern(target),
+            funcPattern: ReversePatterns.funcPattern(target),
+            commentPrefix: ReversePatterns.commentPrefix(target),
+            trueValue: target.true,
+            falseValue: target.false,
+            nilValue: target.nil,
+            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
+            forwardDeclPattern: ReversePatterns.funcDeclPattern(target),
+            autoreleasepoolWrapper: target.main?.contains("@autoreleasepool") ?? false
+        ), printfTarget: target)
     }
 }
 
 class CppReverseTranspiler: CFamilyPrintfReverseTranspiler {
-    private static let coutBoolRegex = try? NSRegularExpression(
-        pattern: #"^(\s*)std::cout\s*<<\s*\((\w+)\s*\?\s*"true"\s*:\s*"false"\)\s*<<\s*std::endl;$"#
-    )
+    private static let cppTarget = loadTarget("cpp")
+    private static let coutBoolRegex = ReversePatterns.coutBoolTernaryPattern(cppTarget)
 
     init() {
+        let target = Self.cppTarget
         super.init(config: Config(
-            headerPatterns: ["// Transpiled from JibJab", "#include"],
-            hasMainWrapper: true,
-            mainPattern: "int main()",
-            printPattern: try? NSRegularExpression(pattern: "^std::cout\\s*<<\\s*(.+?)\\s*<<\\s*std::endl;$"),
-            varPattern: try? NSRegularExpression(pattern: "^(?:int|float|double|char|long|unsigned|auto|bool|string)\\s+(\\w+)\\s*=\\s*(.+);$"),
-            forPattern: try? NSRegularExpression(pattern: "^for\\s*\\(int\\s+(\\w+)\\s*=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
-            ifPattern: try? NSRegularExpression(pattern: "^if\\s*\\((.+)\\)\\s*\\{$"),
-            funcPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double|auto)\\s+(\\w+)\\(([^)]*)\\)\\s*\\{$"),
-            callStyle: .cFamily,
-            forwardDeclPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double|auto)\\s+\\w+\\([^)]*\\);$")
-        ))
+            target: target,
+            headerPatterns: ReversePatterns.headerPatterns(target),
+            hasMainWrapper: target.main != nil,
+            mainPattern: ReversePatterns.mainSignature(target) ?? "int main()",
+            printPattern: ReversePatterns.printPattern(target),
+            varPattern: ReversePatterns.varPattern(target),
+            forPattern: ReversePatterns.forPattern(target),
+            ifPattern: ReversePatterns.ifPattern(target),
+            funcPattern: ReversePatterns.funcPattern(target),
+            commentPrefix: ReversePatterns.commentPrefix(target),
+            trueValue: target.true,
+            falseValue: target.false,
+            nilValue: target.nil,
+            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
+            forwardDeclPattern: ReversePatterns.funcDeclPattern(target)
+        ), printfTarget: target)
     }
 
     override func reverseTranspile(_ code: String) -> String? {
@@ -649,53 +698,66 @@ class JavaScriptReverseTranspiler: BraceReverseTranspiler {
     init() {
         let target = loadTarget("js")
         super.init(config: Config(
-            headerPatterns: ["// Transpiled from JibJab"],
+            target: target,
+            headerPatterns: ReversePatterns.headerPatterns(target),
             hasMainWrapper: false,
-            printPattern: try? NSRegularExpression(pattern: "^console\\.log\\((.+)\\);$"),
-            varPattern: try? NSRegularExpression(pattern: "^(?:let|const|var)\\s+(\\w+)\\s*=\\s*(.+);$"),
-            forPattern: try? NSRegularExpression(pattern: "^for\\s*\\(let\\s+(\\w+)\\s*=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
-            ifPattern: try? NSRegularExpression(pattern: "^if\\s*\\((.+)\\)\\s*\\{$"),
-            funcPattern: try? NSRegularExpression(pattern: "^function\\s+(\\w+)\\(([^)]*)\\)\\s*\\{$"),
+            printPattern: ReversePatterns.printPattern(target),
+            varPattern: ReversePatterns.varPattern(target),
+            forPattern: ReversePatterns.forPattern(target),
+            ifPattern: ReversePatterns.ifPattern(target),
+            funcPattern: ReversePatterns.funcPattern(target),
+            commentPrefix: ReversePatterns.commentPrefix(target),
             trueValue: target.true,
             falseValue: target.false,
             nilValue: target.nil,
-            callStyle: .javascript
+            callStyle: CallStyle(from: ReversePatterns.callStyle(target))
         ))
     }
 }
 
 class SwiftReverseTranspiler: BraceReverseTranspiler {
     init() {
+        let target = loadTarget("swift")
         super.init(config: Config(
-            headerPatterns: ["// Transpiled from JibJab"],
+            target: target,
+            headerPatterns: ReversePatterns.headerPatterns(target),
             hasMainWrapper: false,
-            printPattern: try? NSRegularExpression(pattern: "^print\\((.+)\\)$"),
-            varPattern: try? NSRegularExpression(pattern: "^var\\s+(\\w+)(?:\\s*:\\s*\\w+)?\\s*=\\s*(.+)$"),
-            forPattern: try? NSRegularExpression(pattern: "^for\\s+(\\w+)\\s+in\\s+(\\d+)\\.\\.<(\\d+)\\s*\\{$"),
-            ifPattern: try? NSRegularExpression(pattern: "^if\\s+(.+?)\\s*\\{$"),
-            funcPattern: try? NSRegularExpression(pattern: "^func\\s+(\\w+)\\(([^)]*)\\)(?:\\s*->\\s*\\w+)?\\s*\\{$"),
-            callStyle: .swift,
+            printPattern: ReversePatterns.printPattern(target),
+            varPattern: ReversePatterns.varPattern(target),
+            forPattern: ReversePatterns.forPattern(target),
+            ifPattern: ReversePatterns.ifPattern(target),
+            funcPattern: ReversePatterns.funcPattern(target),
+            commentPrefix: ReversePatterns.commentPrefix(target),
+            trueValue: target.true,
+            falseValue: target.false,
+            nilValue: target.nil,
+            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
             stripSemicolons: false
         ))
     }
 }
 
 class GoReverseTranspiler: BraceReverseTranspiler {
-    private static let printfRegex = try? NSRegularExpression(
-        pattern: #"^(\s*)fmt\.Printf\("(.+)\\n"(?:,\s*(.+))?\)$"#
-    )
+    private static let goTarget = loadTarget("go")
+    private static let printfRegex = ReversePatterns.goPrintfPattern()
 
     init() {
+        let target = Self.goTarget
         super.init(config: Config(
-            headerPatterns: ["// Transpiled from JibJab", "package main", "import"],
-            hasMainWrapper: true,
-            mainPattern: "func main()",
-            printPattern: try? NSRegularExpression(pattern: "^fmt\\.Println\\((.+)\\)$"),
-            varPattern: try? NSRegularExpression(pattern: "^(?:var\\s+)?(\\w+)\\s*:?=\\s*(.+)$"),
-            forPattern: try? NSRegularExpression(pattern: "^for\\s+(\\w+)\\s*:=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
-            ifPattern: try? NSRegularExpression(pattern: "^if\\s+(.+?)\\s*\\{$"),
-            funcPattern: try? NSRegularExpression(pattern: "^func\\s+(\\w+)\\(([^)]*)\\)(?:\\s*\\w+)?\\s*\\{$"),
-            callStyle: .go,
+            target: target,
+            headerPatterns: ReversePatterns.headerPatterns(target),
+            hasMainWrapper: target.main != nil,
+            mainPattern: ReversePatterns.mainSignature(target) ?? "func main()",
+            printPattern: ReversePatterns.printPattern(target),
+            varPattern: ReversePatterns.varPattern(target),
+            forPattern: ReversePatterns.forPattern(target),
+            ifPattern: ReversePatterns.ifPattern(target),
+            funcPattern: ReversePatterns.funcPattern(target),
+            commentPrefix: ReversePatterns.commentPrefix(target),
+            trueValue: target.true,
+            falseValue: target.false,
+            nilValue: target.nil,
+            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
             stripSemicolons: false
         ))
     }
@@ -747,43 +809,50 @@ class ObjCReverseTranspiler: CFamilyPrintfReverseTranspiler {
     init() {
         let target = loadTarget("objc")
         super.init(config: Config(
-            headerPatterns: ["// Transpiled from JibJab", "#import", "#include"],
-            hasMainWrapper: true,
-            mainPattern: "int main(",
-            printPattern: try? NSRegularExpression(pattern: "^printf\\(\"%[a-z]*\\\\n\",\\s*(?:\\(long\\))?(.+)\\);$"),
-            varPattern: try? NSRegularExpression(pattern: "^(?:NSInteger|int|float|double|long|BOOL|NSUInteger)\\s+(\\w+)\\s*=\\s*(.+);$"),
-            forPattern: try? NSRegularExpression(pattern: "^for\\s*\\(int\\s+(\\w+)\\s*=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
-            ifPattern: try? NSRegularExpression(pattern: "^if\\s*\\((.+)\\)\\s*\\{$"),
-            funcPattern: try? NSRegularExpression(pattern: "^(?:NSInteger|int|void|float|double)\\s+(\\w+)\\(([^)]*)\\)\\s*\\{$"),
+            target: target,
+            headerPatterns: ReversePatterns.headerPatterns(target),
+            hasMainWrapper: target.main != nil,
+            mainPattern: ReversePatterns.mainSignature(target) ?? "int main(",
+            printPattern: ReversePatterns.printPattern(target),
+            varPattern: ReversePatterns.varPattern(target),
+            forPattern: ReversePatterns.forPattern(target),
+            ifPattern: ReversePatterns.ifPattern(target),
+            funcPattern: ReversePatterns.funcPattern(target),
+            commentPrefix: ReversePatterns.commentPrefix(target),
             trueValue: target.true,
             falseValue: target.false,
             nilValue: target.nil,
-            callStyle: .cFamily,
-            forwardDeclPattern: try? NSRegularExpression(pattern: "^(?:NSInteger|int|void|float|double)\\s+\\w+\\([^)]*\\);$"),
-            autoreleasepoolWrapper: true
-        ))
+            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
+            forwardDeclPattern: ReversePatterns.funcDeclPattern(target),
+            autoreleasepoolWrapper: target.main?.contains("@autoreleasepool") ?? false
+        ), printfTarget: target)
     }
 }
 
 class ObjCppReverseTranspiler: CFamilyPrintfReverseTranspiler {
-    private static let coutBoolRegex = try? NSRegularExpression(
-        pattern: #"^(\s*)std::cout\s*<<\s*\((\w+)\s*\?\s*"true"\s*:\s*"false"\)\s*<<\s*std::endl;$"#
-    )
+    private static let objcppTarget = loadTarget("objcpp")
+    private static let coutBoolRegex = ReversePatterns.coutBoolTernaryPattern(objcppTarget)
 
     init() {
+        let target = Self.objcppTarget
         super.init(config: Config(
-            headerPatterns: ["// Transpiled from JibJab", "#import", "#include"],
-            hasMainWrapper: true,
-            mainPattern: "int main(",
-            printPattern: try? NSRegularExpression(pattern: "^(?:printf\\(\"%[a-z]*\\\\n\",\\s*(?:\\(long\\))?(.+)\\)|std::cout\\s*<<\\s*(.+?)\\s*<<\\s*std::endl);$"),
-            varPattern: try? NSRegularExpression(pattern: "^(?:int|float|double|auto|bool|long)\\s+(\\w+)\\s*=\\s*(.+);$"),
-            forPattern: try? NSRegularExpression(pattern: "^for\\s*\\(int\\s+(\\w+)\\s*=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
-            ifPattern: try? NSRegularExpression(pattern: "^if\\s*\\((.+)\\)\\s*\\{$"),
-            funcPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double|auto)\\s+(\\w+)\\(([^)]*)\\)\\s*\\{$"),
-            callStyle: .cFamily,
-            forwardDeclPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double|auto)\\s+\\w+\\([^)]*\\);$"),
-            autoreleasepoolWrapper: true
-        ))
+            target: target,
+            headerPatterns: ReversePatterns.headerPatterns(target),
+            hasMainWrapper: target.main != nil,
+            mainPattern: ReversePatterns.mainSignature(target) ?? "int main(",
+            printPattern: ReversePatterns.dualPrintPattern(printf: target, cout: target),
+            varPattern: ReversePatterns.varPattern(target),
+            forPattern: ReversePatterns.forPattern(target),
+            ifPattern: ReversePatterns.ifPattern(target),
+            funcPattern: ReversePatterns.funcPattern(target),
+            commentPrefix: ReversePatterns.commentPrefix(target),
+            trueValue: target.true,
+            falseValue: target.false,
+            nilValue: target.nil,
+            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
+            forwardDeclPattern: ReversePatterns.funcDeclPattern(target),
+            autoreleasepoolWrapper: target.main?.contains("@autoreleasepool") ?? false
+        ), printfTarget: target)
     }
 
     override func reverseTranspile(_ code: String) -> String? {
@@ -803,27 +872,37 @@ class ObjCppReverseTranspiler: CFamilyPrintfReverseTranspiler {
 }
 
 class AppleScriptReverseTranspiler: ReverseTranspiling {
-    private let asTarget = loadTarget("applescript")
+    private let target = loadTarget("applescript")
 
-    private static let logRegex = try? NSRegularExpression(pattern: "^(\\s*)log\\s+(.+)$")
-    private static let setRegex = try? NSRegularExpression(pattern: "^(\\s*)set\\s+(\\w+)\\s+to\\s+(.+)$")
-    private static let repeatRegex = try? NSRegularExpression(pattern: "^(\\s*)repeat\\s+with\\s+(\\w+)\\s+from\\s+(\\d+)\\s+to\\s+\\((\\d+)\\s*-\\s*1\\)$")
-    private static let ifRegex = try? NSRegularExpression(pattern: "^(\\s*)if\\s+(.+?)\\s+then$")
-    private static let elseRegex = try? NSRegularExpression(pattern: "^(\\s*)else$")
-    private static let onRegex = try? NSRegularExpression(pattern: "^(\\s*)on\\s+(\\w+)\\(([^)]*)\\)$")
-    private static let returnRegex = try? NSRegularExpression(pattern: "^(\\s*)return\\s+(.+)$")
-    private static let endRegex = try? NSRegularExpression(pattern: "^(\\s*)end\\s*(\\w*)$")
-    private static let commentRegex = try? NSRegularExpression(pattern: "^(\\s*)--\\s*(.*)$")
+    private static let asTarget = loadTarget("applescript")
+    private static let logRegex = ReversePatterns.printPattern(asTarget)
+    private static let setRegex = ReversePatterns.varPattern(asTarget)
+    private static let repeatRegex = ReversePatterns.forPattern(asTarget)
+    private static let ifRegex = ReversePatterns.ifPattern(asTarget)
+    private static let elseRegex = ReversePatterns.elsePattern(asTarget)
+    private static let onRegex = ReversePatterns.funcPattern(asTarget)
+    private static let returnRegex = ReversePatterns.returnPattern(asTarget)
+    private static let endRegex = try? NSRegularExpression(pattern: "^end\\s*(\\w*)$")
+    private static let commentRegex = ReversePatterns.commentPattern(asTarget)
 
     func reverseTranspile(_ code: String) -> String? {
         var lines = code.components(separatedBy: "\n")
-        lines = lines.filter { !$0.hasPrefix("-- Transpiled from JibJab") }
 
-        // Replace AppleScript-specific operators using target config
+        // Strip header using config
+        let headerPats = ReversePatterns.headerPatterns(target)
+        lines = lines.filter { line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            for pattern in headerPats {
+                if trimmed.hasPrefix(pattern) || trimmed == pattern { return false }
+            }
+            return true
+        }
+
+        // Replace AppleScript-specific operators using config
         var text = lines.joined(separator: "\n")
-        text = replaceOutsideStrings(text, " \(asTarget.and) ", " \(JJ.operators.and.symbol) ")
-        text = replaceOutsideStrings(text, " \(asTarget.or) ", " \(JJ.operators.or.symbol) ")
-        text = replaceOutsideStrings(text, " \(asTarget.mod) ", " \(JJ.operators.mod.symbol) ")
+        for (find, replace) in ReversePatterns.operatorReplacements(target) {
+            text = replaceOutsideStrings(text, find, replace)
+        }
         lines = text.components(separatedBy: "\n")
 
         var result: [String] = []
@@ -837,41 +916,41 @@ class AppleScriptReverseTranspiler: ReverseTranspiling {
             let range = NSRange(location: 0, length: nsLine.length)
 
             if let m = Self.commentRegex?.firstMatch(in: trimmed, range: range) {
-                let comment = nsLine.substring(with: m.range(at: 2))
+                let comment = nsLine.substring(with: m.range(at: 1))
                 result.append("\(indent(indentLevel))\(JJEmit.comment) \(comment)")
             } else if Self.endRegex?.firstMatch(in: trimmed, range: range) != nil {
                 if indentLevel > 0 { indentLevel -= 1 }
                 result.append("\(indent(indentLevel))\(JJEmit.end)")
             } else if let m = Self.onRegex?.firstMatch(in: trimmed, range: range) {
-                let name = nsLine.substring(with: m.range(at: 2))
-                let params = nsLine.substring(with: m.range(at: 3))
+                let name = nsLine.substring(with: m.range(at: 1))
+                let params = nsLine.substring(with: m.range(at: 2))
                 result.append("\(indent(indentLevel))\(JJEmit.morph(name, params))")
                 indentLevel += 1
             } else if let m = Self.repeatRegex?.firstMatch(in: trimmed, range: range) {
-                let v = nsLine.substring(with: m.range(at: 2))
-                let start = nsLine.substring(with: m.range(at: 3))
-                let end = nsLine.substring(with: m.range(at: 4))
+                let v = nsLine.substring(with: m.range(at: 1))
+                let start = nsLine.substring(with: m.range(at: 2))
+                let end = nsLine.substring(with: m.range(at: 3))
                 result.append("\(indent(indentLevel))\(JJEmit.loop(v, start, end))")
                 indentLevel += 1
             } else if let m = Self.ifRegex?.firstMatch(in: trimmed, range: range) {
-                let cond = reverseExpr(nsLine.substring(with: m.range(at: 2)))
+                let cond = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(indent(indentLevel))\(JJEmit.when(cond))")
                 indentLevel += 1
             } else if Self.elseRegex?.firstMatch(in: trimmed, range: range) != nil {
                 result.append("\(indent(indentLevel))\(JJEmit.else)")
                 indentLevel += 1
             } else if let m = Self.returnRegex?.firstMatch(in: trimmed, range: range) {
-                let val = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, style: .applescript)))")
+                let val = reverseExpr(nsLine.substring(with: m.range(at: 1)))
+                result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, target: target)))")
             } else if let m = Self.logRegex?.firstMatch(in: trimmed, range: range) {
-                let expr = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, style: .applescript)))")
+                let expr = reverseExpr(nsLine.substring(with: m.range(at: 1)))
+                result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, target: target)))")
             } else if let m = Self.setRegex?.firstMatch(in: trimmed, range: range) {
-                let name = nsLine.substring(with: m.range(at: 2))
-                let val = reverseExpr(nsLine.substring(with: m.range(at: 3)))
-                result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(val, style: .applescript)))")
+                let name = nsLine.substring(with: m.range(at: 1))
+                let val = reverseExpr(nsLine.substring(with: m.range(at: 2)))
+                result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(val, target: target)))")
             } else {
-                result.append("\(indent(indentLevel))\(reverseFuncCalls(reverseExpr(trimmed), style: .applescript))")
+                result.append("\(indent(indentLevel))\(reverseFuncCalls(reverseExpr(trimmed), target: target))")
             }
         }
 
