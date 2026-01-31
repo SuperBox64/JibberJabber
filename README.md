@@ -215,7 +215,9 @@ Run `bash regression.sh -vg` for verbose output with grid, `-v` for verbose only
 
 BattleScript is a native macOS app that provides a visual IDE for JibJab. Write JJ code and instantly see it transpiled to all 10 target languages, then compile and run any target with one click.
 
-**Startup Checks** - On launch, BattleScript automatically verifies that required tools are installed (Xcode Command Line Tools, Go, QuickJS) and displays an animated status overlay. Missing tools are flagged with install instructions.
+<p align="center">
+  <img src="battlescript-ide-prerelease.png" width="700" alt="BattleScript IDE">
+</p>
 
 See [BattleScript/README.md](BattleScript/README.md) for details.
 
