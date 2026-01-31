@@ -11,7 +11,7 @@ protocol SyntaxHighlighting {
 
 class BaseSyntaxHighlighter: SyntaxHighlighting {
     let font = SyntaxTheme.font
-    let defaultColor = SyntaxTheme.defaultText
+    var defaultColor: NSColor { SyntaxTheme.defaultText }
 
     // Subclasses override these
     var keywords: [String] { [] }
