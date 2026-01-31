@@ -93,8 +93,8 @@ public class AppleScriptTranspiler {
         } else if let enumDef = node as? EnumDef {
             let safeEnumName = safeName(enumDef.name)
             enums[enumDef.name] = enumDef.cases
-            // In AppleScript, represent enum as a record with case name -> index
-            let pairs = enumDef.cases.enumerated().map { "\($0.element):\($0.offset)" }.joined(separator: ", ")
+            // In AppleScript, represent enum as a record with case name -> string name
+            let pairs = enumDef.cases.map { "\($0):\"\($0)\"" }.joined(separator: ", ")
             return ind() + "set \(safeEnumName) to {\(pairs)}"
         }
         return ""

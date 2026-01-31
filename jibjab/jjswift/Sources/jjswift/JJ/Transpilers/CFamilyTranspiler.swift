@@ -6,6 +6,8 @@ public class CFamilyTranspiler {
     var indentLevel = 0
     let T: TargetConfig
     var enums = Set<String>()
+    var enumCases: [String: [String]] = [:]
+    var enumVarTypes: [String: String] = [:]
     var doubleVars = Set<String>()
     var intVars = Set<String>()
     var dictVars = Set<String>()
@@ -106,16 +108,24 @@ public class CFamilyTranspiler {
             return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if let varRef = e as? VarRef {
+            // Enum variable - print name via names array
+            if let enumName = enumVarTypes[varRef.name] {
+                return ind() + "printf(\"%s\\n\", \(enumName)_names[\(varRef.name)]);"
+            }
+            // Full enum - print dict representation
             if enums.contains(varRef.name) {
-                return ind() + "printf(\"%s\\n\", \"enum \(varRef.name)\");"
+                return ind() + "printf(\"%s\\n\", \"\(enumDictString(varRef.name))\");"
             }
             if doubleVars.contains(varRef.name) {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
         }
         if let idx = e as? IndexAccess {
+            // Enum access - print case name as string
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
-                return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
+                if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    return ind() + "printf(\"%s\\n\", \"\(strVal)\");"
+                }
             }
         }
         if isFloatExpr(e) {
@@ -135,6 +145,12 @@ public class CFamilyTranspiler {
         if node.value is DictLiteral {
             dictVars.insert(node.name)
             return varDictToString(node)
+        }
+        // Track enum variable assignments
+        if let idx = node.value as? IndexAccess,
+           let varRef = idx.array as? VarRef,
+           enums.contains(varRef.name) {
+            enumVarTypes[node.name] = varRef.name
         }
         let inferredType = inferType(node.value)
         if inferredType == "Int" { intVars.insert(node.name) }
@@ -235,12 +251,24 @@ public class CFamilyTranspiler {
 
     func enumToString(_ node: EnumDef) -> String {
         enums.insert(node.name)
+        enumCases[node.name] = node.cases
         let cases = node.cases.joined(separator: ", ")
+        var result: String
         if let tmpl = T.enumTemplate {
-            return ind() + tmpl.replacingOccurrences(of: "{name}", with: node.name)
+            result = ind() + tmpl.replacingOccurrences(of: "{name}", with: node.name)
                                .replacingOccurrences(of: "{cases}", with: cases)
+        } else {
+            result = ind() + "enum \(node.name) { \(cases) };"
         }
-        return ind() + "enum \(node.name) { \(cases) };"
+        let namesList = node.cases.map { "\"\($0)\"" }.joined(separator: ", ")
+        result += "\n" + ind() + "const char* \(node.name)_names[] = {\(namesList)};"
+        return result
+    }
+
+    func enumDictString(_ enumName: String) -> String {
+        guard let cases = enumCases[enumName] else { return enumName }
+        let pairs = cases.map { "\\\"\($0)\\\": \($0)" }.joined(separator: ", ")
+        return "{\(pairs)}"
     }
 
     func resolveAccess(_ node: IndexAccess) -> (String, String)? {

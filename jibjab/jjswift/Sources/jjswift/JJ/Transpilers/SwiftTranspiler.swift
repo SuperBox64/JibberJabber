@@ -7,6 +7,7 @@ public class SwiftTranspiler {
     private let T = loadTarget("swift")
     private var doubleVars = Set<String>()
     private var enums = Set<String>()
+    private var enumCases: [String: [String]] = [:]
     private var dictVars = Set<String>()
     private var tupleVars = Set<String>()
 
@@ -112,6 +113,7 @@ public class SwiftTranspiler {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
         } else if let enumDef = node as? EnumDef {
             enums.insert(enumDef.name)
+            enumCases[enumDef.name] = enumDef.cases
             let cases = enumDef.cases.joined(separator: ", ")
             if let tmpl = T.enumTemplate {
                 return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
@@ -137,8 +139,12 @@ public class SwiftTranspiler {
             }
             return String(describing: literal.value ?? T.nil)
         } else if let varRef = node as? VarRef {
-            // If referencing an enum type directly, use .self
+            // If referencing an enum type directly, generate dict representation
             if enums.contains(varRef.name) {
+                if let cases = enumCases[varRef.name] {
+                    let pairs = cases.map { "\\\"\($0)\\\": \($0)" }.joined(separator: ", ")
+                    return "\"{\(pairs)}\""
+                }
                 return "\(varRef.name).self"
             }
             return varRef.name

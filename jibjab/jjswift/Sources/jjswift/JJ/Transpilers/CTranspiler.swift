@@ -91,8 +91,13 @@ public class CTranspiler: CFamilyTranspiler {
             return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if let varRef = e as? VarRef {
+            // Enum variable - print name via names array
+            if let enumName = enumVarTypes[varRef.name] {
+                return ind() + "printf(\"%s\\n\", \(enumName)_names[\(varRef.name)]);"
+            }
+            // Full enum - print dict representation
             if enums.contains(varRef.name) {
-                return ind() + "printf(\"%s\\n\", \"enum \(varRef.name)\");"
+                return ind() + "printf(\"%s\\n\", \"\(enumDictString(varRef.name))\");"
             }
             if doubleVars.contains(varRef.name) {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
@@ -110,8 +115,11 @@ public class CTranspiler: CFamilyTranspiler {
             }
         }
         if let idx = e as? IndexAccess {
+            // Enum access - print case name as string
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
-                return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
+                if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    return ind() + "printf(\"%s\\n\", \"\(strVal)\");"
+                }
             }
             // Dict or tuple access
             if let resolved = resolveAccess(idx) {

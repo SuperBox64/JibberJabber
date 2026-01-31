@@ -120,8 +120,13 @@ public class CppTranspiler: CFamilyTranspiler {
             return ind() + "std::cout << \(expr(e)) << std::endl;"
         }
         if let varRef = e as? VarRef {
+            // Enum variable - print name via names array
+            if let enumName = enumVarTypes[varRef.name] {
+                return ind() + "std::cout << \(enumName)_names[\(varRef.name)] << std::endl;"
+            }
+            // Full enum - print dict representation
             if enums.contains(varRef.name) {
-                return ind() + "std::cout << \"enum \(varRef.name)\" << std::endl;"
+                return ind() + "std::cout << \"\(enumDictString(varRef.name))\" << std::endl;"
             }
             if doubleVars.contains(varRef.name) {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
@@ -139,8 +144,11 @@ public class CppTranspiler: CFamilyTranspiler {
             }
         }
         if let idx = e as? IndexAccess {
+            // Enum access - print case name as string
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
-                return ind() + "std::cout << \(expr(e)) << std::endl;"
+                if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    return ind() + "std::cout << \"\(strVal)\" << std::endl;"
+                }
             }
             // Dict or tuple access
             if let resolved = resolveAccess(idx) {

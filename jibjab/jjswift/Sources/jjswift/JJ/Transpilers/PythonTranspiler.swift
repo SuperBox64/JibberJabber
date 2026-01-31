@@ -5,6 +5,7 @@ public class PythonTranspiler {
     public init() {}
     private var indentLevel = 0
     private let T = loadTarget("py")
+    private var enums = Set<String>()
 
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
@@ -71,6 +72,10 @@ public class PythonTranspiler {
             return "\(header)\n\(bodyStr)"
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
+        } else if let enumDef = node as? EnumDef {
+            enums.insert(enumDef.name)
+            let cases = enumDef.cases.map { "\"\($0)\": \"\($0)\"" }.joined(separator: ", ")
+            return ind() + "\(enumDef.name) = {\(cases)}"
         }
         return ""
     }

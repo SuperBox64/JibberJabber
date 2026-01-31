@@ -78,8 +78,14 @@ public class GoTranspiler: CFamilyTranspiler {
             dictVars.insert(node.name)
             return varDictToString(node)
         }
+        // Track enum variable assignments
+        if let idx = node.value as? IndexAccess,
+           let varRef = idx.array as? VarRef,
+           enums.contains(varRef.name) {
+            enumVarTypes[node.name] = varRef.name
+        }
         let inferredType = inferType(node.value)
-        if inferredType == "Int" { intVars.insert(node.name) }
+        if inferredType == "Int" && enumVarTypes[node.name] == nil { intVars.insert(node.name) }
         else if inferredType == "Double" { doubleVars.insert(node.name) }
         return ind() + "\(node.name) := \(expr(node.value))"
     }
@@ -189,8 +195,16 @@ public class GoTranspiler: CFamilyTranspiler {
             return ind() + "fmt.Println(\(expr(e)))"
         }
         if let varRef = e as? VarRef {
+            // Enum variable - already a string, just print
+            if enumVarTypes[varRef.name] != nil {
+                return ind() + "fmt.Println(\(varRef.name))"
+            }
+            // Full enum - print dict representation
             if enums.contains(varRef.name) {
-                return ind() + "fmt.Println(\"enum \(varRef.name)\")"
+                if let cases = enumCases[varRef.name] {
+                    let pairs = cases.map { "\\\"\($0)\\\": \($0)" }.joined(separator: ", ")
+                    return ind() + "fmt.Println(\"{\(pairs)}\")"
+                }
             }
             if doubleVars.contains(varRef.name) {
                 return ind() + "fmt.Println(\(expr(e)))"
@@ -208,6 +222,7 @@ public class GoTranspiler: CFamilyTranspiler {
             }
         }
         if let idx = e as? IndexAccess {
+            // Enum access - already a string
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
                 return ind() + "fmt.Println(\(expr(e)))"
             }
@@ -234,15 +249,12 @@ public class GoTranspiler: CFamilyTranspiler {
 
     override func enumToString(_ node: EnumDef) -> String {
         enums.insert(node.name)
+        enumCases[node.name] = node.cases
         var lines: [String] = []
         lines.append(ind() + "const (")
         indentLevel += 1
-        for (i, c) in node.cases.enumerated() {
-            if i == 0 {
-                lines.append(ind() + "\(node.name)_\(c) = iota")
-            } else {
-                lines.append(ind() + "\(node.name)_\(c)")
-            }
+        for c in node.cases {
+            lines.append(ind() + "\(node.name)_\(c) = \"\(c)\"")
         }
         indentLevel -= 1
         lines.append(ind() + ")")

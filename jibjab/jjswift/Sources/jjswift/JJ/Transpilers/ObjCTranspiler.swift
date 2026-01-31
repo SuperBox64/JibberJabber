@@ -28,8 +28,13 @@ public class ObjCTranspiler: CFamilyTranspiler {
             return ind() + "printf(\"%s\\n\", \(expr(e)));"
         }
         if let varRef = e as? VarRef {
+            // Enum variable - print name via names array
+            if let enumName = enumVarTypes[varRef.name] {
+                return ind() + "printf(\"%s\\n\", \(enumName)_names[\(varRef.name)]);"
+            }
+            // Full enum - print dict representation
             if enums.contains(varRef.name) {
-                return ind() + "printf(\"enum \(varRef.name)\\n\");"
+                return ind() + "printf(\"%s\\n\", \"\(enumDictString(varRef.name))\");"
             }
             if doubleVars.contains(varRef.name) {
                 return ind() + "printf(\"%f\\n\", \(expr(e)));"
@@ -43,8 +48,11 @@ public class ObjCTranspiler: CFamilyTranspiler {
             return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if let idx = e as? IndexAccess {
+            // Enum access - print case name as string
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
-                return ind() + "printf(\"%ld\\n\", (long)\(expr(e)));"
+                if let lit = idx.index as? Literal, let strVal = lit.value as? String {
+                    return ind() + "printf(\"%s\\n\", \"\(strVal)\");"
+                }
             }
             return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         }
