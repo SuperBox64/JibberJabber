@@ -37,7 +37,7 @@ struct ContentView: View {
                     .font(.headline)
                     .padding(.horizontal, 20)
                     .padding(.top, 9)
-                    .padding(.bottom, 9.0)
+                    .padding(.bottom, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(nsColor: .controlBackgroundColor))
                 List(examples, id: \.file, selection: $selectedExample) { example in
