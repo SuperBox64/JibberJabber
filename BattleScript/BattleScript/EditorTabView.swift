@@ -111,6 +111,7 @@ struct EditorTabView: View {
     let targets: [String]
     @Binding var sourceCode: String
     @Binding var transpiledOutputs: [String: String]
+    @Binding var userHasEdited: Bool
     let isRunning: Bool
     let onRun: () -> Void
     let onStop: () -> Void
@@ -189,7 +190,10 @@ struct EditorTabView: View {
                     HighlightedTextView(
                         text: Binding(
                             get: { transpiledOutputs[selectedTab] ?? "// No output" },
-                            set: { transpiledOutputs[selectedTab] = $0 }
+                            set: {
+                                transpiledOutputs[selectedTab] = $0
+                                userHasEdited = true
+                            }
                         ),
                         language: selectedTab,
                         showLineNumbers: showLineNumbers

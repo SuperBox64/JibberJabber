@@ -55,6 +55,7 @@ struct ContentView: View {
                     targets: targets,
                     sourceCode: $sourceCode,
                     transpiledOutputs: $transpiledOutputs,
+                    userHasEdited: $userHasEdited,
                     isRunning: isRunning,
                     onRun: runCurrentTab,
                     onStop: stopRunning
@@ -77,7 +78,6 @@ struct ContentView: View {
             }
         }
         .onChange(of: sourceCode) { _, _ in
-            userHasEdited = true
             updateTranspilation()
         }
     }
