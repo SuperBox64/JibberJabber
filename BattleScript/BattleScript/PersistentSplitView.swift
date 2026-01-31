@@ -54,6 +54,16 @@ struct PersistentHSplitView<Left: View, Right: View>: NSViewControllerRepresenta
     }
 }
 
+class FixedTopSplitViewController: NSSplitViewController {
+    override func splitView(_ splitView: NSSplitView, shouldAdjustSizeOfSubview view: NSView) -> Bool {
+        // Keep the top (code editor) panel fixed; bottom absorbs resize
+        if view == splitView.subviews.first {
+            return false
+        }
+        return true
+    }
+}
+
 struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresentable {
     let autosaveName: String
     let top: Top
@@ -75,8 +85,8 @@ struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresenta
         self.bottom = bottom()
     }
 
-    func makeNSViewController(context: Context) -> NSSplitViewController {
-        let controller = NSSplitViewController()
+    func makeNSViewController(context: Context) -> FixedTopSplitViewController {
+        let controller = FixedTopSplitViewController()
         controller.splitView.isVertical = false
         controller.splitView.dividerStyle = .thin
 
@@ -100,7 +110,7 @@ struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresenta
         return controller
     }
 
-    func updateNSViewController(_ controller: NSSplitViewController, context: Context) {
+    func updateNSViewController(_ controller: FixedTopSplitViewController, context: Context) {
         if let topHost = controller.splitViewItems[0].viewController as? NSHostingController<Top> {
             topHost.rootView = top
         }
