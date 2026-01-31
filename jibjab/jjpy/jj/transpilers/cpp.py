@@ -39,7 +39,7 @@ class CppTranspiler(CFamilyTranspiler):
             for i, line in enumerate(lines):
                 if line.startswith('#include'):
                     insert_idx = i + 1
-            inc = '#include <string>'
+            inc = self.T.get('stringInclude', '#include <string>')
             if inc not in lines:
                 lines.insert(insert_idx, inc)
             code = '\n'.join(lines)
@@ -57,7 +57,7 @@ class CppTranspiler(CFamilyTranspiler):
                 cpp_var = f'{node.name}_{key}'
                 if isinstance(v, Literal):
                     if isinstance(v.value, str):
-                        lines.append(self.ind() + f'std::string {cpp_var} = "{v.value}";')
+                        lines.append(self.ind() + f'{self.T.get("stringType", "std::string")} {cpp_var} = "{v.value}";')
                         self.dict_fields[node.name][key] = (cpp_var, 'str')
                     elif isinstance(v.value, bool):
                         val = 'true' if v.value else 'false'
@@ -73,7 +73,7 @@ class CppTranspiler(CFamilyTranspiler):
                     if v.elements:
                         first = v.elements[0]
                         if isinstance(first, Literal) and isinstance(first.value, str):
-                            elem_type = 'std::string'
+                            elem_type = self.T.get('stringType', 'std::string')
                         else:
                             elem_type = self.get_target_type(infer_type(first))
                         elements = ', '.join(self.expr(e) for e in v.elements)
@@ -94,7 +94,7 @@ class CppTranspiler(CFamilyTranspiler):
             cpp_var = f'{node.name}_{i}'
             if isinstance(e, Literal):
                 if isinstance(e.value, str):
-                    lines.append(self.ind() + f'std::string {cpp_var} = "{e.value}";')
+                    lines.append(self.ind() + f'{self.T.get("stringType", "std::string")} {cpp_var} = "{e.value}";')
                     self.tuple_fields[node.name].append((cpp_var, 'str'))
                 elif isinstance(e.value, bool):
                     val = 'true' if e.value else 'false'
@@ -111,40 +111,48 @@ class CppTranspiler(CFamilyTranspiler):
                 self.tuple_fields[node.name].append((cpp_var, 'int'))
         return '\n'.join(lines)
 
+    def _cout_line(self, e: str) -> str:
+        return self.T.get('coutNewline', 'std::cout << {expr} << std::endl;').replace('{expr}', e)
+
+    def _cout_inline(self, e: str) -> str:
+        return self.T.get('coutInline', 'std::cout << {expr};').replace('{expr}', e)
+
     def _print_stmt(self, node: PrintStmt) -> str:
         expr_node = node.expr
         if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
-            return self.ind() + f'std::cout << {self.expr(expr_node)} << std::endl;'
+            return self.ind() + self._cout_line(self.expr(expr_node))
         if isinstance(expr_node, VarRef):
             if expr_node.name in self.enums:
-                return self.ind() + f'std::cout << "enum {expr_node.name}" << std::endl;'
+                return self.ind() + self._cout_line(f'"enum {expr_node.name}"')
             if expr_node.name in self.double_vars:
                 return self.ind() + self.T['printFloat'].replace('{expr}', self.expr(expr_node))
             # Print whole dict
             if expr_node.name in self.dict_vars:
                 if expr_node.name in self.dict_fields and not self.dict_fields[expr_node.name]:
-                    return self.ind() + 'std::cout << "{}" << std::endl;'
-                return self.ind() + f'std::cout << "{expr_node.name}" << std::endl;'
+                    return self.ind() + self._cout_line('"{}"')
+                return self.ind() + self._cout_line(f'"{expr_node.name}"')
             # Print whole tuple
             if expr_node.name in self.tuple_vars:
                 return self._print_whole_tuple(expr_node.name)
         if isinstance(expr_node, IndexAccess):
             if isinstance(expr_node.array, VarRef) and expr_node.array.name in self.enums:
-                return self.ind() + f'std::cout << {self.expr(expr_node)} << std::endl;'
+                return self.ind() + self._cout_line(self.expr(expr_node))
             # Dict or tuple access
             resolved = self._resolve_access(expr_node)
             if resolved:
                 cpp_var, typ = resolved
-                return self.ind() + f'std::cout << {cpp_var} << std::endl;'
+                return self.ind() + self._cout_line(cpp_var)
         if self.is_float_expr(expr_node):
             return self.ind() + self.T['printFloat'].replace('{expr}', self.expr(expr_node))
         return self.ind() + self.T['printInt'].replace('{expr}', self.expr(expr_node))
 
     def _print_whole_tuple(self, name):
         if name not in self.tuple_fields or not self.tuple_fields[name]:
-            return self.ind() + 'std::cout << "()" << std::endl;'
+            return self.ind() + self._cout_line('"()"')
         fields = self.tuple_fields[name]
-        # Build output like (10, 20)
+        sep = self.T.get('coutSep', ' << ')
+        endl = self.T.get('coutEndl', ' << std::endl;')
+        cout_expr = self.T.get('coutExpr', 'std::cout << {expr}')
         parts = []
         for i, (cpp_var, typ) in enumerate(fields):
             if i == 0:
@@ -153,7 +161,7 @@ class CppTranspiler(CFamilyTranspiler):
             if i < len(fields) - 1:
                 parts.append('", "')
         parts.append('")"')
-        return self.ind() + f'std::cout << {" << ".join(parts)} << std::endl;'
+        return self.ind() + cout_expr.replace('{expr}', sep.join(parts)) + endl
 
     def _resolve_access(self, node):
         """Resolve dict/tuple access to (cpp_var_name, type) or None."""
