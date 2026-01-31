@@ -72,7 +72,7 @@ public class JavaScriptTranspiler {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
         } else if let enumDef = node as? EnumDef {
             enums.insert(enumDef.name)
-            let cases = enumDef.cases.map { "\"\($0)\": \"\($0)\"" }.joined(separator: ", ")
+            let cases = enumDef.cases.map { "\($0): \"\($0)\"" }.joined(separator: ", ")
             return ind() + "const \(enumDef.name) = { \(cases) };"
         }
         return ""
