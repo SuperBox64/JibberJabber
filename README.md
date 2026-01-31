@@ -49,41 +49,14 @@ See [BattleScript/README.md](BattleScript/README.md) for details.
 
 ## How It Works
 
-<div align="center">
-
-```mermaid
-flowchart TD
-    A[📜 JJ Source Code] --> B[✂️  Lexer]
-    B --> C[🌳 Parser<br>Builds AST]
-    C --> D{Interpret<br>Compile<br>Transpile}
-
-    D --> E[⚡ Interpreter]
-    E --> F[🖥️  Program Output]
-
-    D --> N1[🔧 Native Compiler]
-    N1 --> N2[🍎 ARM64 Mach-O]
-    N2 --> F
-
-    D --> G[🛠️ Transpiler]
-    G --> H[py · js · c · cpp · swift · objc · objcpp · go · asm · applescript]
-    H --> M[🔨 Compile]
-    M --> F
-
-    style N1 fill:#4a1a6e,stroke:#bf5fff,color:#fff
-    style N2 fill:#3d1a5e,stroke:#bf5fff,color:#fff
-
-    style M fill:#2a4a6e,stroke:#ffa500,color:#fff
-
-    style A fill:#1a1a2e,stroke:#00d4ff,color:#fff
-    style B fill:#16213e,stroke:#00d4ff,color:#fff
-    style C fill:#16213e,stroke:#00d4ff,color:#fff
-    style D fill:#0f3460,stroke:#e94560,color:#fff
-    style E fill:#1a1a2e,stroke:#00ff88,color:#fff
-    style F fill:#00ff88,stroke:#00ff88,color:#000
-    style G fill:#2a4a6e,stroke:#ffa500,color:#fff
+```
+JJ Source → Lexer → Parser → AST
+                                 ├─ Interpret → Output
+                                 ├─ Native Compile → ARM64 Mach-O → Run
+                                 └─ Transpile → 10 Languages → Compile → Run
 ```
 
-</div>
+See [Language Spec](jibjab/SPEC.md) for the full pipeline diagram.
 
 ---
 
