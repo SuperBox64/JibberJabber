@@ -25,6 +25,53 @@ JibberJabber facilitates seamless interaction between human-written code and AI-
 
 ---
 
+## Prerequisites
+
+### Xcode Command Line Tools (required)
+
+```bash
+xcode-select --install
+```
+
+Provides `clang`, `swiftc`, `as`, `ld` — needed for C, C++, Swift, ObjC, ObjC++, and ARM64 assembly targets.
+
+### Homebrew (recommended)
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+### Go
+
+**Via Homebrew:**
+```bash
+brew install go
+```
+
+**Via official installer:**
+Download the `.pkg` from [go.dev/dl](https://go.dev/dl/) and run it. Installs to `/usr/local/go`.
+
+### QuickJS (JavaScript target)
+
+**Via Homebrew:**
+```bash
+brew install quickjs
+```
+
+**Build from source:**
+```bash
+git clone https://github.com/quickjs-ng/quickjs.git
+cd quickjs && cmake -B build && cmake --build build && sudo cmake --install build
+```
+
+Or download pre-built binaries from [quickjs-ng releases](https://github.com/quickjs-ng/quickjs/releases).
+
+### Python 3 & AppleScript
+
+Pre-installed on macOS. No action needed.
+
+---
+
 ## Runtimes
 
 | Runtime | Language | Location | Best For |
