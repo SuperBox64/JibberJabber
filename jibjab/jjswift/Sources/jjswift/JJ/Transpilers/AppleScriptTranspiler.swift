@@ -31,7 +31,7 @@ private func safeName(_ name: String) -> String {
     return name
 }
 
-public class AppleScriptTranspiler {
+public class AppleScriptTranspiler: Transpiling {
     public init() {}
     private var indentLevel = 0
     private let T = loadTarget("applescript")

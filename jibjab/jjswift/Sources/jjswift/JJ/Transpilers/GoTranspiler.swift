@@ -23,25 +23,25 @@ public class GoTranspiler: CFamilyTranspiler {
         }
 
         var mainLines: [String] = []
-        if !mainStmts.isEmpty {
-            mainLines.append("func main() {")
+        if !mainStmts.isEmpty, let mainTmpl = T.main {
             indentLevel = 1
-            for s in mainStmts { mainLines.append(stmtToString(s)) }
-            mainLines.append("}")
+            let bodyLines = mainStmts.map { stmtToString($0) }
+            let body = bodyLines.joined(separator: "\n") + "\n"
+            let expanded = mainTmpl
+                .replacingOccurrences(of: "\\n", with: "\n")
+                .replacingOccurrences(of: "{body}", with: body)
+            mainLines.append(expanded)
         }
 
-        // Build header with correct imports
-        lines.append("// Transpiled from JibJab")
-        lines.append("package main")
-        lines.append("")
+        // Build header from config, adding math import if needed
+        var header = T.header.replacingOccurrences(of: "\\n", with: "\n")
+            .trimmingCharacters(in: .newlines)
         if needsMath {
-            lines.append("import (")
-            lines.append("    \"fmt\"")
-            lines.append("    \"math\"")
-            lines.append(")")
-        } else {
-            lines.append("import \"fmt\"")
+            // Replace single import with multi-import block
+            header = header.replacingOccurrences(of: "import \"fmt\"",
+                with: "import (\n\(T.indent)\"fmt\"\n\(T.indent)\"math\"\n)")
         }
+        lines.append(header)
         lines.append("")
 
         // Emit functions
@@ -54,12 +54,17 @@ public class GoTranspiler: CFamilyTranspiler {
     }
 
     func funcDefToString(_ node: FuncDef) -> String {
-        let params = node.params.map { "\($0) int" }.joined(separator: ", ")
-        let header = "func \(node.name)(\(params)) int {"
+        let paramType = getTargetType("Int")
+        let params = node.params.map { "\($0) \(paramType)" }.joined(separator: ", ")
+        let returnType = getTargetType("Int")
+        let header = T.func
+            .replacingOccurrences(of: "{type}", with: returnType)
+            .replacingOccurrences(of: "{name}", with: node.name)
+            .replacingOccurrences(of: "{params}", with: params)
         indentLevel = 1
         let body = node.body.map { stmtToString($0) }.joined(separator: "\n")
         indentLevel = 0
-        return "\(header)\n\(body)\n}"
+        return "\(header)\n\(body)\n\(T.blockEnd)"
     }
 
     override func emitMain(_ lines: inout [String], _ program: Program) {
@@ -88,13 +93,16 @@ public class GoTranspiler: CFamilyTranspiler {
         if inferredType == "Bool" { boolVars.insert(node.name) }
         else if inferredType == "Int" && enumVarTypes[node.name] == nil { intVars.insert(node.name) }
         else if inferredType == "Double" { doubleVars.insert(node.name) }
-        return ind() + "\(node.name) := \(expr(node.value))"
+        let tmpl = T.varShort ?? T.var
+        return ind() + tmpl
+            .replacingOccurrences(of: "{name}", with: node.name)
+            .replacingOccurrences(of: "{value}", with: expr(node.value))
     }
 
     override func varArrayToString(_ node: VarDecl, _ arr: ArrayLiteral) -> String {
         if let firstElem = arr.elements.first {
             if let nestedArr = firstElem as? ArrayLiteral {
-                let innerType = nestedArr.elements.first.map { getTargetType(inferType($0)) } ?? "int"
+                let innerType = nestedArr.elements.first.map { getTargetType(inferType($0)) } ?? getTargetType("Int")
                 let innerSize = nestedArr.elements.count
                 let outerSize = arr.elements.count
                 let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
@@ -109,7 +117,8 @@ public class GoTranspiler: CFamilyTranspiler {
             let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
             return ind() + "\(node.name) := []\(elemType){\(elements)}"
         }
-        return ind() + "\(node.name) := []int{}"
+        let intType = getTargetType("Int")
+        return ind() + "\(node.name) := []\(intType){}"
     }
 
     override func printStmtToString(_ node: PrintStmt) -> String {

@@ -2,7 +2,11 @@
 /// Shared logic for C, C++, Objective-C, and Objective-C++ transpilers.
 /// Subclasses override specific methods for target-specific behavior.
 
-public class CFamilyTranspiler {
+public protocol Transpiling {
+    func transpile(_ program: Program) -> String
+}
+
+public class CFamilyTranspiler: Transpiling {
     var indentLevel = 0
     let T: TargetConfig
     var enums = Set<String>()
@@ -109,13 +113,12 @@ public class CFamilyTranspiler {
             if let lit = first as? Literal, lit.value is String {
                 elemType = expandedStringType()
             } else {
-                let jjType = inferType(first)
-                elemType = jjType == "Double" ? "double" : "int"
+                elemType = getTargetType(inferType(first))
             }
             let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
             return ind() + "\(elemType) \(name)[] = {\(elements)};"
         }
-        return ind() + "int \(name)[] = {};"
+        return ind() + "\(getTargetType("Int")) \(name)[] = {};"
     }
 
     /// Format specifier for printf-style targets
@@ -178,13 +181,17 @@ public class CFamilyTranspiler {
 
     func emitMain(_ lines: inout [String], _ program: Program) {
         let mainStmts = program.statements.filter { !($0 is FuncDef) }
-        if !mainStmts.isEmpty {
-            lines.append("int main() {")
-            indentLevel = 1
-            for s in mainStmts { lines.append(stmtToString(s)) }
-            lines.append("\(T.indent)return 0;")
-            lines.append("}")
-        }
+        guard !mainStmts.isEmpty, let mainTmpl = T.main else { return }
+        // Determine indent level from {body} position in template
+        let tmplLines = mainTmpl.replacingOccurrences(of: "\\n", with: "\n").components(separatedBy: "\n")
+        let bodyIndent = tmplLines.first(where: { $0.contains("{body}") })?.prefix(while: { $0 == " " }).count ?? 4
+        indentLevel = bodyIndent / (T.indent.count > 0 ? T.indent.count : 4)
+        let bodyLines = mainStmts.map { stmtToString($0) }
+        let body = bodyLines.joined(separator: "\n") + "\n"
+        let expanded = mainTmpl
+            .replacingOccurrences(of: "\\n", with: "\n")
+            .replacingOccurrences(of: "{body}", with: body)
+        lines.append(expanded)
     }
 
     func ind() -> String {
@@ -218,12 +225,27 @@ public class CFamilyTranspiler {
         return "%d"
     }
 
+    /// Extract bool display strings from printBool template (e.g. "true"/"false" from ternary)
+    lazy var boolDisplayStrings: (String, String) = {
+        let tmpl = T.printBool
+        // Match pattern: ? "X" : "Y"
+        if let qIdx = tmpl.range(of: "? \""),
+           let midIdx = tmpl.range(of: "\" : \"", range: qIdx.upperBound..<tmpl.endIndex),
+           let endIdx = tmpl.range(of: "\"", range: midIdx.upperBound..<tmpl.endIndex) {
+            let trueVal = String(tmpl[qIdx.upperBound..<midIdx.lowerBound])
+            let falseVal = String(tmpl[midIdx.upperBound..<endIdx.lowerBound])
+            return (trueVal, falseVal)
+        }
+        return ("true", "false")
+    }()
+
     func interpVarExpr(_ name: String) -> String {
         if let enumName = enumVarTypes[name] {
             return "\(enumName)_names[\(name)]"
         }
         if boolVars.contains(name) {
-            return "\(name) ? \"true\" : \"false\""
+            let (trueStr, falseStr) = boolDisplayStrings
+            return "\(name) ? \"\(trueStr)\" : \"\(falseStr)\""
         }
         return name
     }
@@ -415,7 +437,7 @@ public class CFamilyTranspiler {
             let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
             return ind() + "\(elemType) \(node.name)[] = {\(elements)};"
         }
-        return ind() + "int \(node.name)[] = {};"
+        return ind() + "\(getTargetType("Int")) \(node.name)[] = {};"
     }
 
     func varTupleToString(_ node: VarDecl, _ tuple: TupleLiteral) -> String {
@@ -532,16 +554,17 @@ public class CFamilyTranspiler {
         enums.insert(node.name)
         enumCases[node.name] = node.cases
         let cases = node.cases.joined(separator: ", ")
-        var result: String
+        let result: String
         if let tmpl = T.enumTemplate {
             result = ind() + tmpl.replacingOccurrences(of: "{name}", with: node.name)
                                .replacingOccurrences(of: "{cases}", with: cases)
         } else {
-            result = ind() + "enum \(node.name) { \(cases) };"
+            result = ind() + T.var.replacingOccurrences(of: "{type}", with: "enum")
+                .replacingOccurrences(of: "{name}", with: node.name)
+                .replacingOccurrences(of: "{value}", with: "{ \(cases) }")
         }
         let namesList = node.cases.map { "\"\($0)\"" }.joined(separator: ", ")
-        result += "\n" + ind() + "const char* \(node.name)_names[] = {\(namesList)};"
-        return result
+        return result + "\n" + ind() + "\(T.expandStringType) \(node.name)_names[] = {\(namesList)};"
     }
 
     func enumDictString(_ enumName: String) -> String {

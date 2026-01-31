@@ -22,14 +22,8 @@ struct JJEngine {
     }
 
     static func transpile(_ program: Program, target: String) -> String? {
-        guard let t = getTranspiler(target) else { return nil }
-        if let cfamily = t as? CFamilyTranspiler { return cfamily.transpile(program) }
-        if let py = t as? PythonTranspiler { return py.transpile(program) }
-        if let js = t as? JavaScriptTranspiler { return js.transpile(program) }
-        if let sw = t as? SwiftTranspiler { return sw.transpile(program) }
-        if let asm = t as? AssemblyTranspiler { return asm.transpile(program) }
-        if let apple = t as? AppleScriptTranspiler { return apple.transpile(program) }
-        return nil
+        guard let t = getTranspiler(target) as? Transpiling else { return nil }
+        return t.transpile(program)
     }
 
     static func interpret(_ program: Program) -> String {

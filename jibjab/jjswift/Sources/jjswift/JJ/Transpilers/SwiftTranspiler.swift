@@ -1,7 +1,7 @@
 /// JibJab Swift Transpiler - Converts JJ to Swift
 /// Uses shared config from common/jj.json
 
-public class SwiftTranspiler {
+public class SwiftTranspiler: Transpiling {
     public init() {}
     private var indentLevel = 0
     private let T = loadTarget("swift")

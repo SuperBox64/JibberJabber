@@ -27,7 +27,7 @@ struct DictInfo {
     let valueTypes: [TupleElemType]  // Type of each value
 }
 
-public class AssemblyTranspiler {
+public class AssemblyTranspiler: Transpiling {
     public init() {}
     private var asmLines: [String] = []
     private var strings: [(label: String, value: String, addNewline: Bool)] = []

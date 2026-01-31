@@ -4,19 +4,6 @@
 public class ObjCTranspiler: CFamilyTranspiler {
     public override init(target: String = "objc") { super.init(target: target) }
 
-    override func emitMain(_ lines: inout [String], _ program: Program) {
-        let mainStmts = program.statements.filter { !($0 is FuncDef) }
-        if !mainStmts.isEmpty {
-            lines.append("int main(int argc, const char * argv[]) {")
-            lines.append("    @autoreleasepool {")
-            indentLevel = 2
-            for s in mainStmts { lines.append(stmtToString(s)) }
-            lines.append("    }")
-            lines.append("    return 0;")
-            lines.append("}")
-        }
-    }
-
     override func loopToString(_ node: LoopStmt) -> String {
         intVars.insert(node.var)
         return super.loopToString(node)
@@ -39,23 +26,23 @@ public class ObjCTranspiler: CFamilyTranspiler {
             return ind() + "printf(\"\(fmt)\\n\"\(argStr));"
         }
         if let lit = e as? Literal, lit.value is String {
-            return ind() + "printf(\"%s\\n\", \(expr(e)));"
+            return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if let varRef = e as? VarRef {
             // Enum variable - print name via names array
             if let enumName = enumVarTypes[varRef.name] {
-                return ind() + "printf(\"%s\\n\", \(enumName)_names[\(varRef.name)]);"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\(enumName)_names[\(varRef.name)]")
             }
             // Full enum - print dict representation
             if enums.contains(varRef.name) {
-                return ind() + "printf(\"%s\\n\", \"\(enumDictString(varRef.name))\");"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"\(enumDictString(varRef.name))\"")
             }
             // Print whole array
             if arrayVars.contains(varRef.name) {
                 return printWholeArray(varRef.name)
             }
             if doubleVars.contains(varRef.name) {
-                return ind() + "printf(\"%f\\n\", \(expr(e)));"
+                return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             if stringVars.contains(varRef.name) {
                 return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
@@ -64,14 +51,14 @@ public class ObjCTranspiler: CFamilyTranspiler {
                 return ind() + T.printBool.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             if intVars.contains(varRef.name) {
-                return ind() + "printf(\"%ld\\n\", (long)\(expr(e)));"
+                return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             // Print whole dict
             if dictVars.contains(varRef.name) {
                 if let fields = dictFields[varRef.name], fields.isEmpty {
-                    return ind() + "printf(\"{}\\n\");"
+                    return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"{}\"")
                 }
-                return ind() + "printf(\"%s\\n\", \"\(varRef.name)\");"
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"\(varRef.name)\"")
             }
             // Print whole tuple
             if tupleVars.contains(varRef.name) {
@@ -86,46 +73,30 @@ public class ObjCTranspiler: CFamilyTranspiler {
             // Enum access - print case name as string
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
                 if let lit = idx.index as? Literal, let strVal = lit.value as? String {
-                    return ind() + "printf(\"%s\\n\", \"\(strVal)\");"
+                    return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: "\"\(strVal)\"")
                 }
             }
             // Array element access
             if let varRef = idx.array as? VarRef, let meta = arrayMeta[varRef.name], !meta.isNested {
-                if meta.elemType == "str" {
-                    return ind() + "printf(\"%s\\n\", [\(varRef.name)[\(expr(idx.index))] UTF8String]);"
-                } else if meta.elemType == "double" {
-                    return ind() + "printf(\"%g\\n\", [\(varRef.name)[\(expr(idx.index))] doubleValue]);"
-                } else {
-                    return ind() + "printf(\"%d\\n\", [\(varRef.name)[\(expr(idx.index))] intValue]);"
-                }
+                let elemExpr = "[\(varRef.name)[\(expr(idx.index))] \(meta.elemType == "str" ? "UTF8String" : meta.elemType == "double" ? "doubleValue" : "intValue")]"
+                return ind() + printTemplateForType(meta.elemType).replacingOccurrences(of: "{expr}", with: elemExpr)
             }
             // Nested array element: matrix[0][1]
             if let innerIdx = idx.array as? IndexAccess,
                let varRef = innerIdx.array as? VarRef,
                let meta = arrayMeta[varRef.name], meta.isNested {
-                if meta.innerElemType == "str" {
-                    return ind() + "printf(\"%s\\n\", [\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))] UTF8String]);"
-                } else if meta.innerElemType == "double" {
-                    return ind() + "printf(\"%g\\n\", [\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))] doubleValue]);"
-                } else {
-                    return ind() + "printf(\"%d\\n\", [\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))] intValue]);"
-                }
+                let elemExpr = "[\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))] \(meta.innerElemType == "str" ? "UTF8String" : meta.innerElemType == "double" ? "doubleValue" : "intValue")]"
+                return ind() + printTemplateForType(meta.innerElemType).replacingOccurrences(of: "{expr}", with: elemExpr)
             }
             // Dict or tuple access
             if let resolved = resolveAccess(idx) {
                 let (cVar, typ) = resolved
-                if typ == "str" {
-                    return ind() + "printf(\"%s\\n\", \(cVar));"
-                } else if typ == "double" {
-                    return ind() + "printf(\"%g\\n\", \(cVar));"
-                } else {
-                    return ind() + "printf(\"%d\\n\", \(cVar));"
-                }
+                return ind() + printTemplateForType(typ).replacingOccurrences(of: "{expr}", with: cVar)
             }
             return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         if isFloatExpr(e) {
-            return ind() + "printf(\"%f\\n\", \(expr(e)));"
+            return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
         }
         return ind() + T.printInt.replacingOccurrences(of: "{expr}", with: expr(e))
     }

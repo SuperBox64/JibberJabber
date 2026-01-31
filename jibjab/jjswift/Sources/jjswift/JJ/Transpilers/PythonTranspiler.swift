@@ -1,7 +1,7 @@
 /// JibJab Python Transpiler - Converts JJ to Python
 /// Uses shared config from common/jj.json
 
-public class PythonTranspiler {
+public class PythonTranspiler: Transpiling {
     public init() {}
     private var indentLevel = 0
     private let T = loadTarget("py")

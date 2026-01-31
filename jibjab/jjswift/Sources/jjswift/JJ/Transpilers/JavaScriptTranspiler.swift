@@ -1,7 +1,7 @@
 /// JibJab JavaScript Transpiler - Converts JJ to JavaScript
 /// Uses shared config from common/jj.json
 
-public class JavaScriptTranspiler {
+public class JavaScriptTranspiler: Transpiling {
     public init() {}
     private var indentLevel = 0
     private let T = loadTarget("js")

@@ -24,18 +24,13 @@ func getTranspiler(_ target: String) -> Any? {
 }
 
 func transpileCode(_ target: String, _ program: Program) -> String? {
-    guard let t = getTranspiler(target) else {
+    guard let t = getTranspiler(target) as? Transpiling else {
         print("Unknown target: \(target)")
-        print("Valid targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp, go")
+        let validTargets = transpilerRegistry.keys.sorted().joined(separator: ", ")
+        print("Valid targets: \(validTargets)")
         return nil
     }
-    if let cfamily = t as? CFamilyTranspiler { return cfamily.transpile(program) }
-    if let py = t as? PythonTranspiler { return py.transpile(program) }
-    if let js = t as? JavaScriptTranspiler { return js.transpile(program) }
-    if let sw = t as? SwiftTranspiler { return sw.transpile(program) }
-    if let asm = t as? AssemblyTranspiler { return asm.transpile(program) }
-    if let apple = t as? AppleScriptTranspiler { return apple.transpile(program) }
-    return nil
+    return t.transpile(program)
 }
 
 func writeSrc(_ code: String, _ basename: String, _ target: String) -> String {
@@ -114,7 +109,7 @@ func main() {
         print("  jjswift build <file.jj> <target> [output] - Transpile + compile")
         print("  jjswift exec <file.jj> <target>      - Transpile + compile + run")
         print("")
-        print("Targets: py, js, c, cpp, asm, swift, applescript, objc, objcpp, go")
+        print("Targets: \(transpilerRegistry.keys.sorted().joined(separator: ", "))")
         exit(1)
     }
 

@@ -214,7 +214,7 @@ public class Lexer {
                 // Extract block name between <~ and {
                 let afterTilde = m.dropFirst(2) // remove "<~"
                 let blockName = String(afterTilde.prefix(while: { $0 != "{" }))
-                let validBlocks = ["loop", "when", "morph"]
+                let validBlocks = Lexer.bracedBlockNames()
                 let suggestion = Lexer.closestMatch(to: blockName, from: validBlocks)
                 let msg: String
                 if let hint = suggestion {
@@ -228,7 +228,7 @@ public class Lexer {
             // Also catch <~badword>> (no braces, like <~els999e>> or <~tr999y>>)
             if let m = matchRegex("<~[a-zA-Z0-9]+>>") {
                 let blockName = String(m.dropFirst(2).dropLast(2))
-                let validSimpleBlocks = ["else", "try", "oops"]
+                let validSimpleBlocks = Lexer.simpleBlockNames()
                 let suggestion = Lexer.closestMatch(to: blockName, from: validSimpleBlocks)
                 let msg: String
                 if let hint = suggestion {
@@ -521,6 +521,24 @@ public class Lexer {
             }
         }
         return best
+    }
+
+    /// Extract block name from config string (e.g. "loop" from "<~loop{", "else" from "<~else>>")
+    private static func blockName(_ block: String) -> String? {
+        guard block.hasPrefix("<~") else { return nil }
+        let rest = block.dropFirst(2)
+        let name = rest.prefix(while: { $0.isLetter })
+        return name.isEmpty ? nil : String(name)
+    }
+
+    /// Block names with brace content (e.g. ["loop", "when", "morph"])
+    static func bracedBlockNames() -> [String] {
+        return [JJ.blocks.loop, JJ.blocks.when, JJ.blocks.morph].compactMap { blockName($0) }
+    }
+
+    /// Simple block names without brace content (e.g. ["else", "try", "oops"])
+    static func simpleBlockNames() -> [String] {
+        return [JJ.blocks.else, JJ.blocks.try, JJ.blocks.oops].compactMap { blockName($0) }
     }
 
     /// Longest common subsequence length
