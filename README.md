@@ -107,4 +107,5 @@ MIT
 
 ---
 
-*JibJab: Where humans see noise and AI sees code.*
+**About JJ**
+JJ is an AI-first computer programming language by Todd Bruss with a remarkable write once, run any methodology.
