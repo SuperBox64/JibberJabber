@@ -1,4 +1,5 @@
 import Foundation
+import JJLib
 
 // MARK: - Protocol
 
@@ -20,22 +21,24 @@ private func reverseExpr(_ expr: String) -> String {
     }
 
     // Reverse booleans/null per language (done by caller before this)
-    // Reverse operators (order matters - longer patterns first)
-    s = s.replacingOccurrences(of: " === ", with: " <=> ")
-    s = s.replacingOccurrences(of: " !== ", with: " <!=> ")
-    s = s.replacingOccurrences(of: " == ", with: " <=> ")
-    s = s.replacingOccurrences(of: " != ", with: " <!=> ")
-    s = s.replacingOccurrences(of: " <= ", with: " <lte> ")
-    s = s.replacingOccurrences(of: " >= ", with: " <gte> ")
-    s = s.replacingOccurrences(of: " < ", with: " <lt> ")
-    s = s.replacingOccurrences(of: " > ", with: " <gt> ")
-    s = s.replacingOccurrences(of: " + ", with: " <+> ")
-    s = s.replacingOccurrences(of: " - ", with: " <-> ")
-    s = s.replacingOccurrences(of: " * ", with: " <*> ")
-    s = s.replacingOccurrences(of: " / ", with: " </> ")
-    s = s.replacingOccurrences(of: " % ", with: " <%> ")
-    s = s.replacingOccurrences(of: " && ", with: " <&&> ")
-    s = s.replacingOccurrences(of: " || ", with: " <||> ")
+    // Reverse operators using jj.json config (order matters - longer patterns first)
+    // JavaScript-specific triple operators (not in jj.json, map to same JJ symbols)
+    s = replaceOutsideStrings(s, " === ", " \(JJ.operators.eq.symbol) ")
+    s = replaceOutsideStrings(s, " !== ", " \(JJ.operators.neq.symbol) ")
+    // Multi-char emit operators first to avoid partial matches
+    let OP = JJ.operators
+    let orderedOps: [(String, String)] = [
+        (OP.lte.emit, OP.lte.symbol), (OP.gte.emit, OP.gte.symbol),
+        (OP.neq.emit, OP.neq.symbol), (OP.eq.emit, OP.eq.symbol),
+        (OP.and.emit, OP.and.symbol), (OP.or.emit, OP.or.symbol),
+        (OP.lt.emit, OP.lt.symbol), (OP.gt.emit, OP.gt.symbol),
+        (OP.add.emit, OP.add.symbol), (OP.sub.emit, OP.sub.symbol),
+        (OP.mul.emit, OP.mul.symbol), (OP.div.emit, OP.div.symbol),
+        (OP.mod.emit, OP.mod.symbol),
+    ]
+    for (emit, symbol) in orderedOps {
+        s = replaceOutsideStrings(s, " \(emit) ", " \(symbol) ")
+    }
 
     // Reverse number literals: bare integers/floats → #num
     // But not inside strings
