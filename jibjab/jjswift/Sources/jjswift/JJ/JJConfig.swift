@@ -334,3 +334,92 @@ public func escapeString(_ s: String) -> String {
     }
     return result
 }
+
+// MARK: - JJ Emit Helpers
+
+/// Builds JJ output strings from config values
+public struct JJEmit {
+    public static func print(_ expr: String) -> String {
+        "\(JJ.keywords.print)\(JJ.structure.action)\(JJ.syntax.emit)(\(expr))"
+    }
+    public static func snag(_ name: String, _ val: String) -> String {
+        "\(JJ.keywords.snag){\(name)}\(JJ.structure.action)\(JJ.syntax.val)(\(val))"
+    }
+    public static func yeet(_ val: String) -> String {
+        "\(JJ.keywords.yeet){\(val)}"
+    }
+    public static func invoke(_ name: String, _ args: String) -> String {
+        "\(JJ.keywords.invoke){\(name)}\(JJ.structure.action)\(JJ.syntax.with)(\(args))"
+    }
+    public static func morph(_ name: String, _ params: String) -> String {
+        "\(JJ.blocks.morph)\(name)(\(params))\(JJ.blockSuffix)"
+    }
+    public static func loop(_ v: String, _ start: String, _ end: String) -> String {
+        "\(JJ.blocks.loop)\(v)\(JJ.structure.colon)\(start)\(JJ.structure.range)\(end)\(JJ.blockSuffix)"
+    }
+    public static func when(_ cond: String) -> String {
+        "\(JJ.blocks.when)\(cond)\(JJ.blockSuffix)"
+    }
+    public static var `else`: String { JJ.blocks.else }
+    public static var end: String { JJ.blocks.end }
+    public static var comment: String { JJ.literals.comment }
+}
+
+// MARK: - JJ Regex Pattern Builders
+
+/// Builds regex patterns from jj.json for syntax highlighting
+public struct JJPatterns {
+    private static func esc(_ s: String) -> String {
+        NSRegularExpression.escapedPattern(for: s)
+    }
+
+    public static var keyword: String {
+        let kw = JJ.keywords
+        return [kw.print, kw.input, kw.snag, kw.invoke, kw.yeet, kw.enum].map { keyword in
+            if let braceIdx = keyword.firstIndex(of: "{") {
+                return esc(String(keyword[..<braceIdx])) + "\\{[a-zA-Z0-9]*\\}"
+            }
+            return esc(keyword)
+        }.joined(separator: "|")
+    }
+
+    public static var block: String {
+        let blk = JJ.blocks
+        let open = [blk.loop, blk.when, blk.morph].map { esc($0) }
+        let closed = [blk.else, blk.try, blk.oops, blk.end].map { esc($0) }
+        return (open + closed + [esc(JJ.blockSuffix)]).joined(separator: "|")
+    }
+
+    public static var `operator`: String {
+        let ops = JJ.operators
+        return [ops.lte, ops.gte, ops.neq, ops.and, ops.or,
+                ops.eq, ops.lt, ops.gt, ops.add, ops.sub,
+                ops.mul, ops.div, ops.mod, ops.not]
+            .map { esc($0.symbol) }
+            .joined(separator: "|")
+    }
+
+    public static var special: String {
+        [JJ.keywords.true, JJ.keywords.false, JJ.keywords.nil]
+            .map { esc($0) }
+            .joined(separator: "|")
+    }
+
+    public static var action: String {
+        let syn = JJ.syntax
+        let actions = [syn.emit, syn.grab, syn.val, syn.with, syn.cases]
+        return "\(esc(JJ.structure.action))(\(actions.map { esc($0) }.joined(separator: "|")))"
+    }
+
+    public static var separator: String {
+        esc(JJ.structure.action)
+    }
+
+    public static var number: String {
+        "\(esc(JJ.literals.numberPrefix))-?\\d+\\.?\\d*"
+    }
+
+    public static var comment: String {
+        "\(esc(JJ.literals.comment)).*$"
+    }
+}

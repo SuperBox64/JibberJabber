@@ -1,4 +1,5 @@
 import AppKit
+import JJLib
 
 // MARK: - Protocol
 
@@ -215,15 +216,15 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
 class JJHighlighter: SyntaxHighlighting {
     let font = SyntaxTheme.font
 
-    private static let keywordRegex = try? NSRegularExpression(pattern: "~>frob\\{[a-zA-Z0-9]*\\}|~>snag|~>slurp\\{[a-zA-Z0-9]*\\}|~>invoke|~>yeet|~>enum")
-    private static let blockRegex = try? NSRegularExpression(pattern: "<~loop\\{|<~when\\{|<~else>>|<~morph\\{|<~try>>|<~oops>>|<~>>|\\}>>")
-    private static let operatorRegex = try? NSRegularExpression(pattern: "<\\+>|<->|<\\*>|</>|<%>|<=>|<!=>|<lt>|<lte>|<gt>|<gte>|<&&>|<\\|\\|>|<!>")
-    private static let specialRegex = try? NSRegularExpression(pattern: "~yep|~nope|~nil")
-    private static let actionRegex = try? NSRegularExpression(pattern: "::(emit|grab|val|with|cases)")
-    private static let separatorRegex = try? NSRegularExpression(pattern: "::")
-    private static let numberRegex = try? NSRegularExpression(pattern: "#-?\\d+\\.?\\d*")
+    private static let keywordRegex = try? NSRegularExpression(pattern: JJPatterns.keyword)
+    private static let blockRegex = try? NSRegularExpression(pattern: JJPatterns.block)
+    private static let operatorRegex = try? NSRegularExpression(pattern: JJPatterns.operator)
+    private static let specialRegex = try? NSRegularExpression(pattern: JJPatterns.special)
+    private static let actionRegex = try? NSRegularExpression(pattern: JJPatterns.action)
+    private static let separatorRegex = try? NSRegularExpression(pattern: JJPatterns.separator)
+    private static let numberRegex = try? NSRegularExpression(pattern: JJPatterns.number)
     private static let stringRegex = try? NSRegularExpression(pattern: "\"(?:\\\\.|[^\"\\\\])*\"")
-    private static let commentRegex = try? NSRegularExpression(pattern: "@@.*$", options: .anchorsMatchLines)
+    private static let commentRegex = try? NSRegularExpression(pattern: JJPatterns.comment, options: .anchorsMatchLines)
 
     func highlight(_ textStorage: NSTextStorage) {
         let fullRange = NSRange(location: 0, length: textStorage.length)

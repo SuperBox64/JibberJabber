@@ -103,7 +103,7 @@ private func balancedParens(_ s: String) -> Bool {
 
 private func reverseCallExpr(_ funcName: String, _ argsStr: String) -> String {
     let reversedArgs = reverseExpr(argsStr)
-    return "~>invoke{\(funcName)}::with(\(reversedArgs))"
+    return JJEmit.invoke(funcName, reversedArgs)
 }
 
 private func indent(_ level: Int) -> String {
@@ -113,6 +113,8 @@ private func indent(_ level: Int) -> String {
 // MARK: - Python Reverse Transpiler
 
 class PythonReverseTranspiler: ReverseTranspiling {
+    private let pyTarget = loadTarget("py")
+
     private static let printRegex = try? NSRegularExpression(pattern: "^(\\s*)print\\((.+)\\)$")
     private static let varRegex = try? NSRegularExpression(pattern: "^(\\s*)([a-zA-Z_][a-zA-Z0-9_]*)\\s*=\\s*(.+)$")
     private static let forRegex = try? NSRegularExpression(pattern: "^(\\s*)for\\s+(\\w+)\\s+in\\s+range\\((\\d+),\\s*(\\d+)\\):$")
@@ -157,14 +159,14 @@ class PythonReverseTranspiler: ReverseTranspiling {
             }
         }
 
-        // Replace Python-specific booleans
+        // Replace Python-specific booleans/operators using target config
         var text = lines.joined(separator: "\n")
-        text = replaceOutsideStrings(text, "True", "~yep")
-        text = replaceOutsideStrings(text, "False", "~nope")
-        text = replaceOutsideStrings(text, "None", "~nil")
-        text = replaceOutsideStrings(text, " and ", " <&&> ")
-        text = replaceOutsideStrings(text, " or ", " <||> ")
-        text = replaceOutsideStrings(text, "not ", "<!> ")
+        text = replaceOutsideStrings(text, pyTarget.true, JJ.keywords.true)
+        text = replaceOutsideStrings(text, pyTarget.false, JJ.keywords.false)
+        text = replaceOutsideStrings(text, pyTarget.nil, JJ.keywords.nil)
+        text = replaceOutsideStrings(text, " \(pyTarget.and) ", " \(JJ.operators.and.symbol) ")
+        text = replaceOutsideStrings(text, " \(pyTarget.or) ", " \(JJ.operators.or.symbol) ")
+        text = replaceOutsideStrings(text, pyTarget.not, JJ.operators.not.symbol + " ")
         lines = text.components(separatedBy: "\n")
 
         var result: [String] = []
@@ -181,7 +183,7 @@ class PythonReverseTranspiler: ReverseTranspiling {
             // Close blocks when indentation decreases
             while indentLevel > srcIndent {
                 indentLevel -= 1
-                result.append("\(indent(indentLevel))<~>>")
+                result.append("\(indent(indentLevel))\(JJEmit.end)")
             }
 
             let nsLine = trimmed as NSString
@@ -189,37 +191,37 @@ class PythonReverseTranspiler: ReverseTranspiling {
 
             if let m = Self.commentRegex?.firstMatch(in: trimmed, range: range) {
                 let comment = nsLine.substring(with: m.range(at: 2))
-                result.append("\(indent(indentLevel))@@ \(comment)")
+                result.append("\(indent(indentLevel))\(JJEmit.comment) \(comment)")
             } else if let m = Self.defRegex?.firstMatch(in: trimmed, range: range) {
                 let name = nsLine.substring(with: m.range(at: 2))
                 let params = nsLine.substring(with: m.range(at: 3))
-                result.append("\(indent(indentLevel))<~morph{\(name)(\(params))}>>")
+                result.append("\(indent(indentLevel))\(JJEmit.morph(name, params))")
                 indentLevel += 1
             } else if let m = Self.forRegex?.firstMatch(in: trimmed, range: range) {
                 let v = nsLine.substring(with: m.range(at: 2))
                 let start = nsLine.substring(with: m.range(at: 3))
                 let end = nsLine.substring(with: m.range(at: 4))
-                result.append("\(indent(indentLevel))<~loop{\(v):\(start)..\(end)}>>")
+                result.append("\(indent(indentLevel))\(JJEmit.loop(v, start, end))")
                 indentLevel += 1
             } else if let m = Self.ifRegex?.firstMatch(in: trimmed, range: range) {
                 let cond = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))<~when{\(cond)}>>")
+                result.append("\(indent(indentLevel))\(JJEmit.when(cond))")
                 indentLevel += 1
             } else if Self.elseRegex?.firstMatch(in: trimmed, range: range) != nil {
-                result.append("\(indent(indentLevel))<~else>>")
+                result.append("\(indent(indentLevel))\(JJEmit.else)")
                 indentLevel += 1
             } else if let m = Self.returnRegex?.firstMatch(in: trimmed, range: range) {
                 let val = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))~>yeet{\(reverseFuncCalls(val, style: .python))}")
+                result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, style: .python)))")
             } else if let m = Self.printRegex?.firstMatch(in: trimmed, range: range) {
                 let expr = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))~>frob{7a3}::emit(\(reverseFuncCalls(expr, style: .python)))")
+                result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, style: .python)))")
             } else if let m = Self.varRegex?.firstMatch(in: trimmed, range: range) {
                 let name = nsLine.substring(with: m.range(at: 2))
                 // Skip if the name is a known keyword
                 if ["for", "if", "else", "def", "return", "print", "while"].contains(name) { continue }
                 let val = reverseExpr(nsLine.substring(with: m.range(at: 3)))
-                result.append("\(indent(indentLevel))~>snag{\(name)}::val(\(reverseFuncCalls(val, style: .python)))")
+                result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(val, style: .python)))")
             } else {
                 // Try to reverse standalone function calls
                 let reversed = reverseFuncCalls(trimmed, style: .python)
@@ -230,7 +232,7 @@ class PythonReverseTranspiler: ReverseTranspiling {
         // Close remaining blocks
         while indentLevel > 0 {
             indentLevel -= 1
-            result.append("\(indent(indentLevel))<~>>")
+            result.append("\(indent(indentLevel))\(JJEmit.end)")
         }
 
         let output = result.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -267,7 +269,7 @@ private func reverseFuncCalls(_ expr: String, style: CallStyle) -> String {
         let name = nsExpr.substring(with: match.range(at: 1))
         let args = nsExpr.substring(with: match.range(at: 2))
         if !knownFuncs.contains(name) && !name.isEmpty {
-            let replacement = "~>invoke{\(name)}::with(\(args))"
+            let replacement = JJEmit.invoke(name, args)
             result = (result as NSString).replacingCharacters(in: match.range, with: replacement)
         }
     }
@@ -341,12 +343,12 @@ class BraceReverseTranspiler: ReverseTranspiling {
             }
         }
 
-        // Replace booleans/null
+        // Replace booleans/null using JJ keywords from config
         var text = lines.joined(separator: "\n")
-        text = replaceOutsideStrings(text, config.trueValue, "~yep")
-        text = replaceOutsideStrings(text, config.falseValue, "~nope")
+        text = replaceOutsideStrings(text, config.trueValue, JJ.keywords.true)
+        text = replaceOutsideStrings(text, config.falseValue, JJ.keywords.false)
         if config.nilValue != "0" {
-            text = replaceOutsideStrings(text, config.nilValue, "~nil")
+            text = replaceOutsideStrings(text, config.nilValue, JJ.keywords.nil)
         }
         lines = text.components(separatedBy: "\n")
 
@@ -381,14 +383,14 @@ class BraceReverseTranspiler: ReverseTranspiling {
             // Closing brace
             if trimmed == "}" {
                 if indentLevel > 0 { indentLevel -= 1 }
-                result.append("\(indent(indentLevel))<~>>")
+                result.append("\(indent(indentLevel))\(JJEmit.end)")
                 continue
             }
 
             // Comment
             if trimmed.hasPrefix(config.commentPrefix) {
                 let comment = String(trimmed.dropFirst(config.commentPrefix.count)).trimmingCharacters(in: .whitespaces)
-                result.append("\(indent(indentLevel))@@ \(comment)")
+                result.append("\(indent(indentLevel))\(JJEmit.comment) \(comment)")
                 continue
             }
 
@@ -398,7 +400,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
                 let params = nsLine.substring(with: m.range(at: 2))
                 // Strip type annotations from params
                 let cleanParams = stripParamTypes(params, style: config.callStyle)
-                result.append("\(indent(indentLevel))<~morph{\(name)(\(cleanParams))}>>")
+                result.append("\(indent(indentLevel))\(JJEmit.morph(name, cleanParams))")
                 indentLevel += 1
                 continue
             }
@@ -408,7 +410,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
                 let v = nsLine.substring(with: m.range(at: 1))
                 let start = nsLine.substring(with: m.range(at: 2))
                 let end = nsLine.substring(with: m.range(at: 3))
-                result.append("\(indent(indentLevel))<~loop{\(v):\(start)..\(end)}>>")
+                result.append("\(indent(indentLevel))\(JJEmit.loop(v, start, end))")
                 indentLevel += 1
                 continue
             }
@@ -416,14 +418,14 @@ class BraceReverseTranspiler: ReverseTranspiling {
             // If
             if let m = config.ifPattern?.firstMatch(in: trimmed, range: range) {
                 let cond = reverseExpr(nsLine.substring(with: m.range(at: 1)))
-                result.append("\(indent(indentLevel))<~when{\(cond)}>>")
+                result.append("\(indent(indentLevel))\(JJEmit.when(cond))")
                 indentLevel += 1
                 continue
             }
 
             // Else
             if config.elsePattern?.firstMatch(in: trimmed, range: range) != nil {
-                result.append("\(indent(indentLevel))<~else>>")
+                result.append("\(indent(indentLevel))\(JJEmit.else)")
                 indentLevel += 1
                 continue
             }
@@ -433,7 +435,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
                 var val = nsLine.substring(with: m.range(at: 1))
                 if val.hasSuffix(";") { val = String(val.dropLast()) }
                 val = reverseExpr(val)
-                result.append("\(indent(indentLevel))~>yeet{\(reverseFuncCalls(val, style: config.callStyle))}")
+                result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, style: config.callStyle)))")
                 continue
             }
 
@@ -451,7 +453,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
                     continue
                 }
                 let expr = reverseExpr(captured)
-                result.append("\(indent(indentLevel))~>frob{7a3}::emit(\(reverseFuncCalls(expr, style: config.callStyle)))")
+                result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, style: config.callStyle)))")
                 continue
             }
 
@@ -461,7 +463,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
                 var val = nsLine.substring(with: m.range(at: 2))
                 if val.hasSuffix(";") { val = String(val.dropLast()) }
                 val = reverseExpr(val)
-                result.append("\(indent(indentLevel))~>snag{\(name)}::val(\(reverseFuncCalls(val, style: config.callStyle)))")
+                result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(val, style: config.callStyle)))")
                 continue
             }
 
@@ -474,7 +476,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
         // Close remaining blocks
         while indentLevel > 0 {
             indentLevel -= 1
-            result.append("\(indent(indentLevel))<~>>")
+            result.append("\(indent(indentLevel))\(JJEmit.end)")
         }
 
         let output = result.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -645,6 +647,7 @@ class CppReverseTranspiler: CFamilyPrintfReverseTranspiler {
 
 class JavaScriptReverseTranspiler: BraceReverseTranspiler {
     init() {
+        let target = loadTarget("js")
         super.init(config: Config(
             headerPatterns: ["// Transpiled from JibJab"],
             hasMainWrapper: false,
@@ -653,9 +656,9 @@ class JavaScriptReverseTranspiler: BraceReverseTranspiler {
             forPattern: try? NSRegularExpression(pattern: "^for\\s*\\(let\\s+(\\w+)\\s*=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
             ifPattern: try? NSRegularExpression(pattern: "^if\\s*\\((.+)\\)\\s*\\{$"),
             funcPattern: try? NSRegularExpression(pattern: "^function\\s+(\\w+)\\(([^)]*)\\)\\s*\\{$"),
-            trueValue: "true",
-            falseValue: "false",
-            nilValue: "null",
+            trueValue: target.true,
+            falseValue: target.false,
+            nilValue: target.nil,
             callStyle: .javascript
         ))
     }
@@ -671,9 +674,6 @@ class SwiftReverseTranspiler: BraceReverseTranspiler {
             forPattern: try? NSRegularExpression(pattern: "^for\\s+(\\w+)\\s+in\\s+(\\d+)\\.\\.<(\\d+)\\s*\\{$"),
             ifPattern: try? NSRegularExpression(pattern: "^if\\s+(.+?)\\s*\\{$"),
             funcPattern: try? NSRegularExpression(pattern: "^func\\s+(\\w+)\\(([^)]*)\\)(?:\\s*->\\s*\\w+)?\\s*\\{$"),
-            trueValue: "true",
-            falseValue: "false",
-            nilValue: "nil",
             callStyle: .swift,
             stripSemicolons: false
         ))
@@ -695,9 +695,6 @@ class GoReverseTranspiler: BraceReverseTranspiler {
             forPattern: try? NSRegularExpression(pattern: "^for\\s+(\\w+)\\s*:=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
             ifPattern: try? NSRegularExpression(pattern: "^if\\s+(.+?)\\s*\\{$"),
             funcPattern: try? NSRegularExpression(pattern: "^func\\s+(\\w+)\\(([^)]*)\\)(?:\\s*\\w+)?\\s*\\{$"),
-            trueValue: "true",
-            falseValue: "false",
-            nilValue: "nil",
             callStyle: .go,
             stripSemicolons: false
         ))
@@ -748,6 +745,7 @@ class GoReverseTranspiler: BraceReverseTranspiler {
 
 class ObjCReverseTranspiler: CFamilyPrintfReverseTranspiler {
     init() {
+        let target = loadTarget("objc")
         super.init(config: Config(
             headerPatterns: ["// Transpiled from JibJab", "#import", "#include"],
             hasMainWrapper: true,
@@ -757,9 +755,9 @@ class ObjCReverseTranspiler: CFamilyPrintfReverseTranspiler {
             forPattern: try? NSRegularExpression(pattern: "^for\\s*\\(int\\s+(\\w+)\\s*=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
             ifPattern: try? NSRegularExpression(pattern: "^if\\s*\\((.+)\\)\\s*\\{$"),
             funcPattern: try? NSRegularExpression(pattern: "^(?:NSInteger|int|void|float|double)\\s+(\\w+)\\(([^)]*)\\)\\s*\\{$"),
-            trueValue: "YES",
-            falseValue: "NO",
-            nilValue: "nil",
+            trueValue: target.true,
+            falseValue: target.false,
+            nilValue: target.nil,
             callStyle: .cFamily,
             forwardDeclPattern: try? NSRegularExpression(pattern: "^(?:NSInteger|int|void|float|double)\\s+\\w+\\([^)]*\\);$"),
             autoreleasepoolWrapper: true
@@ -782,9 +780,6 @@ class ObjCppReverseTranspiler: CFamilyPrintfReverseTranspiler {
             forPattern: try? NSRegularExpression(pattern: "^for\\s*\\(int\\s+(\\w+)\\s*=\\s*(\\d+);\\s*\\w+\\s*<\\s*(\\d+);"),
             ifPattern: try? NSRegularExpression(pattern: "^if\\s*\\((.+)\\)\\s*\\{$"),
             funcPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double|auto)\\s+(\\w+)\\(([^)]*)\\)\\s*\\{$"),
-            trueValue: "true",
-            falseValue: "false",
-            nilValue: "nil",
             callStyle: .cFamily,
             forwardDeclPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double|auto)\\s+\\w+\\([^)]*\\);$"),
             autoreleasepoolWrapper: true
@@ -808,6 +803,8 @@ class ObjCppReverseTranspiler: CFamilyPrintfReverseTranspiler {
 }
 
 class AppleScriptReverseTranspiler: ReverseTranspiling {
+    private let asTarget = loadTarget("applescript")
+
     private static let logRegex = try? NSRegularExpression(pattern: "^(\\s*)log\\s+(.+)$")
     private static let setRegex = try? NSRegularExpression(pattern: "^(\\s*)set\\s+(\\w+)\\s+to\\s+(.+)$")
     private static let repeatRegex = try? NSRegularExpression(pattern: "^(\\s*)repeat\\s+with\\s+(\\w+)\\s+from\\s+(\\d+)\\s+to\\s+\\((\\d+)\\s*-\\s*1\\)$")
@@ -822,10 +819,11 @@ class AppleScriptReverseTranspiler: ReverseTranspiling {
         var lines = code.components(separatedBy: "\n")
         lines = lines.filter { !$0.hasPrefix("-- Transpiled from JibJab") }
 
+        // Replace AppleScript-specific operators using target config
         var text = lines.joined(separator: "\n")
-        text = replaceOutsideStrings(text, " and ", " <&&> ")
-        text = replaceOutsideStrings(text, " or ", " <||> ")
-        text = replaceOutsideStrings(text, " mod ", " <%> ")
+        text = replaceOutsideStrings(text, " \(asTarget.and) ", " \(JJ.operators.and.symbol) ")
+        text = replaceOutsideStrings(text, " \(asTarget.or) ", " \(JJ.operators.or.symbol) ")
+        text = replaceOutsideStrings(text, " \(asTarget.mod) ", " \(JJ.operators.mod.symbol) ")
         lines = text.components(separatedBy: "\n")
 
         var result: [String] = []
@@ -840,38 +838,38 @@ class AppleScriptReverseTranspiler: ReverseTranspiling {
 
             if let m = Self.commentRegex?.firstMatch(in: trimmed, range: range) {
                 let comment = nsLine.substring(with: m.range(at: 2))
-                result.append("\(indent(indentLevel))@@ \(comment)")
+                result.append("\(indent(indentLevel))\(JJEmit.comment) \(comment)")
             } else if Self.endRegex?.firstMatch(in: trimmed, range: range) != nil {
                 if indentLevel > 0 { indentLevel -= 1 }
-                result.append("\(indent(indentLevel))<~>>")
+                result.append("\(indent(indentLevel))\(JJEmit.end)")
             } else if let m = Self.onRegex?.firstMatch(in: trimmed, range: range) {
                 let name = nsLine.substring(with: m.range(at: 2))
                 let params = nsLine.substring(with: m.range(at: 3))
-                result.append("\(indent(indentLevel))<~morph{\(name)(\(params))}>>")
+                result.append("\(indent(indentLevel))\(JJEmit.morph(name, params))")
                 indentLevel += 1
             } else if let m = Self.repeatRegex?.firstMatch(in: trimmed, range: range) {
                 let v = nsLine.substring(with: m.range(at: 2))
                 let start = nsLine.substring(with: m.range(at: 3))
                 let end = nsLine.substring(with: m.range(at: 4))
-                result.append("\(indent(indentLevel))<~loop{\(v):\(start)..\(end)}>>")
+                result.append("\(indent(indentLevel))\(JJEmit.loop(v, start, end))")
                 indentLevel += 1
             } else if let m = Self.ifRegex?.firstMatch(in: trimmed, range: range) {
                 let cond = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))<~when{\(cond)}>>")
+                result.append("\(indent(indentLevel))\(JJEmit.when(cond))")
                 indentLevel += 1
             } else if Self.elseRegex?.firstMatch(in: trimmed, range: range) != nil {
-                result.append("\(indent(indentLevel))<~else>>")
+                result.append("\(indent(indentLevel))\(JJEmit.else)")
                 indentLevel += 1
             } else if let m = Self.returnRegex?.firstMatch(in: trimmed, range: range) {
                 let val = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))~>yeet{\(reverseFuncCalls(val, style: .applescript))}")
+                result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, style: .applescript)))")
             } else if let m = Self.logRegex?.firstMatch(in: trimmed, range: range) {
                 let expr = reverseExpr(nsLine.substring(with: m.range(at: 2)))
-                result.append("\(indent(indentLevel))~>frob{7a3}::emit(\(reverseFuncCalls(expr, style: .applescript)))")
+                result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, style: .applescript)))")
             } else if let m = Self.setRegex?.firstMatch(in: trimmed, range: range) {
                 let name = nsLine.substring(with: m.range(at: 2))
                 let val = reverseExpr(nsLine.substring(with: m.range(at: 3)))
-                result.append("\(indent(indentLevel))~>snag{\(name)}::val(\(reverseFuncCalls(val, style: .applescript)))")
+                result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(val, style: .applescript)))")
             } else {
                 result.append("\(indent(indentLevel))\(reverseFuncCalls(reverseExpr(trimmed), style: .applescript))")
             }
@@ -879,7 +877,7 @@ class AppleScriptReverseTranspiler: ReverseTranspiling {
 
         while indentLevel > 0 {
             indentLevel -= 1
-            result.append("\(indent(indentLevel))<~>>")
+            result.append("\(indent(indentLevel))\(JJEmit.end)")
         }
 
         let output = result.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
