@@ -8,6 +8,8 @@ class HSplitController<Left: View, Right: View>: NSSplitViewController {
     let rightView: Right
     let leftMin: CGFloat
     let leftMax: CGFloat
+    private var savedLeftWidth: CGFloat?
+    private var isWindowResizing = false
 
     init(left: Left, right: Right, leftMin: CGFloat, leftMax: CGFloat) {
         self.leftView = left
@@ -37,6 +39,41 @@ class HSplitController<Left: View, Right: View>: NSSplitViewController {
         addSplitViewItem(rightItem)
 
         splitView.autosaveName = "MainHSplit"
+
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(windowWillStartResize),
+            name: NSWindow.willStartLiveResizeNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(windowDidResize),
+            name: NSWindow.didResizeNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(windowDidEndResize),
+            name: NSWindow.didEndLiveResizeNotification, object: nil)
+    }
+
+    @objc private func windowWillStartResize(_ note: Notification) {
+        guard (note.object as? NSWindow) == view.window else { return }
+        isWindowResizing = true
+        if splitView.subviews.count >= 2 {
+            savedLeftWidth = splitView.subviews[0].frame.width
+        }
+    }
+
+    @objc private func windowDidResize(_ note: Notification) {
+        guard isWindowResizing,
+              (note.object as? NSWindow) == view.window,
+              let saved = savedLeftWidth,
+              splitView.subviews.count >= 2 else { return }
+        splitView.setPosition(saved, ofDividerAt: 0)
+    }
+
+    @objc private func windowDidEndResize(_ note: Notification) {
+        guard (note.object as? NSWindow) == view.window else { return }
+        isWindowResizing = false
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
@@ -83,6 +120,8 @@ class VSplitController<Top: View, Bottom: View>: NSSplitViewController {
     let bottomView: Bottom
     let topMin: CGFloat
     let bottomMin: CGFloat
+    private var savedTopHeight: CGFloat?
+    private var isWindowResizing = false
 
     init(top: Top, bottom: Bottom, topMin: CGFloat, bottomMin: CGFloat) {
         self.topView = top
@@ -112,6 +151,45 @@ class VSplitController<Top: View, Bottom: View>: NSSplitViewController {
         addSplitViewItem(bottomItem)
 
         splitView.autosaveName = "MainVSplit"
+
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(windowWillStartResize),
+            name: NSWindow.willStartLiveResizeNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(windowDidResize),
+            name: NSWindow.didResizeNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(windowDidEndResize),
+            name: NSWindow.didEndLiveResizeNotification, object: nil)
+    }
+
+    @objc private func windowWillStartResize(_ note: Notification) {
+        guard (note.object as? NSWindow) == view.window else { return }
+        isWindowResizing = true
+        if splitView.subviews.count >= 2 {
+            savedTopHeight = splitView.subviews[0].frame.height
+        }
+    }
+
+    @objc private func windowDidResize(_ note: Notification) {
+        guard isWindowResizing,
+              (note.object as? NSWindow) == view.window,
+              let saved = savedTopHeight,
+              splitView.subviews.count >= 2 else { return }
+        let total = splitView.bounds.height
+        let divider = splitView.dividerThickness
+        let maxTop = total - divider - bottomMin
+        let restored = min(saved, maxTop)
+        splitView.setPosition(restored, ofDividerAt: 0)
+    }
+
+    @objc private func windowDidEndResize(_ note: Notification) {
+        guard (note.object as? NSWindow) == view.window else { return }
+        isWindowResizing = false
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
