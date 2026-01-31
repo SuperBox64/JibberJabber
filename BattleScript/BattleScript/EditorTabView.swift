@@ -137,6 +137,7 @@ struct EditorTabView: View {
         VStack(spacing: 0) {
             // Tab bar
             HStack(spacing: 0) {
+                Spacer().frame(width: 4)
                 ForEach(targets, id: \.self) { target in
                     Button(action: { selectedTab = target }) {
                         Text(target.uppercased())
