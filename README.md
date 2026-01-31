@@ -46,19 +46,6 @@ Write once, run anywhere. JibJab includes a **true native compiler** that genera
 | **jjpy** | Python | `jibjab/jjpy/` | Cross-platform |
 | **BattleScript** | SwiftUI | `BattleScript/` | Visual IDE for JibJab |
 
-### Capabilities
-
-| Implementation | `run` | `compile` | `asm` | `transpile` |
-|----------------|:-----:|:---------:|:-----:|:-----------:|
-| **jjswift** | ✅ | ✅ | ✅ | ✅ |
-| **jjpy** | ✅ | ✅ | ✅ | ✅ |
-| **BattleScript** | ✅ | - | - | ✅ |
-
-- **`run`** - Interpret JJ code directly
-- **`compile`** - Generate ARM64 Mach-O binary (no external tools)
-- **`asm`** - Compile via assembly transpiler (uses `as` + `ld`)
-- **`transpile`** - Convert to Python, JavaScript, C, C++, ARM64 Assembly, Swift, AppleScript, Objective-C, Objective-C++, Go
-
 ---
 
 ## Quick Start
@@ -77,28 +64,12 @@ git clone https://github.com/user/JibberJabber.git
 cd JibberJabber/jibjab
 ```
 
-### Installing External Dependencies
-
-Some transpile targets require external tools. Install them via [Homebrew](https://brew.sh):
-
-```bash
-# Xcode Command Line Tools (C, C++, Swift, Assembly, ObjC, ObjC++)
-xcode-select --install
-
-# QuickJS - JavaScript runtime and compiler
-brew install quickjs
-
-# Go - Go compiler
-brew install go
-```
+### Dependencies
 
 | Tool | Used For | Install |
 |------|----------|---------|
-| `clang` / `clang++` | C, C++, ObjC, ObjC++ | `xcode-select --install` |
-| `swiftc` | Swift | `xcode-select --install` |
-| `as` + `ld` | ARM64 Assembly | `xcode-select --install` |
-| `python3` | Python | Pre-installed on macOS |
-| `osascript` | AppleScript | Pre-installed on macOS |
+| `clang` / `swiftc` / `as` + `ld` | C, C++, Swift, ObjC, ObjC++, ASM | `xcode-select --install` |
+| `python3` / `osascript` | Python, AppleScript | Pre-installed on macOS |
 | `qjs` / `qjsc` | JavaScript (QuickJS) | `brew install quickjs` |
 | `go` | Go | `brew install go` |
 
@@ -194,43 +165,13 @@ Targets: `py`, `js`, `c`, `cpp`, `swift`, `objc`, `objcpp`, `asm`, `applescript`
 
 ---
 
-## Example Programs
+## Examples
 
-### Hello World
 ```jj
+@@ Hello World
 ~>frob{7a3}::emit("Hello, JibJab World!")
-```
 
-### Variables and Math
-```jj
-~>snag{x}::val(#10)
-~>snag{y}::val(#5)
-
-~>frob{7a3}::emit(x <+> y)    @@ prints 15
-~>frob{7a3}::emit(x <*> y)    @@ prints 50
-```
-
-### Conditionals
-```jj
-~>snag{age}::val(#21)
-
-<~when{age <gt> #18}>>
-    ~>frob{7a3}::emit("Adult")
-<~else>>
-    ~>frob{7a3}::emit("Minor")
-<~>>
-```
-
-### Loops
-```jj
-@@ Count from 0 to 9
-<~loop{i:0..10}>>
-    ~>frob{7a3}::emit(i)
-<~>>
-```
-
-### Functions (Fibonacci)
-```jj
+@@ Fibonacci
 <~morph{fib(n)}>>
     <~when{n <lt> #2}>>
         ~>yeet{n}
@@ -238,30 +179,12 @@ Targets: `py`, `js`, `c`, `cpp`, `swift`, `objc`, `objcpp`, `asm`, `applescript`
     ~>yeet{(~>invoke{fib}::with(n <-> #1)) <+> (~>invoke{fib}::with(n <-> #2))}
 <~>>
 
-@@ Print first 15 Fibonacci numbers
 <~loop{i:0..15}>>
     ~>frob{7a3}::emit(~>invoke{fib}::with(i))
 <~>>
 ```
 
-### FizzBuzz
-```jj
-<~loop{n:1..101}>>
-    <~when{(n <%> #15) <=> #0}>>
-        ~>frob{7a3}::emit("FizzBuzz")
-    <~else>>
-        <~when{(n <%> #3) <=> #0}>>
-            ~>frob{7a3}::emit("Fizz")
-        <~else>>
-            <~when{(n <%> #5) <=> #0}>>
-                ~>frob{7a3}::emit("Buzz")
-            <~else>>
-                ~>frob{7a3}::emit(n)
-            <~>>
-        <~>>
-    <~>>
-<~>>
-```
+See `jibjab/examples/` for more: variables, fizzbuzz, arrays, enums, dictionaries, tuples, comparisons, numbers.
 
 ---
 
@@ -302,89 +225,14 @@ See [BattleScript/README.md](BattleScript/README.md) for details.
 
 ```
 JibberJabber/
-├── BattleScript/               # macOS IDE app
-│   ├── BattleScript.xcodeproj
-│   └── BattleScript/
-│       ├── BattleScriptApp.swift
-│       ├── ContentView.swift
-│       ├── EditorTabView.swift
-│       ├── OutputView.swift
-│       └── JJEngine.swift
-│
+├── BattleScript/          # macOS SwiftUI IDE
 ├── jibjab/
-│   ├── common/
-│   │   ├── jj.json              # Shared language definition
-│   │   └── arm64.json           # Shared ARM64/Mach-O constants
-│   │
-│   ├── jjswift/                 # Swift implementation
-│   │   ├── Package.swift
-│   │   └── Sources/jjswift/
-│   │       ├── main.swift       # CLI entry point
-│   │       └── JJ/
-│   │           ├── Lexer.swift
-│   │           ├── Token.swift
-│   │           ├── AST.swift
-│   │           ├── Parser.swift
-│   │           ├── Interpreter.swift
-│   │           ├── NativeCompiler.swift  # ARM64 Mach-O generator
-│   │           ├── JJConfig.swift
-│   │           └── Transpilers/
-│   │               ├── PythonTranspiler.swift
-│   │               ├── JavaScriptTranspiler.swift
-│   │               ├── CTranspiler.swift
-│   │               ├── CppTranspiler.swift
-│   │               ├── AssemblyTranspiler.swift
-│   │               ├── SwiftTranspiler.swift
-│   │               ├── AppleScriptTranspiler.swift
-│   │               ├── ObjCTranspiler.swift
-│   │               ├── ObjCppTranspiler.swift
-│   │               └── GoTranspiler.swift
-│   │
-│   ├── jjpy/                    # Python implementation
-│   │   ├── jj.py                # CLI entry point
-│   │   └── jj/
-│   │       ├── __init__.py
-│   │       ├── lexer.py
-│   │       ├── ast.py
-│   │       ├── parser.py
-│   │       ├── interpreter.py
-│   │       ├── native_compiler.py  # ARM64 Mach-O generator
-│   │       └── transpilers/
-│   │           ├── __init__.py
-│   │           ├── python.py
-│   │           ├── javascript.py
-│   │           ├── c.py
-│   │           ├── cpp.py
-│   │           ├── asm.py
-│   │           ├── swift.py
-│   │           ├── applescript.py
-│   │           ├── objc.py
-│   │           ├── objcpp.py
-│   │           └── go.py
-│   │
-│   ├── examples/                # Example JJ programs
-│   │   ├── hello.jj
-│   │   ├── variables.jj
-│   │   ├── fibonacci.jj
-│   │   ├── fizzbuzz.jj
-│   │   ├── arrays.jj
-│   │   ├── comparisons.jj
-│   │   ├── dictionaries.jj
-│   │   ├── enums.jj
-│   │   ├── numbers.jj
-│   │   └── tuples.jj
-│   │
-│   ├── README.md                # Detailed docs
-│   └── SPEC.md                  # Language specification
-│
-└── README.md                    # This file
+│   ├── common/            # Shared jj.json + arm64.json
+│   ├── jjswift/           # Swift CLI (Lexer, Parser, Interpreter, NativeCompiler, 10 Transpilers)
+│   ├── jjpy/              # Python CLI (same architecture)
+│   └── examples/          # 10 example .jj programs
+└── README.md
 ```
-
----
-
-## Shared Language Definition (`jj.json`)
-
-Both implementations read from `jibjab/common/jj.json`, which defines keywords, blocks, operators, and transpilation templates. This ensures identical output from both implementations.
 
 ---
 
@@ -459,34 +307,10 @@ flowchart TD
 
 ---
 
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [BattleScript/README.md](BattleScript/README.md) | BattleScript IDE docs |
-| [jibjab/README.md](jibjab/README.md) | Detailed implementation docs |
-| [jibjab/SPEC.md](jibjab/SPEC.md) | Complete language specification |
-| [jibjab/common/jj.json](jibjab/common/jj.json) | Shared language definition |
-
----
-
-## Contributing
-
-Contributions welcome:
-- New transpiler targets (Rust, Linux ARM64)
-- Language features (objects, imports)
-- IDE syntax highlighting
-
----
-
 ## License
 
 MIT
 
 ---
 
-*JibJab: Where humans see noise and AI sees code.*
-
-P.S.
-
-This experiment was supposed to fail and it unexpectedly did something remarkable on the first try. #LegoBatman
+*JibJab: Where humans see noise and AI sees code.* This experiment was supposed to fail and it unexpectedly did something remarkable on the first try. #LegoBatman
