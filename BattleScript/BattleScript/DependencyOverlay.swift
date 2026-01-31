@@ -17,13 +17,13 @@ struct DependencyOverlay: View {
     var body: some View {
         if isVisible, let status {
             ZStack(alignment: .top) {
-                Color.black.opacity(0.4)
+                Color(nsColor: .shadowColor).opacity(0.4)
                     .ignoresSafeArea()
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("System Check")
                         .font(.system(.headline, design: .monospaced))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .padding(.bottom, 4)
 
                     row(ok: status.xcodeTools, name: items[0].name, hint: items[0].hint, show: showRow1)
@@ -36,7 +36,7 @@ struct DependencyOverlay: View {
                         }
                         .buttonStyle(.plain)
                         .font(.system(.caption, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.secondary)
                         .padding(.top, 4)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                     }
@@ -75,7 +75,7 @@ struct DependencyOverlay: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(name)
                     .font(.system(.caption, design: .monospaced))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 if !ok {
                     Text(hint)
                         .font(.system(size: 9, design: .monospaced))

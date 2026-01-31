@@ -148,7 +148,7 @@ struct EditorTabView: View {
                     }
                     .buttonStyle(.plain)
                     .background(selectedTab == target ? (tabColors[target] ?? .gray).opacity(0.3) : Color.clear)
-                    .foregroundColor(selectedTab == target ? Color.white.opacity(0.85) : .secondary)
+                    .foregroundColor(selectedTab == target ? .primary : .secondary)
                     .cornerRadius(6)
                 }
                 Spacer()
@@ -217,7 +217,7 @@ struct EditorTabView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
                     .background(showLineNumbers ? Color.blue.opacity(0.3) : Color.clear)
-                    .foregroundColor(showLineNumbers ? Color.white.opacity(0.85) : .secondary)
+                    .foregroundColor(showLineNumbers ? .primary : .secondary)
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
@@ -234,7 +234,7 @@ struct EditorTabView: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)
                             .background(highlighterStyle == style.rawValue ? Color.purple.opacity(0.3) : Color.clear)
-                            .foregroundColor(highlighterStyle == style.rawValue ? Color.white.opacity(0.85) : Color.white.opacity(0.8))
+                            .foregroundColor(highlighterStyle == style.rawValue ? .primary : .secondary)
                             .cornerRadius(4)
                     }
                     .buttonStyle(.plain)
@@ -243,7 +243,7 @@ struct EditorTabView: View {
             }
             .padding(.vertical, 2)
             .offset(y: 1)
-            .background(Color.black.opacity(0.5))
+            .background(Color(nsColor: .controlBackgroundColor))
         }
     }
 }

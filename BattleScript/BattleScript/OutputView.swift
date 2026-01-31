@@ -6,7 +6,7 @@ struct OutputView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Color.black.opacity(0.6)
+            Color(nsColor: .separatorColor)
                 .frame(height: 1)
             HStack {
                 Text("Output")
