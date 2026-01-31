@@ -2,6 +2,15 @@
   "name": "Objective-C++",
   "ext": ".mm",
   "comment": "//",
+  "intFmt": "%d",
+  "strFmt": "%s",
+  "doubleFmt": "%g",
+  "boolFmt": "%s",
+  "coutExpr": "std::cout << {expr}",
+  "coutEndl": " << std::endl;",
+  "coutSep": " << ",
+  "coutNewline": "std::cout << {expr} << std::endl;",
+  "coutInline": "std::cout << {expr};",
   "enumAccess": "{key}",
   "header": "// Transpiled from JibJab\n#import <Foundation/Foundation.h>\n#include <iostream>\n#include <cstdint>\n",
   "printInt": "std::cout << {expr} << std::endl;",
@@ -45,5 +54,11 @@
     "UInt64": "uint64_t",
     "Float": "float",
     "Double": "double"
-  }
+  },
+  "highlightKeywords": ["break", "case", "catch", "continue", "default", "delete", "do", "else", "for", "goto", "if", "new", "noexcept", "return", "sizeof", "switch", "throw", "try", "while", "super"],
+  "highlightDeclKeywords": ["auto", "class", "const", "constexpr", "enum", "explicit", "export", "extern", "final", "friend", "inline", "mutable", "namespace", "operator", "override", "private", "protected", "public", "register", "static", "struct", "template", "typedef", "typename", "union", "using", "virtual", "volatile", "nil", "Nil", "YES", "NO", "NULL", "nullptr"],
+  "highlightTypeKeywords": ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed", "bool", "string", "vector", "id", "BOOL", "NSString", "NSArray", "NSDictionary", "NSNumber", "NSObject", "true", "false"],
+  "highlightSelfKeywords": ["self", "this"],
+  "highlightSystemFunctions": ["printf", "NSLog", "fprintf", "sprintf", "scanf", "puts", "malloc", "calloc", "realloc", "free", "memcpy", "memmove", "memset", "strlen", "strcmp", "sort", "find", "push_back", "begin", "end", "make_shared", "make_unique", "move", "swap", "exit", "abort", "abs"],
+  "highlightCommentPrefix": "//"
 }

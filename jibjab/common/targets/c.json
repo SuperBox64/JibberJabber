@@ -2,6 +2,12 @@
   "name": "C",
   "ext": ".c",
   "comment": "//",
+  "intFmt": "%d",
+  "strFmt": "%s",
+  "doubleFmt": "%g",
+  "boolFmt": "%s",
+  "printfInterp": "printf(\"{fmt}\\n\"{args});",
+  "printfInline": "printf(\"{fmt}\"{args});",
   "enumAccess": "{key}",
   "header": "// Transpiled from JibJab\n#include <stdio.h>\n#include <stdlib.h>\n#include <stdint.h>\n#include <math.h>\n",
   "printInt": "printf(\"%d\\n\", {expr});",
@@ -43,5 +49,10 @@
     "UInt64": "uint64_t",
     "Float": "float",
     "Double": "double"
-  }
+  },
+  "highlightKeywords": ["break", "case", "continue", "default", "do", "else", "for", "goto", "if", "return", "sizeof", "switch", "while"],
+  "highlightDeclKeywords": ["auto", "const", "enum", "extern", "inline", "register", "static", "struct", "typedef", "union", "volatile"],
+  "highlightTypeKeywords": ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed", "size_t", "bool", "FILE", "NULL", "true", "false"],
+  "highlightSystemFunctions": ["printf", "fprintf", "sprintf", "snprintf", "scanf", "fscanf", "sscanf", "puts", "fputs", "gets", "fgets", "putchar", "getchar", "malloc", "calloc", "realloc", "free", "memcpy", "memmove", "memset", "memcmp", "strlen", "strcpy", "strncpy", "strcat", "strncat", "strcmp", "strncmp", "fopen", "fclose", "fread", "fwrite", "fseek", "ftell", "exit", "abort", "atoi", "atof", "atol", "abs", "rand", "srand"],
+  "highlightCommentPrefix": "//"
 }

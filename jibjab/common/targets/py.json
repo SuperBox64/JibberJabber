@@ -43,5 +43,11 @@
     "UInt64": "int",
     "Float": "float",
     "Double": "float"
-  }
+  },
+  "highlightKeywords": ["and", "as", "assert", "async", "await", "break", "continue", "del", "elif", "else", "except", "finally", "for", "from", "global", "if", "in", "is", "not", "or", "pass", "raise", "return", "try", "while", "with", "yield"],
+  "highlightDeclKeywords": ["class", "def", "import", "lambda", "nonlocal"],
+  "highlightTypeKeywords": ["int", "float", "str", "bool", "list", "dict", "tuple", "set", "None", "True", "False", "range", "len", "type", "object", "Exception", "ValueError", "TypeError", "KeyError", "IndexError", "RuntimeError", "StopIteration", "super"],
+  "highlightSelfKeywords": ["self", "cls"],
+  "highlightSystemFunctions": ["print", "input", "len", "range", "enumerate", "zip", "map", "filter", "sorted", "reversed", "min", "max", "abs", "sum", "any", "all", "isinstance", "issubclass", "hasattr", "getattr", "setattr", "delattr", "open", "iter", "next", "id", "hash", "repr", "format", "chr", "ord", "hex", "oct", "bin", "round", "pow", "divmod"],
+  "highlightCommentPrefix": "#"
 }

@@ -2,6 +2,15 @@
   "name": "Go",
   "ext": ".go",
   "comment": "//",
+  "intFmt": "%v",
+  "strFmt": "%v",
+  "doubleFmt": "%v",
+  "boolFmt": "%v",
+  "printfInterp": "fmt.Printf(\"{fmt}\\n\"{args})",
+  "printfInline": "fmt.Printf(\"{fmt}\"{args})",
+  "importSingle": "import \"fmt\"",
+  "importMulti": "import (\n{imports}\n)",
+  "importItem": "\"{name}\"",
   "enumAccess": "{name}_{key}",
   "enumConst": "const (\n{cases}\n)",
   "header": "// Transpiled from JibJab\npackage main\n\nimport \"fmt\"\n",
@@ -44,5 +53,10 @@
     "UInt64": "uint64",
     "Float": "float32",
     "Double": "float64"
-  }
+  },
+  "highlightKeywords": ["if", "else", "for", "range", "switch", "case", "default", "break", "continue", "return", "defer", "go", "select", "fallthrough", "goto"],
+  "highlightDeclKeywords": ["func", "var", "const", "package", "import", "chan", "type", "struct", "interface", "map"],
+  "highlightTypeKeywords": ["int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64", "float32", "float64", "complex64", "complex128", "string", "bool", "byte", "rune", "error", "any", "true", "false", "nil", "iota", "fmt", "Println", "Printf", "Sprintf", "Fprintf"],
+  "highlightSystemFunctions": ["println", "print", "panic", "recover", "make", "new", "append", "copy", "delete", "len", "cap", "close"],
+  "highlightCommentPrefix": "//"
 }

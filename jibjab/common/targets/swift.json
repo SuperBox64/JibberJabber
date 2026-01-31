@@ -45,5 +45,11 @@
     "UInt64": "UInt64",
     "Float": "Float",
     "Double": "Double"
-  }
+  },
+  "highlightKeywords": ["if", "else", "guard", "for", "while", "repeat", "switch", "case", "default", "break", "continue", "return", "defer", "do", "try", "catch", "throw", "throws", "rethrows", "where", "as", "is", "in", "super", "async", "await"],
+  "highlightDeclKeywords": ["func", "var", "let", "class", "struct", "enum", "extension", "protocol", "mutating", "inout", "import", "public", "private", "internal", "fileprivate", "open", "final", "required", "convenience", "static", "subscript", "init", "deinit", "override", "typealias", "associatedtype", "some", "any", "actor", "nonisolated", "isolated", "sending", "weak", "unowned", "lazy", "dynamic", "indirect", "consuming", "borrowing"],
+  "highlightTypeKeywords": ["Int", "Int8", "Int16", "Int32", "Int64", "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "String", "Double", "Float", "Bool", "Character", "Array", "Dictionary", "Set", "Optional", "Any", "AnyObject", "Void", "Error", "Result", "Codable", "Encodable", "Decodable", "Hashable", "Equatable", "Comparable", "Identifiable", "Sendable", "CustomStringConvertible", "true", "false", "nil"],
+  "highlightSelfKeywords": ["self", "Self"],
+  "highlightSystemFunctions": ["print", "debugPrint", "dump", "fatalError", "preconditionFailure", "precondition", "assert", "assertionFailure", "min", "max", "abs", "stride", "zip", "type", "isKnownUniquelyReferenced", "swap", "withUnsafePointer", "withUnsafeMutablePointer", "withUnsafeBytes", "MemoryLayout", "unsafeBitCast", "numericCast", "readLine", "repeatElement", "sequence"],
+  "highlightCommentPrefix": "//"
 }

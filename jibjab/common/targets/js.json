@@ -43,5 +43,11 @@
     "UInt64": "BigInt",
     "Float": "Number",
     "Double": "Number"
-  }
+  },
+  "highlightKeywords": ["if", "else", "for", "while", "do", "return", "break", "continue", "switch", "case", "default", "try", "catch", "finally", "throw", "new", "async", "await", "typeof", "instanceof", "in", "of", "delete", "void", "yield", "super"],
+  "highlightDeclKeywords": ["function", "var", "let", "const", "class", "extends", "static", "import", "export", "from"],
+  "highlightTypeKeywords": ["true", "false", "null", "undefined", "NaN", "Infinity", "Array", "Object", "String", "Number", "Boolean", "Map", "Set", "Promise", "Date", "RegExp", "Error", "Symbol", "BigInt", "JSON", "Math", "console"],
+  "highlightSelfKeywords": ["this"],
+  "highlightSystemFunctions": ["alert", "confirm", "prompt", "parseInt", "parseFloat", "isNaN", "isFinite", "decodeURI", "encodeURI", "decodeURIComponent", "encodeURIComponent", "setTimeout", "setInterval", "clearTimeout", "clearInterval", "fetch", "require"],
+  "highlightCommentPrefix": "//"
 }

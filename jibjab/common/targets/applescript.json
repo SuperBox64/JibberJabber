@@ -68,5 +68,9 @@
     "UInt64": "integer",
     "Float": "real",
     "Double": "real"
-  }
+  },
+  "highlightKeywords": ["if", "then", "else", "repeat", "while", "until", "return", "try", "error", "exit", "not", "and", "or", "is", "as", "of", "in", "the", "a", "an", "do"],
+  "highlightDeclKeywords": ["tell", "end", "set", "to", "get", "on", "with", "considering", "ignoring", "timeout", "transaction", "using", "terms", "from", "local", "global", "property", "script", "my", "it", "its", "application", "display", "dialog", "log", "shell"],
+  "highlightTypeKeywords": ["true", "false", "missing", "value", "text", "integer", "real", "number", "list", "record", "date", "file", "alias", "string", "boolean", "class", "reference"],
+  "highlightCommentPrefix": "--"
 }
