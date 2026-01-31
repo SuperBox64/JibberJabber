@@ -32,7 +32,7 @@ struct SyntaxTheme {
         currentStyle == .xcode ? boldFont : font
     }
     static var commentFont: NSFont {
-        currentStyle == .vscode ? italicFont : font
+        font
     }
 
     private static var isDark: Bool {
@@ -52,13 +52,18 @@ struct SyntaxTheme {
     }
 
     // MARK: - Syntax Colors
+    // VSCode colors sourced from VSCode Dark Modern & Light Modern themes
 
     static var keyword: NSColor {
-        //        Xcode Dark     Xcode Light    VSCode Dark    VSCode Light
+        //        Xcode Dark     Xcode Light    VSCode Dark         VSCode Light
         color(xd: 0xFF7AB2, xl: 0xAD3DA4, vd: 0xC586C0, vl: 0xAF00DB)
     }
     static var block: NSColor {
         color(xd: 0xFF7AB2, xl: 0xAD3DA4, vd: 0xC586C0, vl: 0xAF00DB)
+    }
+    // Declaration keywords (func, let, var, class, struct, etc.) - blue in VSCode
+    static var declarationKeyword: NSColor {
+        color(xd: 0xFF7AB2, xl: 0xAD3DA4, vd: 0x569CD6, vl: 0x0000FF)
     }
     static var `operator`: NSColor {
         color(xd: 0xA3B1BF, xl: 0x262626, vd: 0xD4D4D4, vl: 0x000000)
@@ -108,4 +113,17 @@ struct SyntaxTheme {
     static var property: NSColor {
         color(xd: 0x4EB0CC, xl: 0x3E8087, vd: 0x9CDCFE, vl: 0x001080)
     }
+
+    // MARK: - Bracket Pair Colorization (VSCode only; Xcode uses default text)
+    static var bracket1: NSColor {
+        color(xd: 0xA3B1BF, xl: 0x262626, vd: 0xFFD700, vl: 0x0431FA)
+    }
+    static var bracket2: NSColor {
+        color(xd: 0xA3B1BF, xl: 0x262626, vd: 0xDA70D6, vl: 0x319331)
+    }
+    static var bracket3: NSColor {
+        color(xd: 0xA3B1BF, xl: 0x262626, vd: 0x179FFF, vl: 0x7B3814)
+    }
+    static var bracketColors: [NSColor] { [bracket1, bracket2, bracket3] }
+    static var bracketPairEnabled: Bool { currentStyle == .vscode }
 }

@@ -15,6 +15,7 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
 
     // Subclasses override these
     var keywords: [String] { [] }
+    var declarationKeywords: [String] { [] }  // func, let, var, class, struct, etc. - blue in VSCode
     var keywordColor: NSColor { SyntaxTheme.keyword }
     var typeKeywords: [String] { [] }
     var singleLineCommentPrefix: String? { "//" }
@@ -29,6 +30,7 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
 
     // Precomputed
     private var _keywordSet: Set<String>?
+    private var _declKeywordSet: Set<String>?
     private var _typeSet: Set<String>?
     private var _selfSet: Set<String>?
     private var _stringRegex: NSRegularExpression?
@@ -63,6 +65,9 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
         // Apply keywords
         applyKeywords(textStorage, text: nsText, range: fullRange)
 
+        // Apply declaration keywords (override keyword color for these)
+        applyDeclarationKeywords(textStorage, text: nsText, range: fullRange)
+
         // Apply type keywords
         applyTypes(textStorage, text: nsText, range: fullRange)
 
@@ -96,6 +101,11 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
             }
         }
 
+        // Apply bracket pair colorization (VSCode only)
+        if SyntaxTheme.bracketPairEnabled {
+            applyBracketPairColors(textStorage, text: text, range: fullRange)
+        }
+
         // Apply numbers
         applyNumbers(textStorage, text: text, range: fullRange)
 
@@ -104,6 +114,24 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
 
         // Apply comments last (override everything inside comments)
         applyComments(textStorage, text: text, nsText: nsText, range: fullRange)
+    }
+
+    private func applyBracketPairColors(_ ts: NSTextStorage, text: String, range: NSRange) {
+        let colors = SyntaxTheme.bracketColors
+        let openBrackets: Set<Character> = ["(", "[", "{"]
+        let closeBrackets: Set<Character> = [")", "]", "}"]
+        var depth = 0
+        for (i, ch) in text.enumerated() {
+            if openBrackets.contains(ch) {
+                let color = colors[depth % colors.count]
+                ts.addAttribute(.foregroundColor, value: color, range: NSRange(location: i, length: 1))
+                depth += 1
+            } else if closeBrackets.contains(ch) {
+                depth = max(0, depth - 1)
+                let color = colors[depth % colors.count]
+                ts.addAttribute(.foregroundColor, value: color, range: NSRange(location: i, length: 1))
+            }
+        }
     }
 
     private static let _wordRegex = try? NSRegularExpression(pattern: "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b")
@@ -116,6 +144,18 @@ class BaseSyntaxHighlighter: SyntaxHighlighting {
             let word = text.substring(with: r)
             if kwSet.contains(word) {
                 ts.addAttributes([.foregroundColor: keywordColor, .font: SyntaxTheme.keywordFont], range: r)
+            }
+        }
+    }
+
+    private func applyDeclarationKeywords(_ ts: NSTextStorage, text: NSString, range: NSRange) {
+        if _declKeywordSet == nil { _declKeywordSet = Set(declarationKeywords) }
+        guard let dkSet = _declKeywordSet, !dkSet.isEmpty, let pattern = Self._wordRegex else { return }
+        pattern.enumerateMatches(in: text as String, range: range) { match, _, _ in
+            guard let r = match?.range else { return }
+            let word = text.substring(with: r)
+            if dkSet.contains(word) {
+                ts.addAttributes([.foregroundColor: SyntaxTheme.declarationKeyword, .font: SyntaxTheme.keywordFont], range: r)
             }
         }
     }
@@ -281,6 +321,25 @@ class JJHighlighter: SyntaxHighlighting {
             }
         }
 
+        // Bracket pair colorization (VSCode only)
+        if SyntaxTheme.bracketPairEnabled {
+            let colors = SyntaxTheme.bracketColors
+            let openBrackets: Set<Character> = ["(", "[", "{"]
+            let closeBrackets: Set<Character> = [")", "]", "}"]
+            var depth = 0
+            for (i, ch) in text.enumerated() {
+                if openBrackets.contains(ch) {
+                    let color = colors[depth % colors.count]
+                    textStorage.addAttribute(.foregroundColor, value: color, range: NSRange(location: i, length: 1))
+                    depth += 1
+                } else if closeBrackets.contains(ch) {
+                    depth = max(0, depth - 1)
+                    let color = colors[depth % colors.count]
+                    textStorage.addAttribute(.foregroundColor, value: color, range: NSRange(location: i, length: 1))
+                }
+            }
+        }
+
         // Numbers (gold)
         Self.numberRegex?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             if let r = match?.range {
@@ -308,10 +367,13 @@ class JJHighlighter: SyntaxHighlighting {
 
 class PythonHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
-        ["and", "as", "assert", "async", "await", "break", "class", "continue", "def", "del",
-         "elif", "else", "except", "finally", "for", "from", "global", "if", "import", "in",
-         "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while",
+        ["and", "as", "assert", "async", "await", "break", "continue", "del",
+         "elif", "else", "except", "finally", "for", "from", "global", "if", "in",
+         "is", "not", "or", "pass", "raise", "return", "try", "while",
          "with", "yield"]
+    }
+    override var declarationKeywords: [String] {
+        ["class", "def", "import", "lambda", "nonlocal"]
     }
     override var typeKeywords: [String] {
         ["int", "float", "str", "bool", "list", "dict", "tuple", "set", "None", "True", "False",
@@ -343,11 +405,15 @@ class PythonHighlighter: BaseSyntaxHighlighter {
 
 class JavaScriptHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
-        ["function", "var", "let", "const", "if", "else", "for", "while", "do", "return",
+        ["if", "else", "for", "while", "do", "return",
          "break", "continue", "switch", "case", "default", "try", "catch", "finally",
-         "throw", "new", "class", "extends", "static", "async", "await",
-         "import", "export", "from", "typeof", "instanceof", "in", "of", "delete", "void",
+         "throw", "new", "async", "await",
+         "typeof", "instanceof", "in", "of", "delete", "void",
          "yield", "super"]
+    }
+    override var declarationKeywords: [String] {
+        ["function", "var", "let", "const", "class", "extends", "static",
+         "import", "export", "from"]
     }
     override var typeKeywords: [String] {
         ["true", "false", "null", "undefined", "NaN", "Infinity",
@@ -373,9 +439,13 @@ class JavaScriptHighlighter: BaseSyntaxHighlighter {
 
 class CHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
-        ["auto", "break", "case", "const", "continue", "default", "do", "else", "enum",
-         "extern", "for", "goto", "if", "inline", "register", "return", "sizeof",
-         "static", "struct", "switch", "typedef", "union", "volatile", "while", "main"]
+        ["break", "case", "continue", "default", "do", "else",
+         "for", "goto", "if", "return", "sizeof",
+         "switch", "while"]
+    }
+    override var declarationKeywords: [String] {
+        ["auto", "const", "enum", "extern", "inline", "register",
+         "static", "struct", "typedef", "union", "volatile", "main"]
     }
     override var typeKeywords: [String] {
         ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
@@ -396,13 +466,20 @@ class CHighlighter: BaseSyntaxHighlighter {
 
 class CppHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
-        ["auto", "break", "case", "catch", "class", "const", "constexpr", "continue",
-         "default", "delete", "do", "else", "enum", "explicit", "export", "extern",
-         "final", "for", "friend", "goto", "if", "inline", "mutable", "namespace",
-         "new", "noexcept", "operator", "override", "private", "protected", "public",
-         "register", "return", "sizeof", "static", "static_cast", "struct", "switch",
-         "template", "throw", "try", "typedef", "typeid", "typename",
-         "union", "using", "virtual", "volatile", "while", "main", "nullptr"]
+        ["break", "case", "catch", "continue",
+         "default", "delete", "do", "else",
+         "for", "goto", "if", "new", "noexcept",
+         "return", "sizeof", "switch",
+         "throw", "try", "while"]
+    }
+    override var declarationKeywords: [String] {
+        ["auto", "class", "const", "constexpr",
+         "enum", "explicit", "export", "extern",
+         "final", "friend", "inline", "mutable", "namespace",
+         "operator", "override", "private", "protected", "public",
+         "register", "static", "static_cast", "struct",
+         "template", "typedef", "typeid", "typename",
+         "union", "using", "virtual", "volatile", "main", "nullptr"]
     }
     override var typeKeywords: [String] {
         ["int", "char", "void", "float", "double", "short", "long", "unsigned", "signed",
@@ -424,15 +501,22 @@ class CppHighlighter: BaseSyntaxHighlighter {
 // MARK: - Swift Highlighter
 
 class SwiftHighlighter: BaseSyntaxHighlighter {
+    // Control-flow keywords (purple in VSCode)
     override var keywords: [String] {
-        ["func", "var", "let", "class", "struct", "enum", "extension", "protocol",
-         "mutating", "inout", "if", "else", "guard", "for", "while", "repeat",
+        ["if", "else", "guard", "for", "while", "repeat",
          "switch", "case", "default", "break", "continue", "return", "defer",
-         "do", "try", "catch", "throw", "throws", "rethrows", "import", "public", "private",
+         "do", "try", "catch", "throw", "throws", "rethrows",
+         "where", "as", "is", "in", "super",
+         "async", "await"]
+    }
+    // Declaration keywords (blue in VSCode, same as keyword in Xcode)
+    override var declarationKeywords: [String] {
+        ["func", "var", "let", "class", "struct", "enum", "extension", "protocol",
+         "mutating", "inout", "import", "public", "private",
          "internal", "fileprivate", "open", "final", "required", "convenience",
-         "static", "subscript", "init", "deinit", "override", "where", "as", "is",
-         "in", "super", "typealias", "associatedtype", "some", "any",
-         "async", "await", "actor", "nonisolated", "isolated", "sending",
+         "static", "subscript", "init", "deinit", "override",
+         "typealias", "associatedtype", "some", "any",
+         "actor", "nonisolated", "isolated", "sending",
          "weak", "unowned", "lazy", "dynamic", "indirect", "consuming", "borrowing"]
     }
     override var typeKeywords: [String] {
@@ -456,10 +540,14 @@ class SwiftHighlighter: BaseSyntaxHighlighter {
 
 class ObjCHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
-        ["auto", "break", "case", "const", "continue", "default", "do", "else", "enum",
-         "extern", "for", "goto", "if", "inline", "register", "return", "sizeof",
-         "static", "struct", "switch", "typedef", "union", "volatile", "while",
-         "super", "nil", "Nil", "YES", "NO", "NULL",
+        ["break", "case", "continue", "default", "do", "else",
+         "for", "goto", "if", "return", "sizeof",
+         "switch", "while", "super"]
+    }
+    override var declarationKeywords: [String] {
+        ["auto", "const", "enum", "extern", "inline", "register",
+         "static", "struct", "typedef", "union", "volatile",
+         "nil", "Nil", "YES", "NO", "NULL",
          "printf", "main", "NSLog"]
     }
     override var selfKeywords: [String] { ["self"] }
@@ -498,14 +586,21 @@ class ObjCHighlighter: BaseSyntaxHighlighter {
 
 class ObjCppHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
-        ["auto", "break", "case", "catch", "class", "const", "constexpr", "continue",
-         "default", "delete", "do", "else", "enum", "explicit", "export", "extern",
-         "final", "for", "friend", "goto", "if", "inline", "mutable", "namespace",
-         "new", "noexcept", "operator", "override", "private", "protected", "public",
-         "register", "return", "sizeof", "static", "struct", "switch",
-         "template", "throw", "try", "typedef", "typename",
-         "union", "using", "virtual", "volatile", "while",
-         "super", "nil", "Nil", "YES", "NO", "NULL", "nullptr",
+        ["break", "case", "catch", "continue",
+         "default", "delete", "do", "else",
+         "for", "goto", "if", "new", "noexcept",
+         "return", "sizeof", "switch",
+         "throw", "try", "while", "super"]
+    }
+    override var declarationKeywords: [String] {
+        ["auto", "class", "const", "constexpr",
+         "enum", "explicit", "export", "extern",
+         "final", "friend", "inline", "mutable", "namespace",
+         "operator", "override", "private", "protected", "public",
+         "register", "static", "struct",
+         "template", "typedef", "typename",
+         "union", "using", "virtual", "volatile",
+         "nil", "Nil", "YES", "NO", "NULL", "nullptr",
          "printf", "cout", "main", "NSLog"]
     }
     override var selfKeywords: [String] { ["self", "this"] }
@@ -543,10 +638,13 @@ class ObjCppHighlighter: BaseSyntaxHighlighter {
 
 class GoHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
-        ["func", "var", "const", "package", "import", "if", "else", "for", "range",
+        ["if", "else", "for", "range",
          "switch", "case", "default", "break", "continue", "return", "defer",
-         "go", "chan", "select", "type", "struct", "interface", "map",
-         "fallthrough", "goto", "main"]
+         "go", "select", "fallthrough", "goto"]
+    }
+    override var declarationKeywords: [String] {
+        ["func", "var", "const", "package", "import",
+         "chan", "type", "struct", "interface", "map", "main"]
     }
     override var typeKeywords: [String] {
         ["int", "int8", "int16", "int32", "int64",
@@ -632,6 +730,25 @@ class AsmHighlighter: SyntaxHighlighting {
             }
         }
 
+        // Bracket pair colorization (VSCode only)
+        if SyntaxTheme.bracketPairEnabled {
+            let colors = SyntaxTheme.bracketColors
+            let openBrackets: Set<Character> = ["(", "[", "{"]
+            let closeBrackets: Set<Character> = [")", "]", "}"]
+            var depth = 0
+            for (i, ch) in text.enumerated() {
+                if openBrackets.contains(ch) {
+                    let color = colors[depth % colors.count]
+                    textStorage.addAttribute(.foregroundColor, value: color, range: NSRange(location: i, length: 1))
+                    depth += 1
+                } else if closeBrackets.contains(ch) {
+                    depth = max(0, depth - 1)
+                    let color = colors[depth % colors.count]
+                    textStorage.addAttribute(.foregroundColor, value: color, range: NSRange(location: i, length: 1))
+                }
+            }
+        }
+
         // Strings
         Self.stringRegex?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             if let r = match?.range {
@@ -652,12 +769,17 @@ class AsmHighlighter: SyntaxHighlighting {
 
 class AppleScriptHighlighter: BaseSyntaxHighlighter {
     override var keywords: [String] {
-        ["tell", "end", "set", "to", "get", "on", "if", "then", "else", "repeat",
-         "while", "until", "with", "return", "try", "error", "considering",
-         "ignoring", "timeout", "transaction", "using", "terms", "from",
-         "exit", "local", "global", "property", "script", "my", "it", "its",
-         "not", "and", "or", "is", "as", "of", "in", "the", "a", "an",
-         "application", "display", "dialog", "log", "do", "shell"]
+        ["if", "then", "else", "repeat",
+         "while", "until", "return", "try", "error",
+         "exit", "not", "and", "or", "is", "as", "of", "in",
+         "the", "a", "an", "do"]
+    }
+    override var declarationKeywords: [String] {
+        ["tell", "end", "set", "to", "get", "on",
+         "with", "considering", "ignoring", "timeout", "transaction",
+         "using", "terms", "from",
+         "local", "global", "property", "script", "my", "it", "its",
+         "application", "display", "dialog", "log", "shell"]
     }
     override var typeKeywords: [String] {
         ["true", "false", "missing", "value", "text", "integer", "real", "number",
