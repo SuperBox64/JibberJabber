@@ -87,7 +87,7 @@ struct SyntaxTheme {
         color(xd: 0xFFA14F, xl: 0x78492A, vd: 0xC586C0, vl: 0x0000FF)
     }
     static var type: NSColor {
-        color(xd: 0x4EB0CC, xl: 0x3E8087, vd: 0x4EC9B0, vl: 0x267F99)
+        color(xd: 0xD0A8FF, xl: 0x3E8087, vd: 0x4EC9B0, vl: 0x267F99)
     }
     static var defaultText: NSColor {
         color(xd: 0xDFDFE0, xl: 0x000000, vd: 0xD4D4D4, vl: 0x000000)
@@ -106,7 +106,7 @@ struct SyntaxTheme {
     }
     // System functions (print, etc.) - purple in Xcode, same as functionCall in VSCode
     static var systemFunctionCall: NSColor {
-        color(xd: 0xAA76E9, xl: 0x6C36A9, vd: 0xDCDCAA, vl: 0x795E26)
+        color(xd: 0xA167E6, xl: 0x6C36A9, vd: 0xDCDCAA, vl: 0x795E26)
     }
     static var attribute: NSColor {
         color(xd: 0xFD8F3F, xl: 0x643820, vd: 0xDCDCAA, vl: 0x795E26)
@@ -117,9 +117,9 @@ struct SyntaxTheme {
     static var property: NSColor {
         color(xd: 0x4EB0CC, xl: 0x3E8087, vd: 0x9CDCFE, vl: 0x001080)
     }
-    // All identifiers (variables, functions, etc.) - Xcode colors everything, VSCode colors variables
+    // All identifiers (variables, functions, etc.) - VSCode colors variables; Xcode uses default text
     static var identifier: NSColor {
-        color(xd: 0x67B7A4, xl: 0x316E74, vd: 0x9CDCFE, vl: 0x001080)
+        color(xd: 0xDFDFE0, xl: 0x000000, vd: 0x9CDCFE, vl: 0x001080)
     }
 
     // MARK: - Bracket Pair Colorization (VSCode only; Xcode uses default text)
