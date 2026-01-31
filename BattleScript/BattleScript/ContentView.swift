@@ -3,7 +3,7 @@ import JJLib
 
 struct ContentView: View {
     @State private var sourceCode = ""
-    @State private var selectedExample = ""
+    @State private var selectedExample = "hello"
     @State private var selectedTab = "jj"
     @State private var transpiledOutputs: [String: String] = [:]
     @State private var runOutput = ""
