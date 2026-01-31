@@ -119,6 +119,13 @@ class PythonReverseTranspiler: ReverseTranspiling {
     private static let returnRegex = try? NSRegularExpression(pattern: "^(\\s*)return\\s+(.+)$")
     private static let commentRegex = try? NSRegularExpression(pattern: "^(\\s*)#\\s*(.*)$")
 
+    private static let printBoolRegex = try? NSRegularExpression(
+        pattern: #"^(\s*)print\(str\((\w+)\)\.lower\(\)\)$"#
+    )
+    private static let fstringBoolRegex = try? NSRegularExpression(
+        pattern: #"\{str\((\w+)\)\.lower\(\)\}"#
+    )
+
     func reverseTranspile(_ code: String) -> String? {
         var lines = code.components(separatedBy: "\n")
 
@@ -126,6 +133,25 @@ class PythonReverseTranspiler: ReverseTranspiling {
         lines = lines.filter { line in
             !line.hasPrefix("#!/usr/bin/env python3") &&
             !line.hasPrefix("# Transpiled from JibJab")
+        }
+
+        // Pre-process: simplify bool patterns
+        for i in 0..<lines.count {
+            let trimmed = lines[i].trimmingCharacters(in: .whitespaces)
+            let leading = String(lines[i].prefix(while: { $0 == " " }))
+            let ns = trimmed as NSString
+            let range = NSRange(location: 0, length: ns.length)
+            // print(str(t).lower()) → print(t)
+            if let m = Self.printBoolRegex?.firstMatch(in: trimmed, range: range) {
+                let varName = ns.substring(with: m.range(at: 2))
+                lines[i] = "\(leading)print(\(varName))"
+                continue
+            }
+            // f-string: {str(t).lower()} → {t}
+            if let regex = Self.fstringBoolRegex {
+                lines[i] = leading + regex.stringByReplacingMatches(
+                    in: trimmed, range: range, withTemplate: "{$1}")
+            }
         }
 
         // Replace Python-specific booleans
@@ -482,9 +508,84 @@ class BraceReverseTranspiler: ReverseTranspiling {
     }
 }
 
+// MARK: - C-Family Printf Handler
+
+/// Handles printf("format\n", args) with multiple format specifiers by
+/// reconstructing them as interpolated strings before the base class processes them.
+class CFamilyPrintfReverseTranspiler: BraceReverseTranspiler {
+    private static let printfMultiRegex = try? NSRegularExpression(
+        pattern: #"^(\s*)printf\("(.+)\\n"(?:,\s*(.+))?\);$"#
+    )
+
+    private static let boolTernaryPrintf = try? NSRegularExpression(
+        pattern: #"^(\s*)printf\("%s\\n",\s*(\w+)\s*\?\s*"true"\s*:\s*"false"\);$"#
+    )
+
+    override func reverseTranspile(_ code: String) -> String? {
+        var lines = code.components(separatedBy: "\n")
+        for i in 0..<lines.count {
+            let trimmed = lines[i].trimmingCharacters(in: .whitespaces)
+            let leading = String(lines[i].prefix(while: { $0 == " " || $0 == "\t" }))
+            let ns = trimmed as NSString
+            let range = NSRange(location: 0, length: ns.length)
+
+            // Bool ternary: printf("%s\n", x ? "true" : "false"); → printf("%d\n", x);
+            if let m = Self.boolTernaryPrintf?.firstMatch(in: trimmed, range: range) {
+                let varName = ns.substring(with: m.range(at: 2))
+                lines[i] = "\(leading)printf(\"%d\\n\", \(varName));"
+                continue
+            }
+
+            // Multi-specifier printf (interpolation)
+            if let m = Self.printfMultiRegex?.firstMatch(in: trimmed, range: range) {
+                let fmt = ns.substring(with: m.range(at: 2))
+                let specifierCount = fmt.components(separatedBy: "%").count - 1
+                if specifierCount > 1, m.range(at: 3).location != NSNotFound {
+                    let argsStr = ns.substring(with: m.range(at: 3))
+                    let args = splitArgs(argsStr)
+                    var result = fmt
+                    for arg in args {
+                        if let r = result.range(of: "%[dsgflv]+", options: .regularExpression) {
+                            result = result.replacingCharacters(in: r, with: "{\(arg)}")
+                        }
+                    }
+                    // Strip ternary bool expressions: {x ? "true" : "false"} → {x}
+                    let boolTernary = try? NSRegularExpression(pattern: #"\{(\w+) \? "true" : "false"\}"#)
+                    if let bt = boolTernary {
+                        result = bt.stringByReplacingMatches(in: result, range: NSRange(result.startIndex..., in: result), withTemplate: "{$1}")
+                    }
+                    lines[i] = "\(leading)printf(\"%s\\n\", \"\(result)\");"
+                }
+            }
+        }
+        return super.reverseTranspile(lines.joined(separator: "\n"))
+    }
+
+    /// Split args respecting nested parens/ternary expressions
+    private func splitArgs(_ s: String) -> [String] {
+        var args: [String] = []
+        var current = ""
+        var depth = 0
+        for c in s {
+            if c == "(" { depth += 1 }
+            if c == ")" { depth -= 1 }
+            if c == "," && depth == 0 {
+                args.append(current.trimmingCharacters(in: .whitespaces))
+                current = ""
+            } else {
+                current.append(c)
+            }
+        }
+        if !current.trimmingCharacters(in: .whitespaces).isEmpty {
+            args.append(current.trimmingCharacters(in: .whitespaces))
+        }
+        return args
+    }
+}
+
 // MARK: - Language-Specific Factories
 
-class CReverseTranspiler: BraceReverseTranspiler {
+class CReverseTranspiler: CFamilyPrintfReverseTranspiler {
     init() {
         super.init(config: Config(
             headerPatterns: ["// Transpiled from JibJab", "#include"],
@@ -502,7 +603,11 @@ class CReverseTranspiler: BraceReverseTranspiler {
     }
 }
 
-class CppReverseTranspiler: BraceReverseTranspiler {
+class CppReverseTranspiler: CFamilyPrintfReverseTranspiler {
+    private static let coutBoolRegex = try? NSRegularExpression(
+        pattern: #"^(\s*)std::cout\s*<<\s*\((\w+)\s*\?\s*"true"\s*:\s*"false"\)\s*<<\s*std::endl;$"#
+    )
+
     init() {
         super.init(config: Config(
             headerPatterns: ["// Transpiled from JibJab", "#include"],
@@ -516,6 +621,22 @@ class CppReverseTranspiler: BraceReverseTranspiler {
             callStyle: .cFamily,
             forwardDeclPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double|auto)\\s+\\w+\\([^)]*\\);$")
         ))
+    }
+
+    override func reverseTranspile(_ code: String) -> String? {
+        // Pre-process: strip cout bool ternary to plain cout
+        var lines = code.components(separatedBy: "\n")
+        for i in 0..<lines.count {
+            let trimmed = lines[i].trimmingCharacters(in: .whitespaces)
+            let leading = String(lines[i].prefix(while: { $0 == " " || $0 == "\t" }))
+            let ns = trimmed as NSString
+            let range = NSRange(location: 0, length: ns.length)
+            if let m = Self.coutBoolRegex?.firstMatch(in: trimmed, range: range) {
+                let varName = ns.substring(with: m.range(at: 2))
+                lines[i] = "\(leading)std::cout << \(varName) << std::endl;"
+            }
+        }
+        return super.reverseTranspile(lines.joined(separator: "\n"))
     }
 }
 
@@ -557,6 +678,10 @@ class SwiftReverseTranspiler: BraceReverseTranspiler {
 }
 
 class GoReverseTranspiler: BraceReverseTranspiler {
+    private static let printfRegex = try? NSRegularExpression(
+        pattern: #"^(\s*)fmt\.Printf\("(.+)\\n"(?:,\s*(.+))?\)$"#
+    )
+
     init() {
         super.init(config: Config(
             headerPatterns: ["// Transpiled from JibJab", "package main", "import"],
@@ -574,9 +699,51 @@ class GoReverseTranspiler: BraceReverseTranspiler {
             stripSemicolons: false
         ))
     }
+
+    override func reverseTranspile(_ code: String) -> String? {
+        // Pre-process: convert fmt.Printf with %v placeholders to fmt.Println with interpolation braces
+        var lines = code.components(separatedBy: "\n")
+        // Also strip multi-line import block: "fmt", "math", bare )
+        var inImportBlock = false
+        lines = lines.compactMap { line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            // Track multi-line import block
+            if trimmed == "import (" { inImportBlock = true; return nil }
+            if inImportBlock {
+                if trimmed == ")" { inImportBlock = false; return nil }
+                return nil  // skip "fmt", "math" etc.
+            }
+            return line
+        }
+        for i in 0..<lines.count {
+            let trimmed = lines[i].trimmingCharacters(in: .whitespaces)
+            let leading = String(lines[i].prefix(while: { $0 == " " || $0 == "\t" }))
+            let ns = trimmed as NSString
+            let range = NSRange(location: 0, length: ns.length)
+            if let m = Self.printfRegex?.firstMatch(in: trimmed, range: range) {
+                let fmt = ns.substring(with: m.range(at: 2))
+                let argsRange = m.range(at: 3)
+                if argsRange.location != NSNotFound {
+                    let argsStr = ns.substring(with: argsRange)
+                    let args = argsStr.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+                    // Replace %v with {argName}
+                    var result = fmt
+                    for arg in args {
+                        if let r = result.range(of: "%v") {
+                            result = result.replacingCharacters(in: r, with: "{\(arg)}")
+                        }
+                    }
+                    lines[i] = "\(leading)fmt.Println(\"\(result)\")"
+                } else {
+                    lines[i] = "\(leading)fmt.Println(\"\(fmt)\")"
+                }
+            }
+        }
+        return super.reverseTranspile(lines.joined(separator: "\n"))
+    }
 }
 
-class ObjCReverseTranspiler: BraceReverseTranspiler {
+class ObjCReverseTranspiler: CFamilyPrintfReverseTranspiler {
     init() {
         super.init(config: Config(
             headerPatterns: ["// Transpiled from JibJab", "#import", "#include"],
@@ -597,7 +764,11 @@ class ObjCReverseTranspiler: BraceReverseTranspiler {
     }
 }
 
-class ObjCppReverseTranspiler: BraceReverseTranspiler {
+class ObjCppReverseTranspiler: CFamilyPrintfReverseTranspiler {
+    private static let coutBoolRegex = try? NSRegularExpression(
+        pattern: #"^(\s*)std::cout\s*<<\s*\((\w+)\s*\?\s*"true"\s*:\s*"false"\)\s*<<\s*std::endl;$"#
+    )
+
     init() {
         super.init(config: Config(
             headerPatterns: ["// Transpiled from JibJab", "#import", "#include"],
@@ -615,6 +786,21 @@ class ObjCppReverseTranspiler: BraceReverseTranspiler {
             forwardDeclPattern: try? NSRegularExpression(pattern: "^(?:int|void|float|double|auto)\\s+\\w+\\([^)]*\\);$"),
             autoreleasepoolWrapper: true
         ))
+    }
+
+    override func reverseTranspile(_ code: String) -> String? {
+        var lines = code.components(separatedBy: "\n")
+        for i in 0..<lines.count {
+            let trimmed = lines[i].trimmingCharacters(in: .whitespaces)
+            let leading = String(lines[i].prefix(while: { $0 == " " || $0 == "\t" }))
+            let ns = trimmed as NSString
+            let range = NSRange(location: 0, length: ns.length)
+            if let m = Self.coutBoolRegex?.firstMatch(in: trimmed, range: range) {
+                let varName = ns.substring(with: m.range(at: 2))
+                lines[i] = "\(leading)std::cout << \(varName) << std::endl;"
+            }
+        }
+        return super.reverseTranspile(lines.joined(separator: "\n"))
     }
 }
 
