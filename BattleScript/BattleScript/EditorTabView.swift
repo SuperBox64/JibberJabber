@@ -290,7 +290,8 @@ struct EditorTabView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
                     .contentShape(Rectangle())
-                    .foregroundColor(.secondary)
+                    .background(Color.green.opacity(0.3))
+                    .foregroundColor(.primary)
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
