@@ -54,6 +54,38 @@ struct PersistentHSplitView<Left: View, Right: View>: NSViewControllerRepresenta
     }
 }
 
+class ProportionalSplitDelegate: NSObject, NSSplitViewDelegate {
+    func splitView(_ splitView: NSSplitView, resizeSubviewsWithOldSize oldSize: NSSize) {
+        let dividerThickness = splitView.dividerThickness
+        let newHeight = splitView.bounds.height
+        let oldHeight = oldSize.height
+
+        guard oldHeight > 0, splitView.subviews.count == 2 else {
+            splitView.adjustSubviews()
+            return
+        }
+
+        let topView = splitView.subviews[0]
+        let bottomView = splitView.subviews[1]
+        let oldTopHeight = topView.frame.height
+        let usableOld = oldHeight - dividerThickness
+        let usableNew = newHeight - dividerThickness
+
+        guard usableOld > 0 else {
+            splitView.adjustSubviews()
+            return
+        }
+
+        let ratio = oldTopHeight / usableOld
+        let newTopHeight = round(ratio * usableNew)
+        let newBottomHeight = usableNew - newTopHeight
+        let width = splitView.bounds.width
+
+        topView.frame = NSRect(x: 0, y: newBottomHeight + dividerThickness, width: width, height: newTopHeight)
+        bottomView.frame = NSRect(x: 0, y: 0, width: width, height: newBottomHeight)
+    }
+}
+
 struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresentable {
     let autosaveName: String
     let top: Top
@@ -75,10 +107,15 @@ struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresenta
         self.bottom = bottom()
     }
 
+    func makeCoordinator() -> ProportionalSplitDelegate {
+        ProportionalSplitDelegate()
+    }
+
     func makeNSViewController(context: Context) -> NSSplitViewController {
         let controller = NSSplitViewController()
         controller.splitView.isVertical = false
         controller.splitView.dividerStyle = .thin
+        controller.splitView.delegate = context.coordinator
 
         let topHost = NSHostingController(rootView: top)
         let topItem = NSSplitViewItem(viewController: topHost)
@@ -91,10 +128,6 @@ struct PersistentVSplitView<Top: View, Bottom: View>: NSViewControllerRepresenta
         bottomItem.canCollapse = false
         bottomItem.minimumThickness = bottomMinHeight
         controller.addSplitViewItem(bottomItem)
-
-        // Top panel holds size during window resize; bottom absorbs changes
-        controller.splitView.setHoldingPriority(.init(251), forSubviewAt: 0)
-        controller.splitView.setHoldingPriority(.init(249), forSubviewAt: 1)
 
         controller.splitView.autosaveName = autosaveName
 
