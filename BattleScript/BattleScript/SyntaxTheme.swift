@@ -66,7 +66,7 @@ struct SyntaxTheme {
         color(xd: 0xFF7AB2, xl: 0xAD3DA4, vd: 0x569CD6, vl: 0x0000FF)
     }
     static var `operator`: NSColor {
-        color(xd: 0xA3B1BF, xl: 0x262626, vd: 0xD4D4D4, vl: 0x000000)
+        color(xd: 0xDFDFE0, xl: 0x262626, vd: 0xD4D4D4, vl: 0x000000)
     }
     static var string: NSColor {
         color(xd: 0xFC6A5D, xl: 0xD12F1B, vd: 0xCE9178, vl: 0xA31515)
@@ -75,7 +75,7 @@ struct SyntaxTheme {
         color(xd: 0xD9C97C, xl: 0x272AD8, vd: 0xB5CEA8, vl: 0x098658)
     }
     static var comment: NSColor {
-        color(xd: 0x7F8C99, xl: 0x536579, vd: 0x6A9955, vl: 0x008000)
+        color(xd: 0x6C9C5A, xl: 0x536579, vd: 0x6A9955, vl: 0x008000)
     }
     static var specialValue: NSColor {
         color(xd: 0x78C2B3, xl: 0x3E8087, vd: 0x569CD6, vl: 0x0000FF)
@@ -103,6 +103,10 @@ struct SyntaxTheme {
     }
     static var functionCall: NSColor {
         color(xd: 0x67B7A4, xl: 0x316E74, vd: 0xDCDCAA, vl: 0x795E26)
+    }
+    // System functions (print, etc.) - purple in Xcode, same as functionCall in VSCode
+    static var systemFunctionCall: NSColor {
+        color(xd: 0xA167E6, xl: 0x6C36A9, vd: 0xDCDCAA, vl: 0x795E26)
     }
     static var attribute: NSColor {
         color(xd: 0xFD8F3F, xl: 0x643820, vd: 0xDCDCAA, vl: 0x795E26)
