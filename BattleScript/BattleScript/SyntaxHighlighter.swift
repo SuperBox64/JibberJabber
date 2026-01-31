@@ -615,13 +615,6 @@ class SwiftHighlighter: BaseSyntaxHighlighter {
 
     private static let _attrRegex = try? NSRegularExpression(pattern: "@[a-zA-Z_][a-zA-Z0-9_]*")
     override var attributePattern: NSRegularExpression? { Self._attrRegex }
-
-    // Lone _ is a keyword in Swift (wildcard/discard pattern)
-    private static let _underscoreRegex = try? NSRegularExpression(pattern: "(?<=[^a-zA-Z0-9_])_(?=[^a-zA-Z0-9_])|^_(?=[^a-zA-Z0-9_])")
-    override var extraPatterns: [(NSRegularExpression, NSColor)] {
-        guard let regex = Self._underscoreRegex else { return [] }
-        return [(regex, SyntaxTheme.keyword)]
-    }
 }
 
 // MARK: - Objective-C Highlighter
