@@ -22,9 +22,14 @@ private func reverseExpr(_ expr: String) -> String {
 
     // Reverse booleans/null per language (done by caller before this)
     // Reverse operators using jj.json config (order matters - longer patterns first)
-    // JavaScript-specific triple operators (not in jj.json, map to same JJ symbols)
-    s = replaceOutsideStrings(s, " === ", " \(JJ.operators.eq.symbol) ")
-    s = replaceOutsideStrings(s, " !== ", " \(JJ.operators.neq.symbol) ")
+    // JavaScript-specific operators from JS target config
+    let jsTarget = loadTarget("js")
+    if jsTarget.eq != "==" {
+        s = replaceOutsideStrings(s, " \(jsTarget.eq) ", " \(JJ.operators.eq.symbol) ")
+    }
+    if jsTarget.neq != "!=" {
+        s = replaceOutsideStrings(s, " \(jsTarget.neq) ", " \(JJ.operators.neq.symbol) ")
+    }
     // Multi-char emit operators first to avoid partial matches
     let OP = JJ.operators
     let orderedOps: [(String, String)] = [
@@ -47,39 +52,38 @@ private func reverseExpr(_ expr: String) -> String {
     return s
 }
 
+private let numPrefix = JJ.literals.numberPrefix
+private let numPrefixChar = JJ.literals.numberPrefix.first ?? Character("#")
+
 private func reverseNumbers(_ s: String) -> String {
-    // Don't touch numbers inside quotes
+    let delim = Character(JJ.literals.stringDelim)
     var result = ""
     var inString = false
     var i = s.startIndex
     while i < s.endIndex {
         let c = s[i]
-        if c == "\"" { inString.toggle(); result.append(c); i = s.index(after: i); continue }
+        if c == delim { inString.toggle(); result.append(c); i = s.index(after: i); continue }
         if inString { result.append(c); i = s.index(after: i); continue }
 
-        // Check if this is a bare number (not already prefixed with #)
         if c.isNumber || (c == "-" && i < s.index(before: s.endIndex) && s[s.index(after: i)].isNumber) {
-            // Make sure previous char isn't # already or a letter
             let prevChar: Character
             if let prevIdx = (i > s.startIndex ? s.index(before: i) : nil) {
                 prevChar = s[prevIdx]
             } else {
                 prevChar = Character(" ")
             }
-            if prevChar == "#" || prevChar.isLetter || prevChar == "_" {
+            if prevChar == numPrefixChar || prevChar.isLetter || prevChar == "_" {
                 result.append(c); i = s.index(after: i); continue
             }
-            // Collect the full number
             var numStr = String(c)
             var j = s.index(after: i)
             while j < s.endIndex && (s[j].isNumber || s[j] == ".") {
                 numStr.append(s[j])
                 j = s.index(after: j)
             }
-            // Only prefix if it's a standalone number (next char is not a letter)
             let nextChar = j < s.endIndex ? s[j] : Character(" ")
             if !nextChar.isLetter && nextChar != "_" {
-                result.append("#")
+                result += numPrefix
             }
             result.append(numStr)
             i = j
@@ -220,10 +224,8 @@ class PythonReverseTranspiler: ReverseTranspiling {
                 result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, target: target)))")
             } else if let m = Self.varRegex?.firstMatch(in: trimmed, range: range) {
                 let name = nsLine.substring(with: m.range(at: 1))
-                // Skip if the name is a known keyword
-                let known = ReversePatterns.knownFunctions(target)
-                let pyKeywords: Set<String> = ["for", "if", "else", "def", "return", "while"]
-                if known.contains(name) || pyKeywords.contains(name) { continue }
+                // Skip if the name is a known keyword (derived from target config templates)
+                if ReversePatterns.knownFunctions(target).contains(name) { continue }
                 let val = reverseExpr(nsLine.substring(with: m.range(at: 2)))
                 result.append("\(indent(indentLevel))\(JJEmit.snag(name, reverseFuncCalls(val, target: target)))")
             } else {
@@ -249,13 +251,13 @@ class PythonReverseTranspiler: ReverseTranspiling {
 enum CallStyle {
     case python, cFamily, swift, go, javascript, applescript
 
-    init(from name: String) {
-        switch name {
-        case "python": self = .python
-        case "swift": self = .swift
-        case "go": self = .go
-        case "javascript": self = .javascript
-        case "applescript": self = .applescript
+    init(from target: TargetConfig) {
+        switch target.name {
+        case "Python": self = .python
+        case "Swift": self = .swift
+        case "Go": self = .go
+        case "JavaScript": self = .javascript
+        case "AppleScript": self = .applescript
         default: self = .cFamily
         }
     }
@@ -305,24 +307,47 @@ private func replaceOutsideStrings(_ text: String, _ find: String, _ replace: St
 class BraceReverseTranspiler: ReverseTranspiling {
     struct Config {
         var target: TargetConfig
-        var headerPatterns: [String] = []
-        var hasMainWrapper: Bool = false
-        var mainPattern: String = "int main()"
+        var headerPatterns: [String]
+        var hasMainWrapper: Bool
+        var mainPattern: String
         var printPattern: NSRegularExpression?
         var varPattern: NSRegularExpression?
         var forPattern: NSRegularExpression?
         var ifPattern: NSRegularExpression?
-        var elsePattern = try? NSRegularExpression(pattern: "^\\}?\\s*else\\s*\\{?$")
+        var elsePattern: NSRegularExpression?
         var funcPattern: NSRegularExpression?
-        var returnPattern = try? NSRegularExpression(pattern: "^return\\s+(.+?)\\s*;?$")
-        var commentPrefix: String = "//"
-        var trueValue: String = "true"
-        var falseValue: String = "false"
-        var nilValue: String = "nil"
-        var callStyle: CallStyle = .cFamily
-        var forwardDeclPattern: NSRegularExpression? = nil
-        var stripSemicolons: Bool = true
-        var autoreleasepoolWrapper: Bool = false
+        var returnPattern: NSRegularExpression?
+        var commentPrefix: String
+        var trueValue: String
+        var falseValue: String
+        var nilValue: String
+        var callStyle: CallStyle
+        var forwardDeclPattern: NSRegularExpression?
+        var stripSemicolons: Bool
+        var autoreleasepoolWrapper: Bool
+
+        /// Build a Config entirely from a TargetConfig — no hard-coded defaults
+        init(from target: TargetConfig) {
+            self.target = target
+            self.headerPatterns = ReversePatterns.headerPatterns(target)
+            self.hasMainWrapper = target.main != nil
+            self.mainPattern = ReversePatterns.mainSignature(target) ?? ""
+            self.printPattern = ReversePatterns.printPattern(target)
+            self.varPattern = ReversePatterns.varPattern(target)
+            self.forPattern = ReversePatterns.forPattern(target)
+            self.ifPattern = ReversePatterns.ifPattern(target)
+            self.elsePattern = ReversePatterns.elsePattern(target)
+            self.funcPattern = ReversePatterns.funcPattern(target)
+            self.returnPattern = ReversePatterns.returnPattern(target)
+            self.commentPrefix = ReversePatterns.commentPrefix(target)
+            self.trueValue = target.true
+            self.falseValue = target.false
+            self.nilValue = target.nil
+            self.callStyle = CallStyle(from: target)
+            self.forwardDeclPattern = ReversePatterns.funcDeclPattern(target)
+            self.stripSemicolons = target.return.hasSuffix(";")
+            self.autoreleasepoolWrapper = ReversePatterns.hasAutoreleasepool(target)
+        }
     }
 
     let config: Config
@@ -372,16 +397,18 @@ class BraceReverseTranspiler: ReverseTranspiling {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty { result.append(""); continue }
 
-            // Skip main wrapper
+            // Skip main wrapper (patterns derived from target config)
+            let blockEnd = ReversePatterns.blockEndString(config.target)
+            let mainReturn = ReversePatterns.mainReturnStatement(config.target)
             if config.hasMainWrapper {
                 if trimmed.contains(config.mainPattern) && trimmed.contains("{") {
                     inMain = true; skipReturn0 = true; continue
                 }
-                if config.autoreleasepoolWrapper && trimmed.contains("@autoreleasepool") && trimmed.contains("{") {
+                if config.autoreleasepoolWrapper && config.target.main?.contains("@autoreleasepool") == true && trimmed.contains("@autoreleasepool") && trimmed.contains("{") {
                     inAutoreleasepool = true; continue
                 }
-                if inMain && skipReturn0 && trimmed == "return 0;" { skipReturn0 = false; continue }
-                if inMain && trimmed == "}" {
+                if inMain && skipReturn0 && trimmed == mainReturn { skipReturn0 = false; continue }
+                if inMain && trimmed == blockEnd {
                     if inAutoreleasepool { inAutoreleasepool = false; continue }
                     inMain = false; continue
                 }
@@ -390,8 +417,8 @@ class BraceReverseTranspiler: ReverseTranspiling {
             let nsLine = trimmed as NSString
             let range = NSRange(location: 0, length: nsLine.length)
 
-            // Closing brace
-            if trimmed == "}" {
+            // Closing block (e.g. "}" for C-family)
+            if trimmed == blockEnd {
                 if indentLevel > 0 { indentLevel -= 1 }
                 result.append("\(indent(indentLevel))\(JJEmit.end)")
                 continue
@@ -546,16 +573,16 @@ class BraceReverseTranspiler: ReverseTranspiling {
 /// Handles printf("format\n", args) with multiple format specifiers by
 /// reconstructing them as interpolated strings before the base class processes them.
 class CFamilyPrintfReverseTranspiler: BraceReverseTranspiler {
-    private static let printfMultiRegex = try? NSRegularExpression(
-        pattern: #"^(\s*)printf\("(.+)\\n"(?:,\s*(.+))?\);$"#
-    )
-
     let printfTarget: TargetConfig
 
     init(config: Config, printfTarget: TargetConfig) {
         self.printfTarget = printfTarget
         super.init(config: config)
     }
+
+    private lazy var printfMultiRegex: NSRegularExpression? = {
+        ReversePatterns.printfMultiPattern(printfTarget)
+    }()
 
     private lazy var boolTernaryPrintf: NSRegularExpression? = {
         ReversePatterns.printfBoolTernaryPattern(printfTarget)
@@ -576,12 +603,13 @@ class CFamilyPrintfReverseTranspiler: BraceReverseTranspiler {
             // Bool ternary: printf("%s\n", x ? "true" : "false"); → printf("%d\n", x);
             if let m = boolTernaryPrintf?.firstMatch(in: trimmed, range: range) {
                 let varName = ns.substring(with: m.range(at: 2))
-                lines[i] = "\(leading)printf(\"%d\\n\", \(varName));"
+                let replacement = ReversePatterns.printfIntReplacement(printfTarget, varName: varName)
+                lines[i] = "\(leading)\(replacement)"
                 continue
             }
 
             // Multi-specifier printf (interpolation)
-            if let m = Self.printfMultiRegex?.firstMatch(in: trimmed, range: range) {
+            if let m = printfMultiRegex?.firstMatch(in: trimmed, range: range) {
                 let fmt = ns.substring(with: m.range(at: 2))
                 let specifierCount = fmt.components(separatedBy: "%").count - 1
                 if specifierCount > 1, m.range(at: 3).location != NSNotFound {
@@ -597,7 +625,9 @@ class CFamilyPrintfReverseTranspiler: BraceReverseTranspiler {
                     if let bt = inlineBoolTernary {
                         result = bt.stringByReplacingMatches(in: result, range: NSRange(result.startIndex..., in: result), withTemplate: "{$1}")
                     }
-                    lines[i] = "\(leading)printf(\"%s\\n\", \"\(result)\");"
+                    // Build the string-print replacement from config
+                    let strPrint = printfTarget.printStr.replacingOccurrences(of: "{expr}", with: "\"\(result)\"")
+                    lines[i] = "\(leading)\(strPrint)"
                 }
             }
         }
@@ -631,24 +661,7 @@ class CFamilyPrintfReverseTranspiler: BraceReverseTranspiler {
 class CReverseTranspiler: CFamilyPrintfReverseTranspiler {
     init() {
         let target = loadTarget("c")
-        super.init(config: Config(
-            target: target,
-            headerPatterns: ReversePatterns.headerPatterns(target),
-            hasMainWrapper: target.main != nil,
-            mainPattern: ReversePatterns.mainSignature(target) ?? "int main()",
-            printPattern: ReversePatterns.printPattern(target),
-            varPattern: ReversePatterns.varPattern(target),
-            forPattern: ReversePatterns.forPattern(target),
-            ifPattern: ReversePatterns.ifPattern(target),
-            funcPattern: ReversePatterns.funcPattern(target),
-            commentPrefix: ReversePatterns.commentPrefix(target),
-            trueValue: target.true,
-            falseValue: target.false,
-            nilValue: target.nil,
-            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
-            forwardDeclPattern: ReversePatterns.funcDeclPattern(target),
-            autoreleasepoolWrapper: target.main?.contains("@autoreleasepool") ?? false
-        ), printfTarget: target)
+        super.init(config: Config(from: target), printfTarget: target)
     }
 }
 
@@ -658,27 +671,10 @@ class CppReverseTranspiler: CFamilyPrintfReverseTranspiler {
 
     init() {
         let target = Self.cppTarget
-        super.init(config: Config(
-            target: target,
-            headerPatterns: ReversePatterns.headerPatterns(target),
-            hasMainWrapper: target.main != nil,
-            mainPattern: ReversePatterns.mainSignature(target) ?? "int main()",
-            printPattern: ReversePatterns.printPattern(target),
-            varPattern: ReversePatterns.varPattern(target),
-            forPattern: ReversePatterns.forPattern(target),
-            ifPattern: ReversePatterns.ifPattern(target),
-            funcPattern: ReversePatterns.funcPattern(target),
-            commentPrefix: ReversePatterns.commentPrefix(target),
-            trueValue: target.true,
-            falseValue: target.false,
-            nilValue: target.nil,
-            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
-            forwardDeclPattern: ReversePatterns.funcDeclPattern(target)
-        ), printfTarget: target)
+        super.init(config: Config(from: target), printfTarget: target)
     }
 
     override func reverseTranspile(_ code: String) -> String? {
-        // Pre-process: strip cout bool ternary to plain cout
         var lines = code.components(separatedBy: "\n")
         for i in 0..<lines.count {
             let trimmed = lines[i].trimmingCharacters(in: .whitespaces)
@@ -687,7 +683,9 @@ class CppReverseTranspiler: CFamilyPrintfReverseTranspiler {
             let range = NSRange(location: 0, length: ns.length)
             if let m = Self.coutBoolRegex?.firstMatch(in: trimmed, range: range) {
                 let varName = ns.substring(with: m.range(at: 2))
-                lines[i] = "\(leading)std::cout << \(varName) << std::endl;"
+                if let replacement = ReversePatterns.coutReplacement(Self.cppTarget, varName: varName) {
+                    lines[i] = "\(leading)\(replacement)"
+                }
             }
         }
         return super.reverseTranspile(lines.joined(separator: "\n"))
@@ -697,83 +695,37 @@ class CppReverseTranspiler: CFamilyPrintfReverseTranspiler {
 class JavaScriptReverseTranspiler: BraceReverseTranspiler {
     init() {
         let target = loadTarget("js")
-        super.init(config: Config(
-            target: target,
-            headerPatterns: ReversePatterns.headerPatterns(target),
-            hasMainWrapper: false,
-            printPattern: ReversePatterns.printPattern(target),
-            varPattern: ReversePatterns.varPattern(target),
-            forPattern: ReversePatterns.forPattern(target),
-            ifPattern: ReversePatterns.ifPattern(target),
-            funcPattern: ReversePatterns.funcPattern(target),
-            commentPrefix: ReversePatterns.commentPrefix(target),
-            trueValue: target.true,
-            falseValue: target.false,
-            nilValue: target.nil,
-            callStyle: CallStyle(from: ReversePatterns.callStyle(target))
-        ))
+        super.init(config: Config(from: target))
     }
 }
 
 class SwiftReverseTranspiler: BraceReverseTranspiler {
     init() {
         let target = loadTarget("swift")
-        super.init(config: Config(
-            target: target,
-            headerPatterns: ReversePatterns.headerPatterns(target),
-            hasMainWrapper: false,
-            printPattern: ReversePatterns.printPattern(target),
-            varPattern: ReversePatterns.varPattern(target),
-            forPattern: ReversePatterns.forPattern(target),
-            ifPattern: ReversePatterns.ifPattern(target),
-            funcPattern: ReversePatterns.funcPattern(target),
-            commentPrefix: ReversePatterns.commentPrefix(target),
-            trueValue: target.true,
-            falseValue: target.false,
-            nilValue: target.nil,
-            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
-            stripSemicolons: false
-        ))
+        super.init(config: Config(from: target))
     }
 }
 
 class GoReverseTranspiler: BraceReverseTranspiler {
     private static let goTarget = loadTarget("go")
-    private static let printfRegex = ReversePatterns.goPrintfPattern()
+    private static let printfRegex = ReversePatterns.fmtPrintfPattern(goTarget)
 
     init() {
         let target = Self.goTarget
-        super.init(config: Config(
-            target: target,
-            headerPatterns: ReversePatterns.headerPatterns(target),
-            hasMainWrapper: target.main != nil,
-            mainPattern: ReversePatterns.mainSignature(target) ?? "func main()",
-            printPattern: ReversePatterns.printPattern(target),
-            varPattern: ReversePatterns.varPattern(target),
-            forPattern: ReversePatterns.forPattern(target),
-            ifPattern: ReversePatterns.ifPattern(target),
-            funcPattern: ReversePatterns.funcPattern(target),
-            commentPrefix: ReversePatterns.commentPrefix(target),
-            trueValue: target.true,
-            falseValue: target.false,
-            nilValue: target.nil,
-            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
-            stripSemicolons: false
-        ))
+        super.init(config: Config(from: target))
     }
 
     override func reverseTranspile(_ code: String) -> String? {
         // Pre-process: convert fmt.Printf with %v placeholders to fmt.Println with interpolation braces
         var lines = code.components(separatedBy: "\n")
-        // Also strip multi-line import block: "fmt", "math", bare )
+        // Strip multi-line import block (Go-specific header content)
         var inImportBlock = false
         lines = lines.compactMap { line in
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            // Track multi-line import block
             if trimmed == "import (" { inImportBlock = true; return nil }
             if inImportBlock {
                 if trimmed == ")" { inImportBlock = false; return nil }
-                return nil  // skip "fmt", "math" etc.
+                return nil
             }
             return line
         }
@@ -785,19 +737,20 @@ class GoReverseTranspiler: BraceReverseTranspiler {
             if let m = Self.printfRegex?.firstMatch(in: trimmed, range: range) {
                 let fmt = ns.substring(with: m.range(at: 2))
                 let argsRange = m.range(at: 3)
+                // Build the replacement using the target's printStr template
+                let printlnTemplate = Self.goTarget.printStr
                 if argsRange.location != NSNotFound {
                     let argsStr = ns.substring(with: argsRange)
                     let args = argsStr.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-                    // Replace %v with {argName}
                     var result = fmt
                     for arg in args {
                         if let r = result.range(of: "%v") {
                             result = result.replacingCharacters(in: r, with: "{\(arg)}")
                         }
                     }
-                    lines[i] = "\(leading)fmt.Println(\"\(result)\")"
+                    lines[i] = "\(leading)\(printlnTemplate.replacingOccurrences(of: "{expr}", with: "\"\(result)\""))"
                 } else {
-                    lines[i] = "\(leading)fmt.Println(\"\(fmt)\")"
+                    lines[i] = "\(leading)\(printlnTemplate.replacingOccurrences(of: "{expr}", with: "\"\(fmt)\""))"
                 }
             }
         }
@@ -808,24 +761,7 @@ class GoReverseTranspiler: BraceReverseTranspiler {
 class ObjCReverseTranspiler: CFamilyPrintfReverseTranspiler {
     init() {
         let target = loadTarget("objc")
-        super.init(config: Config(
-            target: target,
-            headerPatterns: ReversePatterns.headerPatterns(target),
-            hasMainWrapper: target.main != nil,
-            mainPattern: ReversePatterns.mainSignature(target) ?? "int main(",
-            printPattern: ReversePatterns.printPattern(target),
-            varPattern: ReversePatterns.varPattern(target),
-            forPattern: ReversePatterns.forPattern(target),
-            ifPattern: ReversePatterns.ifPattern(target),
-            funcPattern: ReversePatterns.funcPattern(target),
-            commentPrefix: ReversePatterns.commentPrefix(target),
-            trueValue: target.true,
-            falseValue: target.false,
-            nilValue: target.nil,
-            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
-            forwardDeclPattern: ReversePatterns.funcDeclPattern(target),
-            autoreleasepoolWrapper: target.main?.contains("@autoreleasepool") ?? false
-        ), printfTarget: target)
+        super.init(config: Config(from: target), printfTarget: target)
     }
 }
 
@@ -835,24 +771,10 @@ class ObjCppReverseTranspiler: CFamilyPrintfReverseTranspiler {
 
     init() {
         let target = Self.objcppTarget
-        super.init(config: Config(
-            target: target,
-            headerPatterns: ReversePatterns.headerPatterns(target),
-            hasMainWrapper: target.main != nil,
-            mainPattern: ReversePatterns.mainSignature(target) ?? "int main(",
-            printPattern: ReversePatterns.dualPrintPattern(printf: target, cout: target),
-            varPattern: ReversePatterns.varPattern(target),
-            forPattern: ReversePatterns.forPattern(target),
-            ifPattern: ReversePatterns.ifPattern(target),
-            funcPattern: ReversePatterns.funcPattern(target),
-            commentPrefix: ReversePatterns.commentPrefix(target),
-            trueValue: target.true,
-            falseValue: target.false,
-            nilValue: target.nil,
-            callStyle: CallStyle(from: ReversePatterns.callStyle(target)),
-            forwardDeclPattern: ReversePatterns.funcDeclPattern(target),
-            autoreleasepoolWrapper: target.main?.contains("@autoreleasepool") ?? false
-        ), printfTarget: target)
+        // ObjC++ uses dual print (printf + cout) so override print pattern
+        var config = Config(from: target)
+        config.printPattern = ReversePatterns.dualPrintPattern(printf: target, cout: target)
+        super.init(config: config, printfTarget: target)
     }
 
     override func reverseTranspile(_ code: String) -> String? {
@@ -864,7 +786,9 @@ class ObjCppReverseTranspiler: CFamilyPrintfReverseTranspiler {
             let range = NSRange(location: 0, length: ns.length)
             if let m = Self.coutBoolRegex?.firstMatch(in: trimmed, range: range) {
                 let varName = ns.substring(with: m.range(at: 2))
-                lines[i] = "\(leading)std::cout << \(varName) << std::endl;"
+                if let replacement = ReversePatterns.coutReplacement(Self.objcppTarget, varName: varName) {
+                    lines[i] = "\(leading)\(replacement)"
+                }
             }
         }
         return super.reverseTranspile(lines.joined(separator: "\n"))

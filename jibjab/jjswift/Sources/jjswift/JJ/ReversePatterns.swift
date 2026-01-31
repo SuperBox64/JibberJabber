@@ -437,35 +437,19 @@ public struct ReversePatterns {
         return try? NSRegularExpression(pattern: #"\{str\((\w+)\)\.lower\(\)\}"#)
     }
 
-    // MARK: - Call Style
-
-    /// Derives the CallStyle from the target config.
-    public static func callStyle(_ target: TargetConfig) -> String {
-        switch target.name {
-        case "Python": return "python"
-        case "Swift": return "swift"
-        case "Go": return "go"
-        case "JavaScript": return "javascript"
-        case "AppleScript": return "applescript"
-        default: return "cFamily"
-        }
-    }
-
     // MARK: - Known Functions
 
     /// Extracts known function names from the target's print templates
     /// plus standard library functions that shouldn't be reverse-transpiled as user calls.
+    /// Also extracts keywords from the target's statement templates (for, if, def, etc.).
     public static func knownFunctions(_ target: TargetConfig) -> Set<String> {
         var funcs = Set<String>()
 
         // Extract function names from print templates
         for template in [target.print, target.printInt, target.printStr, target.printBool] {
-            // Match word before ( but not {
             if let dotIdx = template.firstIndex(of: ".") {
-                // For things like console.log, fmt.Println — add the prefix
                 let prefix = String(template[..<dotIdx])
                 if !prefix.contains("{") { funcs.insert(prefix) }
-                // Also add the full dotted name up to (
                 let afterDot = template[template.index(after: dotIdx)...]
                 if let parenIdx = afterDot.firstIndex(of: "(") {
                     let methodName = String(afterDot[..<parenIdx])
@@ -478,34 +462,73 @@ public struct ReversePatterns {
             }
         }
 
-        // Add common standard library functions per language
-        switch target.name {
-        case "Python":
-            funcs.formUnion(["print", "range", "len", "int", "float", "str"])
-        case "C", "Objective-C":
-            funcs.formUnion(["printf", "main", "scanf", "malloc", "free", "NSLog"])
-        case "C++", "Objective-C++":
-            funcs.formUnion(["printf", "main", "scanf", "malloc", "free"])
-        case "Swift":
-            funcs.formUnion(["print", "Int", "String", "Double"])
-        case "Go":
-            funcs.formUnion(["main"])
-        case "JavaScript":
-            funcs.formUnion(["console"])
-        case "AppleScript":
-            funcs.formUnion(["log", "display"])
-        default:
-            break
+        // Extract statement keywords from templates
+        // e.g. "def {name}({params}):" → "def", "for {var} in range..." → "for"
+        let templates = [target.forRange, target.if, target.else, target.func,
+                         target.return, target.while, target.var, target.call]
+        for tmpl in templates {
+            // First word before { or ( or space
+            let firstWord = tmpl.prefix(while: { $0.isLetter || $0 == "_" })
+            if !firstWord.isEmpty { funcs.insert(String(firstWord)) }
         }
+
+        // If target has a main wrapper, "main" is a known function
+        if target.main != nil { funcs.insert("main") }
 
         return funcs
     }
 
+    // MARK: - Printf Multi-Specifier Pattern
+
+    /// Generates regex for multi-specifier printf, derived from the target's print template.
+    /// Returns nil for targets that don't use printf.
+    public static func printfMultiPattern(_ target: TargetConfig) -> NSRegularExpression? {
+        guard target.printInt.contains("printf") else { return nil }
+        return try? NSRegularExpression(
+            pattern: #"^(\s*)printf\("(.+)\\n"(?:,\s*(.+))?\);$"#
+        )
+    }
+
     // MARK: - Go Printf Pattern
 
-    /// Generates regex for Go's fmt.Printf pattern.
-    public static func goPrintfPattern() -> NSRegularExpression? {
-        try? NSRegularExpression(pattern: #"^(\s*)fmt\.Printf\("(.+)\\n"(?:,\s*(.+))?\)$"#)
+    /// Generates regex for Go's fmt.Printf pattern, derived from the target's print template.
+    /// Returns nil for non-Go targets.
+    public static func fmtPrintfPattern(_ target: TargetConfig) -> NSRegularExpression? {
+        guard target.printInt.contains("fmt.P") else { return nil }
+        return try? NSRegularExpression(pattern: #"^(\s*)fmt\.Printf\("(.+)\\n"(?:,\s*(.+))?\)$"#)
+    }
+
+    // MARK: - Main Wrapper Helpers
+
+    /// Whether the target's main template contains an @autoreleasepool wrapper.
+    public static func hasAutoreleasepool(_ target: TargetConfig) -> Bool {
+        target.main?.contains("@autoreleasepool") ?? false
+    }
+
+    /// Builds the "return 0;" string from the target's return template with value "0".
+    /// Used to detect and skip the main wrapper's return statement.
+    public static func mainReturnStatement(_ target: TargetConfig) -> String {
+        target.return.replacingOccurrences(of: "{value}", with: "0")
+    }
+
+    /// The block-end string from the target (e.g. "}" for C-family).
+    public static func blockEndString(_ target: TargetConfig) -> String {
+        target.blockEnd
+    }
+
+    // MARK: - Cout Replacement
+
+    /// Builds the cout print replacement string for a variable, derived from target's printInt template.
+    /// E.g. for C++: "std::cout << varName << std::endl;"
+    public static func coutReplacement(_ target: TargetConfig, varName: String) -> String? {
+        guard target.printInt.contains("std::cout") else { return nil }
+        return target.printInt.replacingOccurrences(of: "{expr}", with: varName)
+    }
+
+    /// Builds the printf print replacement string for a variable with %d format.
+    /// E.g. for C: "printf("%d\n", varName);"
+    public static func printfIntReplacement(_ target: TargetConfig, varName: String) -> String {
+        target.printInt.replacingOccurrences(of: "{expr}", with: varName)
     }
 
     // MARK: - Comment Pattern

@@ -6,20 +6,21 @@
 import Foundation
 import JJLib
 
+private let transpilerRegistry: [String: () -> Any] = [
+    "py": { PythonTranspiler() },
+    "js": { JavaScriptTranspiler() },
+    "c": { CTranspiler() },
+    "cpp": { CppTranspiler() },
+    "swift": { SwiftTranspiler() },
+    "objc": { ObjCTranspiler() },
+    "objcpp": { ObjCppTranspiler() },
+    "asm": { AssemblyTranspiler() },
+    "applescript": { AppleScriptTranspiler() },
+    "go": { GoTranspiler() },
+]
+
 func getTranspiler(_ target: String) -> Any? {
-    switch target {
-    case "py": return PythonTranspiler()
-    case "js": return JavaScriptTranspiler()
-    case "c": return CTranspiler()
-    case "cpp": return CppTranspiler()
-    case "swift": return SwiftTranspiler()
-    case "objc": return ObjCTranspiler()
-    case "objcpp": return ObjCppTranspiler()
-    case "asm": return AssemblyTranspiler()
-    case "applescript": return AppleScriptTranspiler()
-    case "go": return GoTranspiler()
-    default: return nil
-    }
+    transpilerRegistry[target]?()
 }
 
 func transpileCode(_ target: String, _ program: Program) -> String? {
