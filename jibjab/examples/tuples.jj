@@ -30,7 +30,7 @@
 ~>frob{7a3}::emit(empty)
 
 @@ Single element (trailing comma syntax)
-~>snag{single}::val((#42,))
+~>snag{single}::val((#42))
 ~>frob{7a3}::emit("Single element tuple:")
 ~>frob{7a3}::emit(single)
 

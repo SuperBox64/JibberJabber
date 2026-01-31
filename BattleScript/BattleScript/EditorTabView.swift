@@ -212,7 +212,7 @@ struct EditorTabView: View {
                 }
             }
             .padding(.vertical, 4)
-            .offset(y: 0.5)
+            .offset(y: -0.75)
             .background(Color(nsColor: .controlBackgroundColor))
 
             Divider()
