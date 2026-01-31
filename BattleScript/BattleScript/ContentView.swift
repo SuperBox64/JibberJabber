@@ -139,10 +139,11 @@ struct ContentView: View {
     }
 
     private func runCurrentTab() {
-        isRunning = true
-        runOutput = ""
-
         let tab = selectedTab
+        if tab != "jj" {
+            isRunning = true
+        }
+        runOutput = ""
         let code: String
         if tab == "jj" {
             code = sourceCode

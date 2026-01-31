@@ -81,12 +81,9 @@ public class Interpreter {
         } else if let funcDef = node as? FuncDef {
             functions[funcDef.name] = funcDef
         } else if let enumDef = node as? EnumDef {
-            // Store enum as a dictionary mapping case names to themselves
-            var enumDict: [String: Any?] = [:]
-            for caseName in enumDef.cases {
-                enumDict[caseName] = caseName
-            }
-            locals[locals.count - 1][enumDef.name] = enumDict
+            // Store enum as ordered dict: ("dict", [(key, value)]) to preserve insertion order
+            let pairs: [(String, Any?)] = enumDef.cases.map { ($0, $0 as Any?) }
+            locals[locals.count - 1][enumDef.name] = ("dict", pairs)
         } else if let returnStmt = node as? ReturnStmt {
             return ("return", try evaluate(returnStmt.value) as Any)
         }
@@ -118,13 +115,13 @@ public class Interpreter {
         } else if let arrayLit = node as? ArrayLiteral {
             return try arrayLit.elements.map { try evaluate($0) }
         } else if let dictLit = node as? DictLiteral {
-            var dict: [String: Any?] = [:]
+            var pairs: [(String, Any?)] = []
             for pair in dictLit.pairs {
                 let key = stringify(try evaluate(pair.key))
                 let value = try evaluate(pair.value)
-                dict[key] = value
+                pairs.append((key, value))
             }
-            return dict
+            return ("dict", pairs)
         } else if let tupleLit = node as? TupleLiteral {
             // Return tuple as a special wrapper to distinguish from arrays
             return ("tuple", try tupleLit.elements.map { try evaluate($0) })
@@ -145,10 +142,20 @@ public class Interpreter {
                 }
                 throw RuntimeError.error("Tuple index out of bounds: \(idx)")
             }
-            if let dict = container as? [String: Any?] {
+            if let orderedDict = container as? (String, [(String, Any?)]),
+               orderedDict.0 == "dict" {
                 let keyStr = stringify(key)
-                if let value = dict[keyStr] {
-                    return value
+                // Support integer index for array-like access on dict values
+                if let intKey = key as? Int {
+                    // Find the value and index into it if it's an array
+                    for (_, v) in orderedDict.1 {
+                        if let arr = v as? [Any?], intKey >= 0, intKey < arr.count {
+                            return arr[intKey]
+                        }
+                    }
+                }
+                for (k, v) in orderedDict.1 {
+                    if k == keyStr { return v }
                 }
                 throw RuntimeError.error("Dictionary key not found: \(keyStr)")
             }
@@ -250,8 +257,9 @@ public class Interpreter {
             let items = tuple.1.map { stringify($0) }
             return "(" + items.joined(separator: ", ") + ")"
         }
-        if let dict = value as? [String: Any?] {
-            let items = dict.map { "\"\($0.key)\": \(stringify($0.value))" }
+        if let orderedDict = value as? (String, [(String, Any?)]),
+           orderedDict.0 == "dict" {
+            let items = orderedDict.1.map { "\"\($0.0)\": \(stringify($0.1))" }
             return "{" + items.joined(separator: ", ") + "}"
         }
         return String(describing: value)

@@ -189,8 +189,7 @@ struct EditorTabView: View {
                     Button(action: onStop) {
                         Label("Stop", systemImage: "stop.fill")
                             .font(.system(.caption, design: .monospaced))
-                            .fixedSize()
-                            .padding(.horizontal, 10)
+                            .frame(width: 60)
                             .padding(.vertical, 4)
                             .background(Color.red.opacity(0.2))
                             .foregroundColor(.red)
@@ -202,8 +201,7 @@ struct EditorTabView: View {
                     Button(action: onRun) {
                         Label("Run", systemImage: "play.fill")
                             .font(.system(.caption, design: .monospaced))
-                            .fixedSize()
-                            .padding(.horizontal, 10)
+                            .frame(width: 60)
                             .padding(.vertical, 4)
                             .background(Color.green.opacity(0.2))
                             .foregroundColor(.green)
@@ -250,8 +248,8 @@ struct EditorTabView: View {
                         Text("Lines")
                             .font(.system(.caption, design: .monospaced))
                     }
+                    .frame(height: 20)
                     .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
                     .contentShape(Rectangle())
                     .background(showLineNumbers ? Color.blue.opacity(0.3) : Color.clear)
                     .foregroundColor(showLineNumbers ? .primary : .secondary)
@@ -268,10 +266,10 @@ struct EditorTabView: View {
                         Text("Edit")
                             .font(.system(.caption, design: .monospaced))
                     }
+                    .frame(height: 20)
                     .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
                     .contentShape(Rectangle())
-                    .background(editMode ? Color.orange.opacity(0.3) : Color.clear)
+                    .background(editMode ? Color.orange.opacity(0.5) : Color.clear)
                     .foregroundColor(editMode ? .primary : .secondary)
                     .cornerRadius(4)
                 }
@@ -288,8 +286,8 @@ struct EditorTabView: View {
                         Text("Copy")
                             .font(.system(.caption, design: .monospaced))
                     }
+                    .frame(height: 20)
                     .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
                     .contentShape(Rectangle())
                     .background(Color.gray.opacity(0.3))
                     .foregroundColor(.primary)
@@ -306,8 +304,8 @@ struct EditorTabView: View {
                         Text(style.rawValue)
                             .font(.system(.caption, design: .monospaced))
                             .fontWeight(highlighterStyle == style.rawValue ? .bold : .regular)
+                            .frame(height: 20)
                             .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
                             .contentShape(Rectangle())
                             .background(highlighterStyle == style.rawValue ? Color.purple.opacity(0.3) : Color.clear)
                             .foregroundColor(Color.white.opacity(0.8))
