@@ -37,6 +37,18 @@ See [jibjab/README.md](jibjab/README.md) for dependencies and setup.
 
 ---
 
+## BattleScript IDE
+
+Native macOS IDE for JibJab. Write JJ code and instantly see it transpiled to all 10 targets, then compile and run any target with one click.
+
+<p align="center">
+  <img src="battlescript-ide-prerelease.png" width="700" alt="BattleScript IDE">
+</p>
+
+See [BattleScript/README.md](BattleScript/README.md) for details.
+
+---
+
 ## CLI Usage
 
 ```
@@ -66,18 +78,6 @@ Hello, JibJab World!
 
 ---
 
-## BattleScript IDE
-
-Native macOS IDE for JibJab. Write JJ code and instantly see it transpiled to all 10 targets, then compile and run any target with one click.
-
-<p align="center">
-  <img src="battlescript-ide-prerelease.png" width="700" alt="BattleScript IDE">
-</p>
-
-See [BattleScript/README.md](BattleScript/README.md) for details.
-
----
-
 ## How It Works
 
 ```
@@ -93,7 +93,8 @@ See [Language Spec](jibjab/SPEC.md) for the full pipeline diagram.
 
 ## More
 
-- [Quick Start & Commands](jibjab/README.md)
+- [Quick Start & Commands (jjswift)](jibjab/README.md)
+- [jjpy Usage](jibjab/jjpy/README.md)
 - [Language Spec](jibjab/SPEC.md)
 - [Regression Tests](jibjab/TESTS.md)
 - [BattleScript IDE](BattleScript/README.md)
