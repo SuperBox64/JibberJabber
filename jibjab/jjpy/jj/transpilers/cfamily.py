@@ -91,12 +91,20 @@ class CFamilyTranspiler:
         """Emit main function. Override for ObjC @autoreleasepool."""
         main_stmts = [s for s in program.statements if not isinstance(s, FuncDef)]
         if main_stmts:
-            lines.append('int main() {')
-            self.indent = 1
-            for s in main_stmts:
-                lines.append(self.stmt(s))
-            lines.append(f"{self.T['indent']}return 0;")
-            lines.append('}')
+            main_tmpl = self.T.get('main')
+            if main_tmpl:
+                self.indent = 1
+                body_lines = [self.stmt(s) for s in main_stmts]
+                body = '\n'.join(body_lines) + '\n'
+                expanded = main_tmpl.replace('\\n', '\n').replace('{body}', body)
+                lines.append(expanded)
+            else:
+                lines.append('int main() {')
+                self.indent = 1
+                for s in main_stmts:
+                    lines.append(self.stmt(s))
+                lines.append(f"{self.T['indent']}return 0;")
+                lines.append('}')
 
     def ind(self) -> str:
         return self.T['indent'] * self.indent
@@ -144,11 +152,11 @@ class CFamilyTranspiler:
         return ""
 
     def _interp_format_specifier(self, name: str) -> str:
-        if name in self.double_vars: return '%g'
-        if name in self.string_vars: return '%s'
-        if name in self.bool_vars: return '%s'
-        if name in self.enum_var_types: return '%s'
-        return '%d'
+        if name in self.double_vars: return self.T.get('doubleFmt', '%g')
+        if name in self.string_vars: return self.T.get('strFmt', '%s')
+        if name in self.bool_vars: return self.T.get('boolFmt', '%s')
+        if name in self.enum_var_types: return self.T.get('strFmt', '%s')
+        return self.T.get('intFmt', '%d')
 
     def _interp_var_expr(self, name: str) -> str:
         if name in self.enum_var_types:
@@ -170,7 +178,8 @@ class CFamilyTranspiler:
                     fmt += self._interp_format_specifier(text)
                     args.append(self._interp_var_expr(text))
             arg_str = '' if not args else ', ' + ', '.join(args)
-            return self.ind() + f'printf("{fmt}\\n"{arg_str});'
+            tmpl = self.T.get('printfInterp', 'printf("{fmt}\\n"{args});')
+            return self.ind() + tmpl.replace('{fmt}', fmt).replace('{args}', arg_str)
         if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
             return self.ind() + self.T['printStr'].replace('{expr}', self.expr(expr_node))
         if isinstance(expr_node, VarRef):
@@ -191,7 +200,9 @@ class CFamilyTranspiler:
 
     def _print_enum_type(self, name: str) -> str:
         """Print an enum type name. Override per target."""
-        return self.ind() + f'printf("%s\\n", "enum {name}");'
+        sfmt = self.T.get('strFmt', '%s')
+        tmpl = self.T.get('printfInterp', 'printf("{fmt}\\n"{args});')
+        return self.ind() + tmpl.replace('{fmt}', sfmt).replace('{args}', f', "enum {name}"')
 
     def _print_enum_value(self, expr_node) -> str:
         """Print an enum value. Override per target."""
@@ -257,7 +268,8 @@ class CFamilyTranspiler:
         """Enum definition. Override per target."""
         self.enums.add(node.name)
         cases = ', '.join(node.cases)
-        return self.ind() + f"enum {node.name} {{ {cases} }};"
+        tmpl = self.T.get('enum', 'enum {name} { {cases} };')
+        return self.ind() + tmpl.replace('{name}', node.name).replace('{cases}', cases)
 
     def expr(self, node: ASTNode) -> str:
         if isinstance(node, StringInterpolation):
@@ -293,11 +305,12 @@ class CFamilyTranspiler:
         elif isinstance(node, IndexAccess):
             if isinstance(node.array, VarRef) and node.array.name in self.enums:
                 if isinstance(node.index, Literal) and isinstance(node.index.value, str):
-                    return node.index.value
+                    return self.T.get('enumAccess', '{key}').replace('{name}', node.array.name).replace('{key}', node.index.value)
             return f"{self.expr(node.array)}[{self.expr(node.index)}]"
         elif isinstance(node, BinaryOp):
             if node.op == '%' and (self.is_float_expr(node.left) or self.is_float_expr(node.right)):
-                return f"fmod({self.expr(node.left)}, {self.expr(node.right)})"
+                fm = self.T.get('floatMod', 'fmod({left}, {right})')
+                return fm.replace('{left}', self.expr(node.left)).replace('{right}', self.expr(node.right))
             return f"({self.expr(node.left)} {node.op} {self.expr(node.right)})"
         elif isinstance(node, UnaryOp):
             return f"({node.op}{self.expr(node.operand)})"
