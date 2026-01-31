@@ -34,10 +34,10 @@ Hello, JibJab World!
 
 ---
 
-## Implementations
+## Runtimes
 
-| Implementation | Language | Location | Best For |
-|----------------|----------|----------|----------|
+| Runtime | Language | Location | Best For |
+|---------|----------|----------|----------|
 | **jjswift** | Swift | `jibjab/jjswift/` | Native macOS, ARM64 compilation |
 | **jjpy** | Python | `jibjab/jjpy/` | Cross-platform |
 | **BattleScript** | SwiftUI | `BattleScript/` | Visual IDE for JibJab |
