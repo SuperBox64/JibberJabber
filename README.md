@@ -82,9 +82,9 @@ Hello, JibJab World!
 
 ```
 JJ Source → Lexer → Parser → AST
-                                 ├─ Interpret → Run
-                                 ├─ Native Compile → ARM64 Mach-O → Run
-                                 └─ Transpile → 10 Languages → Compile → Run
+                                 ├─ Interpreter → Run
+                                 ├─ Compiler → ARM64 Mach-O → Run
+                                 └─ Transpiler → 10 Languages → Compile → Run
 ```
 
 See [Language Spec](jibjab/SPEC.md) for the full pipeline diagram.
