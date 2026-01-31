@@ -120,3 +120,7 @@ public enum StringInterpPart {
 public struct StringInterpolation: ASTNode {
     public let parts: [StringInterpPart]
 }
+
+public struct CommentNode: ASTNode {
+    public let text: String
+}

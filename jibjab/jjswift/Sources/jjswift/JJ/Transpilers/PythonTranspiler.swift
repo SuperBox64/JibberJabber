@@ -87,6 +87,8 @@ public class PythonTranspiler: Transpiling {
                                    .replacingOccurrences(of: "{cases}", with: cases)
             }
             return ind() + "\(enumDef.name) = {\(cases)}"
+        } else if let comment = node as? CommentNode {
+            return ind() + T.comment + " " + comment.text
         }
         return ""
     }

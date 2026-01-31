@@ -76,6 +76,8 @@ public class JavaScriptTranspiler: Transpiling {
             let tmpl = T.enumTemplate ?? "const {name} = { {cases} };"
             return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
                                .replacingOccurrences(of: "{cases}", with: cases)
+        } else if let comment = node as? CommentNode {
+            return ind() + T.comment + " " + comment.text
         }
         return ""
     }

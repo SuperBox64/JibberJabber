@@ -86,6 +86,8 @@ public class Interpreter {
             locals[locals.count - 1][enumDef.name] = ("dict", pairs)
         } else if let returnStmt = node as? ReturnStmt {
             return ("return", try evaluate(returnStmt.value) as Any)
+        } else if node is CommentNode {
+            // Comments are no-ops at runtime
         }
         return nil
     }

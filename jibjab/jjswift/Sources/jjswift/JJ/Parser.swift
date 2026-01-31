@@ -101,6 +101,9 @@ public class Parser {
             return try parseReturn()
         case .enum:
             return try parseEnumDef()
+        case .comment:
+            let token = advance()
+            return CommentNode(text: (token.value as? String) ?? "")
         default:
             return nil
         }

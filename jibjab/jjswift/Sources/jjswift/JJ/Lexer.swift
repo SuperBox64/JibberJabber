@@ -80,9 +80,16 @@ public class Lexer {
 
         // Comments
         if match(JJ.literals.comment) != nil {
-            while let ch = peek(), ch != "\n" {
+            // Skip leading whitespace after comment marker
+            while let ch = peek(), ch == " " || ch == "\t" {
                 _ = advance()
             }
+            var text = ""
+            while let ch = peek(), ch != "\n" {
+                text.append(ch)
+                _ = advance()
+            }
+            addToken(.comment, value: text)
             return
         }
 

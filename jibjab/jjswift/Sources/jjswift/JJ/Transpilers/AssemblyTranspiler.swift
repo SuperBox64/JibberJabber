@@ -261,6 +261,8 @@ public class AssemblyTranspiler: Transpiling {
             enums[enumDef.name] = caseValues
             enumCaseStrings[enumDef.name] = enumDef.cases
             enumCaseLabels[enumDef.name] = caseLabels
+        } else if let comment = node as? CommentNode {
+            asmLines.append(T.comment + " " + comment.text)
         }
     }
 

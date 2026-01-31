@@ -104,6 +104,8 @@ public class AppleScriptTranspiler: Transpiling {
             return ind() + T.var
                 .replacingOccurrences(of: "{name}", with: safeEnumName)
                 .replacingOccurrences(of: "{value}", with: "{\(pairs)}")
+        } else if let comment = node as? CommentNode {
+            return ind() + T.comment + " " + comment.text
         }
         return ""
     }

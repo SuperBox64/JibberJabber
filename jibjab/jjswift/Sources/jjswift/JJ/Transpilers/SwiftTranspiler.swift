@@ -124,6 +124,8 @@ public class SwiftTranspiler: Transpiling {
             let tmpl = T.enumTemplate ?? "enum {name} { case {cases} }"
             return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
                                .replacingOccurrences(of: "{cases}", with: cases)
+        } else if let comment = node as? CommentNode {
+            return ind() + T.comment + " " + comment.text
         }
         return ""
     }
