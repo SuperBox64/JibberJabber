@@ -1,6 +1,12 @@
 {
   "name": "JavaScript",
   "ext": ".js",
+  "comment": "//",
+  "interpOpen": "`",
+  "interpClose": "`",
+  "interpVarOpen": "${",
+  "interpVarClose": "}",
+  "enumAccess": "{name}[{key}]",
   "header": "// Transpiled from JibJab\n",
   "print": "console.log({expr});",
   "printBool": "console.log({expr});",

@@ -1,6 +1,8 @@
 {
   "name": "Objective-C",
   "ext": ".m",
+  "comment": "//",
+  "enumAccess": "{key}",
   "header": "// Transpiled from JibJab\n#import <Foundation/Foundation.h>\n#include <stdio.h>\n",
   "printInt": "printf(\"%ld\\n\", (long){expr});",
   "printStr": "printf(\"%s\\n\", {expr});",

@@ -1,43 +1,19 @@
 /// JibJab AppleScript Transpiler - Converts JJ to AppleScript
-/// Uses shared config from common/jj.json
-
-// AppleScript reserved words and class names that can't be used as variable names
-private let appleScriptReserved: Set<String> = [
-    // Language keywords
-    "it", "me", "my", "true", "false", "error", "return", "every", "some",
-    "first", "last", "middle", "front", "back",
-    // Standard Suite commands
-    "activate", "close", "count", "copy", "delete", "duplicate", "exists",
-    "get", "launch", "make", "move", "open", "print", "quit", "reopen",
-    "run", "save", "set",
-    // Standard Suite classes
-    "alias", "application", "boolean", "class", "data", "date", "file",
-    "integer", "item", "list", "number", "point", "real", "record",
-    "reference", "script", "text",
-    // Common properties
-    "bounds", "color", "document", "folder", "disk", "id", "index",
-    "length", "name", "position", "property", "result", "size", "value",
-    "version", "visible", "window",
-    // Text/collection elements
-    "characters", "items", "numbers", "paragraphs", "strings", "words",
-    // Constants
-    "missing", "pi", "tab", "linefeed", "quote", "space", "container"
-]
-
-private func safeName(_ name: String) -> String {
-    if appleScriptReserved.contains(name.lowercased()) {
-        return "my_\(name)"
-    }
-    return name
-}
+/// Uses shared config from common/targets/applescript.json
 
 public class AppleScriptTranspiler: Transpiling {
     public init() {}
     private var indentLevel = 0
     private let T = loadTarget("applescript")
     private let OP = JJ.operators
-    private var enums: [String: [String]] = [:]  // Track enum name -> cases
-    private var dictVars = Set<String>()          // Track dict variable names
+    private var enums: [String: [String]] = [:]
+    private var dictVars = Set<String>()
+
+    private lazy var reserved: Set<String> = Set(T.reservedWords.map { $0.lowercased() })
+
+    private func safeName(_ name: String) -> String {
+        reserved.contains(name.lowercased()) ? "\(T.reservedPrefix)\(name)" : name
+    }
 
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
@@ -53,15 +29,15 @@ public class AppleScriptTranspiler: Transpiling {
 
     private func stmtToString(_ node: ASTNode) -> String {
         if let printStmt = node as? PrintStmt {
-            // Dict var: emit runtime check so empty dicts print "{}" instead of blank
             if let varRef = printStmt.expr as? VarRef, dictVars.contains(varRef.name) {
                 let name = safeName(varRef.name)
+                let blockEndIf = T.blockEndIf ?? T.blockEnd
                 var lines: [String] = []
-                lines.append(ind() + "if \(name) is {} then")
-                lines.append(ind() + T.indent + "log \"{}\"")
-                lines.append(ind() + "else")
-                lines.append(ind() + T.indent + "log \(name)")
-                lines.append(ind() + "end if")
+                lines.append(ind() + T.if.replacingOccurrences(of: "{condition}", with: "\(name) is {}"))
+                lines.append(ind() + T.indent + T.print.replacingOccurrences(of: "{expr}", with: "\"{}\""))
+                lines.append(ind() + T.else)
+                lines.append(ind() + T.indent + T.print.replacingOccurrences(of: "{expr}", with: name))
+                lines.append(ind() + blockEndIf)
                 return lines.joined(separator: "\n")
             }
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
@@ -86,12 +62,13 @@ public class AppleScriptTranspiler: Transpiling {
             } else if let condition = loopStmt.condition {
                 header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(condition))
             } else {
-                header = ind() + "-- unsupported loop"
+                header = ind() + "\(T.comment) unsupported loop"
             }
             indentLevel += 1
             let body = loopStmt.body.map { stmtToString($0) }.joined(separator: "\n")
             indentLevel -= 1
-            return "\(header)\n\(body)\n\(ind())end repeat"
+            let blockEndRepeat = T.blockEndRepeat ?? T.blockEnd
+            return "\(header)\n\(body)\n\(ind())\(blockEndRepeat)"
         } else if let ifStmt = node as? IfStmt {
             let header = ind() + T.if.replacingOccurrences(of: "{condition}", with: expr(ifStmt.condition))
             indentLevel += 1
@@ -104,7 +81,8 @@ public class AppleScriptTranspiler: Transpiling {
                 result += "\n" + elseBody.map { stmtToString($0) }.joined(separator: "\n")
                 indentLevel -= 1
             }
-            result += "\n\(ind())end if"
+            let blockEndIf = T.blockEndIf ?? T.blockEnd
+            result += "\n\(ind())\(blockEndIf)"
             return result
         } else if let funcDef = node as? FuncDef {
             let safeParams = funcDef.params.map { safeName($0) }.joined(separator: ", ")
@@ -115,33 +93,39 @@ public class AppleScriptTranspiler: Transpiling {
             indentLevel += 1
             let body = funcDef.body.map { stmtToString($0) }.joined(separator: "\n")
             indentLevel -= 1
-            return "\(header)\n\(body)\n\(ind())end \(safeFuncName)"
+            let blockEndFunc = T.blockEndFunc?.replacingOccurrences(of: "{name}", with: safeFuncName) ?? T.blockEnd
+            return "\(header)\n\(body)\n\(ind())\(blockEndFunc)"
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
         } else if let enumDef = node as? EnumDef {
             let safeEnumName = safeName(enumDef.name)
             enums[enumDef.name] = enumDef.cases
-            // In AppleScript, represent enum as a record with case name -> string name
             let pairs = enumDef.cases.map { "\($0):\"\($0)\"" }.joined(separator: ", ")
-            return ind() + "set \(safeEnumName) to {\(pairs)}"
+            return ind() + T.var
+                .replacingOccurrences(of: "{name}", with: safeEnumName)
+                .replacingOccurrences(of: "{value}", with: "{\(pairs)}")
         }
         return ""
     }
 
     private func expr(_ node: ASTNode) -> String {
         if let interp = node as? StringInterpolation {
-            // Build & concatenation: (x as text) & " literal " & (y as text)
+            let concat = T.interpConcat ?? " & "
             var parts: [String] = []
             for part in interp.parts {
                 switch part {
                 case .literal(let text):
                     if !text.isEmpty { parts.append("\"\(escapeString(text))\"") }
                 case .variable(let name):
-                    parts.append("(\(safeName(name)) as text)")
+                    if let castTmpl = T.interpCast {
+                        parts.append(castTmpl.replacingOccurrences(of: "{name}", with: safeName(name)))
+                    } else {
+                        parts.append(safeName(name))
+                    }
                 }
             }
             if parts.isEmpty { return "\"\"" }
-            return parts.joined(separator: " & ")
+            return parts.joined(separator: concat)
         }
         if let literal = node as? Literal {
             if let str = literal.value as? String {
@@ -163,7 +147,6 @@ public class AppleScriptTranspiler: Transpiling {
             return "{\(elements)}"
         } else if let dict = node as? DictLiteral {
             let pairs = dict.pairs.map { pair -> String in
-                // AppleScript record keys must be unquoted labels, prefixed if reserved
                 var key = expr(pair.0)
                 if key.hasPrefix("\"") && key.hasSuffix("\"") {
                     key = String(key.dropFirst().dropLast())
@@ -175,24 +158,28 @@ public class AppleScriptTranspiler: Transpiling {
             let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
             return "{\(elements)}"
         } else if let idx = node as? IndexAccess {
-            // Check if this is enum access (e.g., Color["Red"] -> Red of my_Color)
+            // Enum access
             if let varRef = idx.array as? VarRef, enums[varRef.name] != nil {
                 if let lit = idx.index as? Literal, let strVal = lit.value as? String {
-                    return "\(strVal) of \(safeName(varRef.name))"
+                    return T.enumAccess
+                        .replacingOccurrences(of: "{key}", with: strVal)
+                        .replacingOccurrences(of: "{name}", with: safeName(varRef.name))
                 }
             }
-            // Dict access: person["name"] -> name of person
+            // Dict access
             if let varRef = idx.array as? VarRef, dictVars.contains(varRef.name) {
                 if let lit = idx.index as? Literal, let strVal = lit.value as? String {
-                    return "\(safeName(strVal)) of \(safeName(varRef.name))"
+                    return T.propertyAccess
+                        .replacingOccurrences(of: "{key}", with: safeName(strVal))
+                        .replacingOccurrences(of: "{object}", with: safeName(varRef.name))
                 }
             }
-            // Nested dict+array: data["items"][0] -> item (0+1) of items of data
-            // The inner dict access is resolved recursively via expr(idx.array)
-            return "item (\(expr(idx.index)) + 1) of \(expr(idx.array))"
+            // Array/nested access
+            return T.indexAccess
+                .replacingOccurrences(of: "{index}", with: expr(idx.index))
+                .replacingOccurrences(of: "{array}", with: expr(idx.array))
         } else if let binaryOp = node as? BinaryOp {
             var op = binaryOp.op
-            // Map operators to AppleScript equivalents
             if op == OP.and.emit || op == "&&" {
                 op = T.and
             } else if op == OP.or.emit || op == "||" {
@@ -214,7 +201,9 @@ public class AppleScriptTranspiler: Transpiling {
             return "(\(op)\(expr(unaryOp.operand)))"
         } else if let funcCall = node as? FuncCall {
             let args = funcCall.args.map { expr($0) }.joined(separator: ", ")
-            return "\(safeName(funcCall.name))(\(args))"
+            return T.call
+                .replacingOccurrences(of: "{name}", with: safeName(funcCall.name))
+                .replacingOccurrences(of: "{args}", with: args)
         }
         return ""
     }

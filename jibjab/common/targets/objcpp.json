@@ -1,6 +1,8 @@
 {
   "name": "Objective-C++",
   "ext": ".mm",
+  "comment": "//",
+  "enumAccess": "{key}",
   "header": "// Transpiled from JibJab\n#import <Foundation/Foundation.h>\n#include <iostream>\n#include <cstdint>\n",
   "printInt": "std::cout << {expr} << std::endl;",
   "printStr": "std::cout << {expr} << std::endl;",

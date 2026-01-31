@@ -24,7 +24,7 @@ public class CppTranspiler: CFamilyTranspiler {
             for (i, line) in lines.enumerated() {
                 if line.hasPrefix("#include") { insertIdx = i + 1 }
             }
-            let inc = "#include <string>"
+            let inc = T.stringInclude ?? "#include <string>"
             if !lines.contains(inc) {
                 lines.insert(inc, at: insertIdx)
             }

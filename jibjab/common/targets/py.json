@@ -1,6 +1,13 @@
 {
   "name": "Python",
   "ext": ".py",
+  "comment": "#",
+  "emptyBody": "pass",
+  "interpOpen": "f\"",
+  "interpClose": "\"",
+  "interpVarOpen": "{",
+  "interpVarClose": "}",
+  "enumAccess": "{name}[{key}]",
   "header": "#!/usr/bin/env python3\n# Transpiled from JibJab\n",
   "print": "print({expr})",
   "printBool": "print(str({expr}).lower())",

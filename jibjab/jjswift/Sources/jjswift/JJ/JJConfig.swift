@@ -129,6 +129,24 @@ public struct TargetConfig: Codable {
     private let _varShort: String?
     private let _expandBoolAsInt: Bool?
     private let _expandStringType: String?
+    private let _comment: String?
+    private let _emptyBody: String?
+    private let _interpOpen: String?
+    private let _interpClose: String?
+    private let _interpVarOpen: String?
+    private let _interpVarClose: String?
+    private let _interpConcat: String?
+    private let _interpCast: String?
+    private let _indexAccess: String?
+    private let _propertyAccess: String?
+    private let _enumAccess: String?
+    private let _enumConst: String?
+    private let _reservedWords: [String]?
+    private let _reservedPrefix: String?
+    private let _stringInclude: String?
+    private let _varDict: String?
+    private let _dictEmpty: String?
+    private let _paramFormat: String?
     public let main: String?
     public let compile: [String]?
     public let run: [String]?
@@ -162,6 +180,24 @@ public struct TargetConfig: Codable {
         case _varShort = "varShort"
         case _expandBoolAsInt = "expandBoolAsInt"
         case _expandStringType = "expandStringType"
+        case _comment = "comment"
+        case _emptyBody = "emptyBody"
+        case _interpOpen = "interpOpen"
+        case _interpClose = "interpClose"
+        case _interpVarOpen = "interpVarOpen"
+        case _interpVarClose = "interpVarClose"
+        case _interpConcat = "interpConcat"
+        case _interpCast = "interpCast"
+        case _indexAccess = "indexAccess"
+        case _propertyAccess = "propertyAccess"
+        case _enumAccess = "enumAccess"
+        case _enumConst = "enumConst"
+        case _reservedWords = "reservedWords"
+        case _reservedPrefix = "reservedPrefix"
+        case _stringInclude = "stringInclude"
+        case _varDict = "varDict"
+        case _dictEmpty = "dictEmpty"
+        case _paramFormat = "paramFormat"
         // true/false/nil handled specially
     }
 
@@ -213,6 +249,24 @@ public struct TargetConfig: Codable {
         _varShort = try container.decodeIfPresent(String.self, forKey: ._varShort)
         _expandBoolAsInt = try container.decodeIfPresent(Bool.self, forKey: ._expandBoolAsInt)
         _expandStringType = try container.decodeIfPresent(String.self, forKey: ._expandStringType)
+        _comment = try container.decodeIfPresent(String.self, forKey: ._comment)
+        _emptyBody = try container.decodeIfPresent(String.self, forKey: ._emptyBody)
+        _interpOpen = try container.decodeIfPresent(String.self, forKey: ._interpOpen)
+        _interpClose = try container.decodeIfPresent(String.self, forKey: ._interpClose)
+        _interpVarOpen = try container.decodeIfPresent(String.self, forKey: ._interpVarOpen)
+        _interpVarClose = try container.decodeIfPresent(String.self, forKey: ._interpVarClose)
+        _interpConcat = try container.decodeIfPresent(String.self, forKey: ._interpConcat)
+        _interpCast = try container.decodeIfPresent(String.self, forKey: ._interpCast)
+        _indexAccess = try container.decodeIfPresent(String.self, forKey: ._indexAccess)
+        _propertyAccess = try container.decodeIfPresent(String.self, forKey: ._propertyAccess)
+        _enumAccess = try container.decodeIfPresent(String.self, forKey: ._enumAccess)
+        _enumConst = try container.decodeIfPresent(String.self, forKey: ._enumConst)
+        _reservedWords = try container.decodeIfPresent([String].self, forKey: ._reservedWords)
+        _reservedPrefix = try container.decodeIfPresent(String.self, forKey: ._reservedPrefix)
+        _stringInclude = try container.decodeIfPresent(String.self, forKey: ._stringInclude)
+        _varDict = try container.decodeIfPresent(String.self, forKey: ._varDict)
+        _dictEmpty = try container.decodeIfPresent(String.self, forKey: ._dictEmpty)
+        _paramFormat = try container.decodeIfPresent(String.self, forKey: ._paramFormat)
 
         // Handle true/false/nil with special decoder keys
         let additionalContainer = try decoder.container(keyedBy: AdditionalCodingKeys.self)
@@ -253,6 +307,24 @@ public struct TargetConfig: Codable {
     public var varShort: String? { _varShort }
     public var expandBoolAsInt: Bool { _expandBoolAsInt ?? false }
     public var expandStringType: String { _expandStringType ?? stringType }
+    public var comment: String { _comment ?? "//" }
+    public var emptyBody: String? { _emptyBody }
+    public var interpOpen: String? { _interpOpen }
+    public var interpClose: String? { _interpClose }
+    public var interpVarOpen: String? { _interpVarOpen }
+    public var interpVarClose: String? { _interpVarClose }
+    public var interpConcat: String? { _interpConcat }
+    public var interpCast: String? { _interpCast }
+    public var indexAccess: String { _indexAccess ?? "{array}[{index}]" }
+    public var propertyAccess: String { _propertyAccess ?? "{object}[{key}]" }
+    public var enumAccess: String { _enumAccess ?? "{key}" }
+    public var enumConst: String? { _enumConst }
+    public var reservedWords: [String] { _reservedWords ?? [] }
+    public var reservedPrefix: String { _reservedPrefix ?? "_" }
+    public var stringInclude: String? { _stringInclude }
+    public var varDict: String? { _varDict }
+    public var dictEmpty: String { _dictEmpty ?? "{}" }
+    public var paramFormat: String? { _paramFormat }
 }
 
 /// Environment overrides for JJLib

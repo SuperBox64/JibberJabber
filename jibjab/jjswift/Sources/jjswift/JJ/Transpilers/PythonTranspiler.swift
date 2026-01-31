@@ -47,11 +47,11 @@ public class PythonTranspiler: Transpiling {
             } else if let condition = loopStmt.condition {
                 header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(condition))
             } else {
-                header = ind() + "# unsupported loop"
+                header = ind() + "\(T.comment) unsupported loop"
             }
             indentLevel += 1
             let body = loopStmt.body.map { stmtToString($0) }.joined(separator: "\n")
-            let bodyStr = body.isEmpty ? "\(ind())pass" : body
+            let bodyStr = body.isEmpty ? "\(ind())\(T.emptyBody ?? "")" : body
             indentLevel -= 1
             return "\(header)\n\(bodyStr)"
         } else if let ifStmt = node as? IfStmt {
@@ -74,7 +74,7 @@ public class PythonTranspiler: Transpiling {
                 .replacingOccurrences(of: "{params}", with: funcDef.params.joined(separator: ", "))
             indentLevel += 1
             let body = funcDef.body.map { stmtToString($0) }.joined(separator: "\n")
-            let bodyStr = body.isEmpty ? "\(ind())pass" : body
+            let bodyStr = body.isEmpty ? "\(ind())\(T.emptyBody ?? "")" : body
             indentLevel -= 1
             return "\(header)\n\(bodyStr)"
         } else if let returnStmt = node as? ReturnStmt {
@@ -82,6 +82,10 @@ public class PythonTranspiler: Transpiling {
         } else if let enumDef = node as? EnumDef {
             enums.insert(enumDef.name)
             let cases = enumDef.cases.map { "\"\($0)\": \"\($0)\"" }.joined(separator: ", ")
+            if let tmpl = T.enumTemplate {
+                return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
+                                   .replacingOccurrences(of: "{cases}", with: cases)
+            }
             return ind() + "\(enumDef.name) = {\(cases)}"
         }
         return ""
@@ -102,14 +106,18 @@ public class PythonTranspiler: Transpiling {
             }
             return String(describing: literal.value ?? T.nil)
         } else if let interp = node as? StringInterpolation {
-            var fstr = "f\""
+            let open = T.interpOpen ?? "f\""
+            let close = T.interpClose ?? "\""
+            let varOpen = T.interpVarOpen ?? "{"
+            let varClose = T.interpVarClose ?? "}"
+            var fstr = open
             for part in interp.parts {
                 switch part {
                 case .literal(let text): fstr += escapeString(text)
-                case .variable(let name): fstr += "{\(name)}"
+                case .variable(let name): fstr += "\(varOpen)\(name)\(varClose)"
                 }
             }
-            return fstr + "\""
+            return fstr + close
         } else if let varRef = node as? VarRef {
             return varRef.name
         } else if let arrayLit = node as? ArrayLiteral {

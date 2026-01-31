@@ -40,7 +40,7 @@ public class JavaScriptTranspiler: Transpiling {
             } else if let condition = loopStmt.condition {
                 header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(condition))
             } else {
-                header = ind() + "// unsupported loop"
+                header = ind() + "\(T.comment) unsupported loop"
             }
             indentLevel += 1
             let body = loopStmt.body.map { stmtToString($0) }.joined(separator: "\n")
@@ -73,6 +73,10 @@ public class JavaScriptTranspiler: Transpiling {
         } else if let enumDef = node as? EnumDef {
             enums.insert(enumDef.name)
             let cases = enumDef.cases.map { "\($0): \"\($0)\"" }.joined(separator: ", ")
+            if let tmpl = T.enumTemplate {
+                return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
+                                   .replacingOccurrences(of: "{cases}", with: cases)
+            }
             return ind() + "const \(enumDef.name) = { \(cases) };"
         }
         return ""
@@ -93,14 +97,18 @@ public class JavaScriptTranspiler: Transpiling {
             }
             return String(describing: literal.value ?? T.nil)
         } else if let interp = node as? StringInterpolation {
-            var tmpl = "`"
+            let open = T.interpOpen ?? "`"
+            let close = T.interpClose ?? "`"
+            let varOpen = T.interpVarOpen ?? "${"
+            let varClose = T.interpVarClose ?? "}"
+            var tmpl = open
             for part in interp.parts {
                 switch part {
                 case .literal(let text): tmpl += escapeString(text)
-                case .variable(let name): tmpl += "${\(name)}"
+                case .variable(let name): tmpl += "\(varOpen)\(name)\(varClose)"
                 }
             }
-            return tmpl + "`"
+            return tmpl + close
         } else if let varRef = node as? VarRef {
             return varRef.name
         } else if let binaryOp = node as? BinaryOp {

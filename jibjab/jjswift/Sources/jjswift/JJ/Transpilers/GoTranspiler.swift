@@ -202,11 +202,30 @@ public class GoTranspiler: CFamilyTranspiler {
     override func enumToString(_ node: EnumDef) -> String {
         enums.insert(node.name)
         enumCases[node.name] = node.cases
+        if let constTmpl = T.enumConst {
+            var casesLines: [String] = []
+            indentLevel += 1
+            for c in node.cases {
+                let caseName = T.enumAccess
+                    .replacingOccurrences(of: "{name}", with: node.name)
+                    .replacingOccurrences(of: "{key}", with: c)
+                casesLines.append(ind() + "\(caseName) = \"\(c)\"")
+            }
+            indentLevel -= 1
+            let casesStr = casesLines.joined(separator: "\n")
+            return ind() + constTmpl
+                .replacingOccurrences(of: "\\n", with: "\n")
+                .replacingOccurrences(of: "{cases}", with: casesStr)
+        }
+        // Fallback
         var lines: [String] = []
         lines.append(ind() + "const (")
         indentLevel += 1
         for c in node.cases {
-            lines.append(ind() + "\(node.name)_\(c) = \"\(c)\"")
+            let caseName = T.enumAccess
+                .replacingOccurrences(of: "{name}", with: node.name)
+                .replacingOccurrences(of: "{key}", with: c)
+            lines.append(ind() + "\(caseName) = \"\(c)\"")
         }
         indentLevel -= 1
         lines.append(ind() + ")")
@@ -218,7 +237,9 @@ public class GoTranspiler: CFamilyTranspiler {
             // Handle enum access
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
                 if let lit = idx.index as? Literal, let strVal = lit.value as? String {
-                    return "\(varRef.name)_\(strVal)"
+                    return T.enumAccess
+                        .replacingOccurrences(of: "{name}", with: varRef.name)
+                        .replacingOccurrences(of: "{key}", with: strVal)
                 }
             }
             if let resolved = resolveAccess(idx) { return resolved.0 }

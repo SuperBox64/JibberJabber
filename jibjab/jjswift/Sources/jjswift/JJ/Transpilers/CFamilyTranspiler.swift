@@ -444,7 +444,7 @@ public class CFamilyTranspiler: Transpiling {
         var lines: [String] = []
         tupleFields[node.name] = []
         if tuple.elements.isEmpty {
-            return ind() + "// empty tuple \(node.name)"
+            return ind() + "\(T.comment) empty tuple \(node.name)"
         }
         for (i, e) in tuple.elements.enumerated() {
             let varName = "\(node.name)_\(i)"
@@ -475,7 +475,7 @@ public class CFamilyTranspiler: Transpiling {
         var lines: [String] = []
         dictFields[node.name] = [:]
         if dict.pairs.isEmpty {
-            return ind() + "// empty dict \(node.name)"
+            return ind() + "\(T.comment) empty dict \(node.name)"
         }
         for (k, v) in dict.pairs {
             guard let kLit = k as? Literal, let key = kLit.value as? String else { continue }
@@ -512,7 +512,7 @@ public class CFamilyTranspiler: Transpiling {
         } else if let condition = node.condition {
             header = ind() + T.while.replacingOccurrences(of: "{condition}", with: stripOuterParens(expr(condition)))
         } else {
-            header = ind() + "// unsupported loop"
+            header = ind() + "\(T.comment) unsupported loop"
         }
         indentLevel += 1
         let body = node.body.map { stmtToString($0) }.joined(separator: "\n")
@@ -635,7 +635,9 @@ public class CFamilyTranspiler: Transpiling {
         } else if let idx = node as? IndexAccess {
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
                 if let lit = idx.index as? Literal, let strVal = lit.value as? String {
-                    return strVal
+                    return T.enumAccess
+                        .replacingOccurrences(of: "{name}", with: varRef.name)
+                        .replacingOccurrences(of: "{key}", with: strVal)
                 }
             }
             return "\(expr(idx.array))[\(expr(idx.index))]"

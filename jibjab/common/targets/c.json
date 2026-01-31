@@ -1,6 +1,8 @@
 {
   "name": "C",
   "ext": ".c",
+  "comment": "//",
+  "enumAccess": "{key}",
   "header": "// Transpiled from JibJab\n#include <stdio.h>\n#include <stdlib.h>\n#include <stdint.h>\n#include <math.h>\n",
   "printInt": "printf(\"%d\\n\", {expr});",
   "printStr": "printf(\"%s\\n\", {expr});",

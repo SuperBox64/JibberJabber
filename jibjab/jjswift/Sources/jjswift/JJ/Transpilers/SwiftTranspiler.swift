@@ -48,8 +48,14 @@ public class SwiftTranspiler: Transpiling {
             // Dict declaration
             if let dictLit = varDecl.value as? DictLiteral {
                 dictVars.insert(varDecl.name)
+                if let varDict = T.varDict {
+                    let value = dictLit.pairs.isEmpty ? T.dictEmpty : expr(varDecl.value)
+                    return ind() + varDict
+                        .replacingOccurrences(of: "{name}", with: varDecl.name)
+                        .replacingOccurrences(of: "{value}", with: value)
+                }
                 if dictLit.pairs.isEmpty {
-                    return ind() + "var \(varDecl.name): [String: Any] = [:]"
+                    return ind() + "var \(varDecl.name): [String: Any] = \(T.dictEmpty)"
                 }
                 return ind() + "var \(varDecl.name): [String: Any] = \(expr(varDecl.value))"
             }
@@ -79,7 +85,7 @@ public class SwiftTranspiler: Transpiling {
             } else if let condition = loopStmt.condition {
                 header = ind() + T.while.replacingOccurrences(of: "{condition}", with: expr(condition))
             } else {
-                header = ind() + "// unsupported loop"
+                header = ind() + "\(T.comment) unsupported loop"
             }
             indentLevel += 1
             let body = loopStmt.body.map { stmtToString($0) }.joined(separator: "\n")
@@ -100,8 +106,16 @@ public class SwiftTranspiler: Transpiling {
             }
             return result
         } else if let funcDef = node as? FuncDef {
-            // Swift requires typed parameters with _ to suppress argument labels
-            let typedParams = funcDef.params.map { "_ \($0): Int" }.joined(separator: ", ")
+            let typedParams: String
+            if let paramFmt = T.paramFormat {
+                let paramType = T.types?["Int"] ?? "Int"
+                typedParams = funcDef.params.map {
+                    paramFmt.replacingOccurrences(of: "{name}", with: $0)
+                            .replacingOccurrences(of: "{type}", with: paramType)
+                }.joined(separator: ", ")
+            } else {
+                typedParams = funcDef.params.map { "_ \($0): Int" }.joined(separator: ", ")
+            }
             let header = ind() + T.func
                 .replacingOccurrences(of: "{name}", with: funcDef.name)
                 .replacingOccurrences(of: "{params}", with: typedParams)
@@ -119,7 +133,9 @@ public class SwiftTranspiler: Transpiling {
                 return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
                                    .replacingOccurrences(of: "{cases}", with: cases)
             }
-            return ind() + "enum \(enumDef.name) { case \(cases) }"
+            return ind() + T.var.replacingOccurrences(of: "{type}", with: "enum")
+                .replacingOccurrences(of: "{name}", with: enumDef.name)
+                .replacingOccurrences(of: "{value}", with: "{ case \(cases) }")
         }
         return ""
     }
@@ -139,14 +155,18 @@ public class SwiftTranspiler: Transpiling {
             }
             return String(describing: literal.value ?? T.nil)
         } else if let interp = node as? StringInterpolation {
-            var result = "\""
+            let open = T.interpOpen ?? "\""
+            let close = T.interpClose ?? "\""
+            let varOpen = T.interpVarOpen ?? "\\("
+            let varClose = T.interpVarClose ?? ")"
+            var result = open
             for part in interp.parts {
                 switch part {
                 case .literal(let text): result += escapeString(text)
-                case .variable(let name): result += "\\(\(name))"
+                case .variable(let name): result += "\(varOpen)\(name)\(varClose)"
                 }
             }
-            return result + "\""
+            return result + close
         } else if let varRef = node as? VarRef {
             // If referencing an enum type directly, generate dict representation
             if enums.contains(varRef.name) {
@@ -175,7 +195,9 @@ public class SwiftTranspiler: Transpiling {
             // Check if this is enum access (e.g., Color["Red"] -> Color.Red)
             if let varRef = idx.array as? VarRef, enums.contains(varRef.name) {
                 if let lit = idx.index as? Literal, let strVal = lit.value as? String {
-                    return "\(varRef.name).\(strVal)"
+                    return T.enumAccess
+                        .replacingOccurrences(of: "{name}", with: varRef.name)
+                        .replacingOccurrences(of: "{key}", with: strVal)
                 }
             }
             // Tuple access: use .N dot syntax instead of [N]
@@ -205,7 +227,7 @@ public class SwiftTranspiler: Transpiling {
             let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
             return "[\(elements)]"
         } else if let dict = node as? DictLiteral {
-            if dict.pairs.isEmpty { return "[:]" }
+            if dict.pairs.isEmpty { return T.dictEmpty }
             let pairs = dict.pairs.map { "\(expr($0.key)): \(expr($0.value))" }.joined(separator: ", ")
             return "[\(pairs)]"
         } else if let tuple = node as? TupleLiteral {
