@@ -150,4 +150,4 @@ See [Language Spec](jibjab/SPEC.md) for the full pipeline diagram.
 
 ## About JJ
 
-JJ is an experimental AI-first computer programming language by Todd Bruss with a remarkable write once, run any methodology. MIT License.
+JJ is an experimental AI-first computer programming language by Todd Bruss with a write once, run anywhere methodology. MIT License.
