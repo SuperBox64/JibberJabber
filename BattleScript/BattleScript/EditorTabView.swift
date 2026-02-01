@@ -149,6 +149,9 @@ struct EditorTabView: View {
     @AppStorage("highlighterStyle") private var highlighterStyle = "Xcode"
     @AppStorage("showLineNumbers") var showLineNumbers = true
     @State private var refreshID = UUID()
+    @State private var copiedCopy = false
+    @State private var copiedRTF = false
+    @State private var copiedHTML = false
 
     private let tabColors: [String: Color] = [
         "jj": .purple,
@@ -290,9 +293,11 @@ struct EditorTabView: View {
                     let text = selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text, forType: .string)
+                    copiedCopy = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) { copiedCopy = false }
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: "doc.on.doc")
+                        Image(systemName: copiedCopy ? "checkmark" : "doc.on.doc")
                             .font(.system(.caption))
                         Text("Copy")
                             .font(.system(.caption, design: .monospaced))
@@ -312,10 +317,12 @@ struct EditorTabView: View {
                     if let rtfData = attrStr.rtf(from: range, documentAttributes: [:]) {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setData(rtfData, forType: .rtf)
+                        copiedRTF = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { copiedRTF = false }
                     }
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: "doc.richtext")
+                        Image(systemName: copiedRTF ? "checkmark" : "doc.richtext")
                             .font(.system(.caption))
                         Text("RTF")
                             .font(.system(.caption, design: .monospaced))
@@ -340,10 +347,12 @@ struct EditorTabView: View {
                         htmlString = htmlString.replacingOccurrences(of: "font-family: Menlo", with: "font-family: ui-monospace, 'JetBrains Mono', Menlo, monospace")
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(htmlString, forType: .string)
+                        copiedHTML = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { copiedHTML = false }
                     }
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: "chevron.left.forwardslash.chevron.right")
+                        Image(systemName: copiedHTML ? "checkmark" : "chevron.left.forwardslash.chevron.right")
                             .font(.system(.caption))
                         Text("HTML")
                             .font(.system(.caption, design: .monospaced))
