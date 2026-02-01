@@ -332,9 +332,10 @@ struct EditorTabView: View {
                 Button(action: {
                     let attrStr = highlightedAttributedString()
                     let range = NSRange(location: 0, length: attrStr.length)
-                    if let htmlData = try? attrStr.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]) {
+                    if let htmlData = try? attrStr.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]),
+                       let htmlString = String(data: htmlData, encoding: .utf8) {
                         NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setData(htmlData, forType: .html)
+                        NSPasteboard.general.setString(htmlString, forType: .html)
                     }
                 }) {
                     HStack(spacing: 4) {
