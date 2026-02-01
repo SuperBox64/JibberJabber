@@ -1,6 +1,6 @@
 <div align="left">
-  <img src="https://github.com/user-attachments/assets/766f0f42-33dc-4b47-bc22-0f31aae37b5f" width="192" alt="BattleScript JibberJabber JibJab JJ AI first programming language experiment GUI Icon">
-  <div><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BattleScript.app</b></div>
+  <img src="https://github.com/user-attachments/assets/766f0f42-33dc-4b47-bc22-0f31aae37b5f" width="130" alt="BattleScript JibberJabber JibJab JJ AI first programming language experiment GUI Icon">
+  <div><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BattleScript</b></div>
 </div>
 
 ## JJ aka JibberJabber AI programming language 1.0 by Todd Bruss
