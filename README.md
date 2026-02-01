@@ -54,7 +54,7 @@ See [jibjab/README.md](jibjab/README.md) for dependencies and setup.
 
 Native macOS IDE for JibJab. Write JJ code and instantly see it transpiled to all 10 targets, then compile and run any target with one click.
 
-<p align="center">
+<p align="left">
   <img src="https://github.com/user-attachments/assets/784f9205-34e3-4eea-a1d8-8eeee5e8c2c6" width="738" alt="BattleScript Experimental JibberJabber JibJab JJ Swift JJSwift IDE for macOS 14, 15, 26">
 </p>
 
