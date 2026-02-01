@@ -149,6 +149,9 @@ struct EditorTabView: View {
     @AppStorage("highlighterStyle") private var highlighterStyle = "Xcode"
     @AppStorage("showLineNumbers") var showLineNumbers = true
     @State private var refreshID = UUID()
+    @State private var copiedCopy = false
+    @State private var copiedRTF = false
+    @State private var copiedHTML = false
 
     private let tabColors: [String: Color] = [
         "jj": .purple,
@@ -163,6 +166,43 @@ struct EditorTabView: View {
         "asm": .green,
         "applescript": .indigo,
     ]
+
+    private func activeTextView() -> NSTextView? {
+        var responder = NSApp.keyWindow?.firstResponder
+        while let r = responder {
+            if let tv = r as? NSTextView { return tv }
+            responder = r.nextResponder
+        }
+        return nil
+    }
+
+    private func selectedOrFullText() -> String {
+        if let tv = activeTextView() {
+            let sel = tv.selectedRange()
+            if sel.length > 0, let range = Range(sel, in: tv.string) {
+                return String(tv.string[range])
+            }
+        }
+        return selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
+    }
+
+    private func highlightedAttributedString() -> NSAttributedString {
+        let fullText = selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
+        let lang = selectedTab == "jj" ? "jj" : selectedTab
+        let storage = NSTextStorage(string: fullText, attributes: [
+            .font: SyntaxTheme.font,
+            .foregroundColor: NSColor.textColor
+        ])
+        SyntaxHighlighterFactory.highlighter(for: lang)?.highlight(storage)
+        // Extract selection if any
+        if let tv = activeTextView() {
+            let sel = tv.selectedRange()
+            if sel.length > 0, sel.location + sel.length <= storage.length {
+                return storage.attributedSubstring(from: sel)
+            }
+        }
+        return NSAttributedString(attributedString: storage)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -276,13 +316,15 @@ struct EditorTabView: View {
                 .buttonStyle(.plain)
                 .padding(.leading, 4)
                 Button(action: {
-                    let text = selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(text, forType: .string)
+                    NSPasteboard.general.setString(selectedOrFullText(), forType: .string)
+                    copiedCopy = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) { copiedCopy = false }
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: "doc.on.doc")
+                        Image(systemName: copiedCopy ? "checkmark" : "doc.on.doc")
                             .font(.system(.caption))
+                            .frame(width: 12)
                         Text("Copy")
                             .font(.system(.caption, design: .monospaced))
                     }
@@ -290,6 +332,63 @@ struct EditorTabView: View {
                     .padding(.horizontal, 6)
                     .contentShape(Rectangle())
                     .background(Color.gray.opacity(0.3))
+                    .foregroundColor(.primary)
+                    .cornerRadius(4)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 4)
+                Button(action: {
+                    let attrStr = highlightedAttributedString()
+                    let range = NSRange(location: 0, length: attrStr.length)
+                    if let rtfData = attrStr.rtf(from: range, documentAttributes: [:]) {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setData(rtfData, forType: .rtf)
+                        copiedRTF = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { copiedRTF = false }
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: copiedRTF ? "checkmark" : "doc.richtext")
+                            .font(.system(.caption))
+                            .frame(width: 12)
+                        Text("RTF")
+                            .font(.system(.caption, design: .monospaced))
+                    }
+                    .frame(height: 20)
+                    .padding(.horizontal, 6)
+                    .contentShape(Rectangle())
+                    .background(Color.blue.opacity(0.3))
+                    .foregroundColor(.primary)
+                    .cornerRadius(4)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 4)
+                Button(action: {
+                    let attrStr = highlightedAttributedString()
+                    let range = NSRange(location: 0, length: attrStr.length)
+                    if let htmlData = try? attrStr.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]),
+                       var htmlString = String(data: htmlData, encoding: .utf8) {
+                        // Replace system font references with cross-platform monospace stack
+                        htmlString = htmlString.replacingOccurrences(of: "'.AppleSystemUIFontMonospaced'", with: "ui-monospace, 'JetBrains Mono', Menlo, monospace")
+                        htmlString = htmlString.replacingOccurrences(of: "'Menlo'", with: "ui-monospace, 'JetBrains Mono', Menlo, monospace")
+                        htmlString = htmlString.replacingOccurrences(of: "font-family: Menlo", with: "font-family: ui-monospace, 'JetBrains Mono', Menlo, monospace")
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(htmlString, forType: .string)
+                        copiedHTML = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { copiedHTML = false }
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: copiedHTML ? "checkmark" : "chevron.left.forwardslash.chevron.right")
+                            .font(.system(.caption))
+                            .frame(width: 12)
+                        Text("HTML")
+                            .font(.system(.caption, design: .monospaced))
+                    }
+                    .frame(height: 20)
+                    .padding(.horizontal, 6)
+                    .contentShape(Rectangle())
+                    .background(Color.green.opacity(0.3))
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                 }

@@ -1,8 +1,9 @@
-<p align="center">
-  <img src="battlescript.png" width="256" alt="BattleScript JibberJabber JibJab JJ AI first programming language experiment GUI Icon">
-</p>
+<div align="left">
+  <img src="https://github.com/user-attachments/assets/766f0f42-33dc-4b47-bc22-0f31aae37b5f" width="140" alt="BattleScript JibberJabber JibJab JJ AI first programming language experiment GUI Icon">
+  <div><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BattleScript</b></div>
+</div>
 
-# JibberJabber (JJ) 1.0
+## JJ aka JibberJabber AI programming language 1.0 by Todd Bruss
 
 An **AI-first programming language** created by [Todd Bruss](https://github.com/SuperBox64). JibberJabber is a polyglot engine designed to integrate AI models as primary execution components rather than external tools. It supports transcoding and cross-compilation across multiple environments, bridging high-level AI logic and system performance.
 
@@ -54,8 +55,8 @@ See [jibjab/README.md](jibjab/README.md) for dependencies and setup.
 
 Native macOS IDE for JibJab. Write JJ code and instantly see it transpiled to all 10 targets, then compile and run any target with one click.
 
-<p align="center">
-  <img src="battlescript-ide-prerelease.png" width="700" alt="BattleScript IDE">
+<p align="left">
+  <img src="https://github.com/user-attachments/assets/784f9205-34e3-4eea-a1d8-8eeee5e8c2c6" width="738" alt="BattleScript Experimental JibberJabber JibJab JJ Swift JJSwift IDE for macOS 14, 15, 26">
 </p>
 
 See [BattleScript/README.md](BattleScript/README.md) for details.

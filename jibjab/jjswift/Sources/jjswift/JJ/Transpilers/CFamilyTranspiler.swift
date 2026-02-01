@@ -409,8 +409,7 @@ public class CFamilyTranspiler: Transpiling {
     func varDeclToString(_ node: VarDecl) -> String {
         if let arr = node.value as? ArrayLiteral {
             arrayVars.insert(node.name)
-            if let firstElem = arr.elements.first, firstElem is ArrayLiteral {
-                let inner = firstElem as! ArrayLiteral
+            if let inner = arr.elements.first as? ArrayLiteral {
                 let jjType = inner.elements.first.map { inferType($0) } ?? "Int"
                 let iType = jjType == "String" ? "str" : (jjType == "Double" ? "double" : "int")
                 arrayMeta[node.name] = ArrayMeta(elemType: "nested", count: arr.elements.count, isNested: true, innerCount: inner.elements.count, innerElemType: iType)
