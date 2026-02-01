@@ -333,7 +333,10 @@ struct EditorTabView: View {
                     let attrStr = highlightedAttributedString()
                     let range = NSRange(location: 0, length: attrStr.length)
                     if let htmlData = try? attrStr.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]),
-                       let htmlString = String(data: htmlData, encoding: .utf8) {
+                       var htmlString = String(data: htmlData, encoding: .utf8) {
+                        // Replace macOS system font references with generic monospace
+                        let fontName = SyntaxTheme.font.fontName
+                        htmlString = htmlString.replacingOccurrences(of: fontName, with: "monospace")
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(htmlString, forType: .html)
                         NSPasteboard.general.setString(htmlString, forType: .string)
