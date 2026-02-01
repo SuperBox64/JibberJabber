@@ -334,10 +334,10 @@ struct EditorTabView: View {
                     let range = NSRange(location: 0, length: attrStr.length)
                     if let htmlData = try? attrStr.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]),
                        var htmlString = String(data: htmlData, encoding: .utf8) {
-                        // Replace system font references with CSS font-family stack
-                        htmlString = htmlString.replacingOccurrences(of: "'.AppleSystemUIFontMonospaced'", with: "'SF Mono', Menlo, monospace")
-                        htmlString = htmlString.replacingOccurrences(of: "'Menlo'", with: "'SF Mono', Menlo, monospace")
-                        htmlString = htmlString.replacingOccurrences(of: "font-family: Menlo", with: "font-family: 'SF Mono', Menlo, monospace")
+                        // Replace system font references with web-safe monospace stack
+                        htmlString = htmlString.replacingOccurrences(of: "'.AppleSystemUIFontMonospaced'", with: "Menlo, Consolas, 'Courier New', monospace")
+                        htmlString = htmlString.replacingOccurrences(of: "'Menlo'", with: "Menlo, Consolas, 'Courier New', monospace")
+                        htmlString = htmlString.replacingOccurrences(of: "font-family: Menlo", with: "font-family: Menlo, Consolas, 'Courier New', monospace")
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(htmlString, forType: .string)
                     }
