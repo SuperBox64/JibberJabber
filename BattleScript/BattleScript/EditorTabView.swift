@@ -164,6 +164,17 @@ struct EditorTabView: View {
         "applescript": .indigo,
     ]
 
+    private func highlightedAttributedString() -> NSAttributedString {
+        let text = selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
+        let lang = selectedTab == "jj" ? "jj" : selectedTab
+        let storage = NSTextStorage(string: text, attributes: [
+            .font: SyntaxTheme.font,
+            .foregroundColor: NSColor.textColor
+        ])
+        SyntaxHighlighterFactory.highlighter(for: lang)?.highlight(storage)
+        return NSAttributedString(attributedString: storage)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Tab bar
@@ -290,6 +301,52 @@ struct EditorTabView: View {
                     .padding(.horizontal, 6)
                     .contentShape(Rectangle())
                     .background(Color.gray.opacity(0.3))
+                    .foregroundColor(.primary)
+                    .cornerRadius(4)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 4)
+                Button(action: {
+                    let attrStr = highlightedAttributedString()
+                    let range = NSRange(location: 0, length: attrStr.length)
+                    if let rtfData = attrStr.rtf(from: range, documentAttributes: [:]) {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setData(rtfData, forType: .rtf)
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "doc.richtext")
+                            .font(.system(.caption))
+                        Text("RTF")
+                            .font(.system(.caption, design: .monospaced))
+                    }
+                    .frame(height: 20)
+                    .padding(.horizontal, 6)
+                    .contentShape(Rectangle())
+                    .background(Color.blue.opacity(0.3))
+                    .foregroundColor(.primary)
+                    .cornerRadius(4)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 4)
+                Button(action: {
+                    let attrStr = highlightedAttributedString()
+                    let range = NSRange(location: 0, length: attrStr.length)
+                    if let htmlData = try? attrStr.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]) {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setData(htmlData, forType: .html)
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left.forwardslash.chevron.right")
+                            .font(.system(.caption))
+                        Text("HTML")
+                            .font(.system(.caption, design: .monospaced))
+                    }
+                    .frame(height: 20)
+                    .padding(.horizontal, 6)
+                    .contentShape(Rectangle())
+                    .background(Color.green.opacity(0.3))
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                 }
