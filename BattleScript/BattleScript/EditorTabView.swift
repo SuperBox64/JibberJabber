@@ -172,22 +172,6 @@ struct EditorTabView: View {
             .foregroundColor: NSColor.textColor
         ])
         SyntaxHighlighterFactory.highlighter(for: lang)?.highlight(storage)
-        // Replace system monospace fonts with Menlo for cross-app compatibility
-        let size = SyntaxTheme.font.pointSize
-        let menlo = NSFont(name: "Menlo-Regular", size: size) ?? NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
-        let menloBold = NSFont(name: "Menlo-Bold", size: size) ?? NSFont.monospacedSystemFont(ofSize: size, weight: .bold)
-        let menloItalic = NSFont(name: "Menlo-Italic", size: size) ?? menlo
-        storage.enumerateAttribute(.font, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
-            guard let font = value as? NSFont else { return }
-            let traits = NSFontManager.shared.traits(of: font)
-            if traits.contains(.boldFontMask) {
-                storage.addAttribute(.font, value: menloBold, range: range)
-            } else if traits.contains(.italicFontMask) {
-                storage.addAttribute(.font, value: menloItalic, range: range)
-            } else {
-                storage.addAttribute(.font, value: menlo, range: range)
-            }
-        }
         return NSAttributedString(attributedString: storage)
     }
 
@@ -349,7 +333,12 @@ struct EditorTabView: View {
                     let attrStr = highlightedAttributedString()
                     let range = NSRange(location: 0, length: attrStr.length)
                     if let htmlData = try? attrStr.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]),
-                       let htmlString = String(data: htmlData, encoding: .utf8) {
+                       var htmlString = String(data: htmlData, encoding: .utf8) {
+                        // Replace all macOS system font references with Menlo
+                        for f in [SyntaxTheme.font, SyntaxTheme.boldFont, SyntaxTheme.italicFont] {
+                            htmlString = htmlString.replacingOccurrences(of: f.fontName, with: "Menlo")
+                            htmlString = htmlString.replacingOccurrences(of: f.familyName ?? "", with: "Menlo")
+                        }
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(htmlString, forType: .string)
                     }
