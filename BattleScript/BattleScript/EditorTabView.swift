@@ -334,11 +334,8 @@ struct EditorTabView: View {
                     let range = NSRange(location: 0, length: attrStr.length)
                     if let htmlData = try? attrStr.data(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.html]),
                        var htmlString = String(data: htmlData, encoding: .utf8) {
-                        // Replace all macOS system font references with Menlo
-                        for f in [SyntaxTheme.font, SyntaxTheme.boldFont, SyntaxTheme.italicFont] {
-                            htmlString = htmlString.replacingOccurrences(of: f.fontName, with: "Menlo")
-                            htmlString = htmlString.replacingOccurrences(of: f.familyName ?? "", with: "Menlo")
-                        }
+                        // Replace Menlo references with CSS font-family stack
+                        htmlString = htmlString.replacingOccurrences(of: "font-family: Menlo", with: "font-family: 'SF Mono', Menlo, monospace")
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(htmlString, forType: .string)
                     }
