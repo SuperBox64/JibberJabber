@@ -2,7 +2,7 @@
   <img src="battlescript.png" width="128" alt="BattleScript JibberJabber JibJab JJ AI first programming language experiment GUI Icon">
 </p>
 
-# JibberJabber (JJ) 1.0
+# JibberJabber JibJab (JJ) AI programming lang 1.0 by Todd Bruss
 
 An **AI-first programming language** created by [Todd Bruss](https://github.com/SuperBox64). JibberJabber is a polyglot engine designed to integrate AI models as primary execution components rather than external tools. It supports transcoding and cross-compilation across multiple environments, bridging high-level AI logic and system performance.
 
