@@ -336,6 +336,7 @@ struct EditorTabView: View {
                        let htmlString = String(data: htmlData, encoding: .utf8) {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(htmlString, forType: .html)
+                        NSPasteboard.general.setString(htmlString, forType: .string)
                     }
                 }) {
                     HStack(spacing: 4) {
