@@ -338,7 +338,6 @@ struct EditorTabView: View {
                         let fontName = SyntaxTheme.font.fontName
                         htmlString = htmlString.replacingOccurrences(of: fontName, with: "monospace")
                         NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(htmlString, forType: .html)
                         NSPasteboard.general.setString(htmlString, forType: .string)
                     }
                 }) {
