@@ -400,7 +400,9 @@
       "Bash(plutil:*)",
       "Bash(defaults delete:*)",
       "Bash(for f in jibjab/common/targets/{py,js,c,cpp,swift,objc,objcpp,go,applescript}.json)",
-      "Bash(do echo -n \"$f: \")"
+      "Bash(do echo -n \"$f: \")",
+      "WebFetch(domain:jj.xcf.ai)",
+      "Bash(git reset:*)"
     ]
   }
 }
