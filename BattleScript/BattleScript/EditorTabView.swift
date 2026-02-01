@@ -167,14 +167,40 @@ struct EditorTabView: View {
         "applescript": .indigo,
     ]
 
+    private func activeTextView() -> NSTextView? {
+        var responder = NSApp.keyWindow?.firstResponder
+        while let r = responder {
+            if let tv = r as? NSTextView { return tv }
+            responder = r.nextResponder
+        }
+        return nil
+    }
+
+    private func selectedOrFullText() -> String {
+        if let tv = activeTextView() {
+            let sel = tv.selectedRange()
+            if sel.length > 0, let range = Range(sel, in: tv.string) {
+                return String(tv.string[range])
+            }
+        }
+        return selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
+    }
+
     private func highlightedAttributedString() -> NSAttributedString {
-        let text = selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
+        let fullText = selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
         let lang = selectedTab == "jj" ? "jj" : selectedTab
-        let storage = NSTextStorage(string: text, attributes: [
+        let storage = NSTextStorage(string: fullText, attributes: [
             .font: SyntaxTheme.font,
             .foregroundColor: NSColor.textColor
         ])
         SyntaxHighlighterFactory.highlighter(for: lang)?.highlight(storage)
+        // Extract selection if any
+        if let tv = activeTextView() {
+            let sel = tv.selectedRange()
+            if sel.length > 0, sel.location + sel.length <= storage.length {
+                return storage.attributedSubstring(from: sel)
+            }
+        }
         return NSAttributedString(attributedString: storage)
     }
 
@@ -290,9 +316,8 @@ struct EditorTabView: View {
                 .buttonStyle(.plain)
                 .padding(.leading, 4)
                 Button(action: {
-                    let text = selectedTab == "jj" ? sourceCode : (transpiledOutputs[selectedTab] ?? "")
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(text, forType: .string)
+                    NSPasteboard.general.setString(selectedOrFullText(), forType: .string)
                     copiedCopy = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) { copiedCopy = false }
                 }) {
