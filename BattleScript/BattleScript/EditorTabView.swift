@@ -299,6 +299,7 @@ struct EditorTabView: View {
                     HStack(spacing: 4) {
                         Image(systemName: copiedCopy ? "checkmark" : "doc.on.doc")
                             .font(.system(.caption))
+                            .frame(width: 12)
                         Text("Copy")
                             .font(.system(.caption, design: .monospaced))
                     }
@@ -324,6 +325,7 @@ struct EditorTabView: View {
                     HStack(spacing: 4) {
                         Image(systemName: copiedRTF ? "checkmark" : "doc.richtext")
                             .font(.system(.caption))
+                            .frame(width: 12)
                         Text("RTF")
                             .font(.system(.caption, design: .monospaced))
                     }
@@ -354,6 +356,7 @@ struct EditorTabView: View {
                     HStack(spacing: 4) {
                         Image(systemName: copiedHTML ? "checkmark" : "chevron.left.forwardslash.chevron.right")
                             .font(.system(.caption))
+                            .frame(width: 12)
                         Text("HTML")
                             .font(.system(.caption, design: .monospaced))
                     }
