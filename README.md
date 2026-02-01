@@ -1,5 +1,5 @@
 <p align="left">
-  <img src="battlescript.png" width="128" alt="BattleScript JibberJabber JibJab JJ AI first programming language experiment GUI Icon">
+  <img src="battlescript.png" width="192" alt="BattleScript JibberJabber JibJab JJ AI first programming language experiment GUI Icon">
 </p>
 
 # JibberJabber JibJab (JJ) AI programming lang 1.0 by Todd Bruss
