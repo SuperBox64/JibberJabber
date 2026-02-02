@@ -99,6 +99,8 @@ public class Parser {
             return try parseFuncDef()
         case .yeet:
             return try parseReturn()
+        case .kaboom:
+            return try parseThrow()
         case .enum:
             return try parseEnumDef()
         case .`try`:
@@ -215,6 +217,14 @@ public class Parser {
         let value = try parseExpression()
         _ = try expect(.rbrace)
         return ReturnStmt(value: value)
+    }
+
+    private func parseThrow() throws -> ThrowStmt {
+        _ = advance() // KABOOM
+        _ = try expect(.lbrace)
+        let value = try parseExpression()
+        _ = try expect(.rbrace)
+        return ThrowStmt(value: value)
     }
 
     private func parseEnumDef() throws -> EnumDef {

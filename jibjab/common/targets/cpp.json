@@ -32,6 +32,7 @@
   "func": "{type} {name}({params}) {",
   "funcDecl": "{type} {name}({params});",
   "return": "return {value};",
+  "throw": "throw std::runtime_error({value});",
   "call": "{name}({args})",
   "blockEnd": "}",
   "indent": "    ",

@@ -18,6 +18,7 @@ public struct JJCoreConfig: Codable {
         public let print: String
         public let input: String
         public let yeet: String
+        public let kaboom: String
         public let snag: String
         public let invoke: String
         public let `enum`: String
@@ -104,6 +105,7 @@ public struct TargetConfig: Codable {
     public let `func`: String
     private let _funcDecl: String?
     public let `return`: String
+    private let _throw: String?
     public let call: String
     private let _blockEnd: String?
     public let blockEndRepeat: String?
@@ -207,6 +209,7 @@ public struct TargetConfig: Codable {
 
     enum CodingKeys: String, CodingKey {
         case name, ext, header, `var`, varInfer, varAuto, forRange, `while`, `if`, `else`, `func`, `return`, call, indent, main, compile, run, types
+        case _throw = "throw"
         case _print = "print"
         case _printInt = "printInt"
         case _printStr = "printStr"
@@ -329,6 +332,7 @@ public struct TargetConfig: Codable {
         `func` = try container.decode(String.self, forKey: .func)
         _funcDecl = try container.decodeIfPresent(String.self, forKey: ._funcDecl)
         `return` = try container.decode(String.self, forKey: .return)
+        _throw = try container.decodeIfPresent(String.self, forKey: ._throw)
         call = try container.decode(String.self, forKey: .call)
         _blockEnd = try container.decodeIfPresent(String.self, forKey: ._blockEnd)
         blockEndRepeat = try container.decodeIfPresent(String.self, forKey: .blockEndRepeat)
@@ -453,6 +457,7 @@ public struct TargetConfig: Codable {
     public var tryBlock: String { _try ?? "try {" }
     public var catchBlock: String { _catch ?? "} catch {" }
     public var blockEndTry: String? { _blockEndTry }
+    public var throwStmt: String? { _throw }
     public var and: String { _and ?? "&&" }
     public var or: String { _or ?? "||" }
     public var not: String { _not ?? "!" }
@@ -632,6 +637,9 @@ public struct JJEmit {
     public static func yeet(_ val: String) -> String {
         "\(JJ.keywords.yeet){\(val)}"
     }
+    public static func kaboom(_ val: String) -> String {
+        "\(JJ.keywords.kaboom){\(val)}"
+    }
     public static func invoke(_ name: String, _ args: String) -> String {
         "\(JJ.keywords.invoke){\(name)}\(JJ.structure.action)\(JJ.syntax.with)(\(args))"
     }
@@ -661,7 +669,7 @@ public struct JJPatterns {
 
     public static var keyword: String {
         let kw = JJ.keywords
-        return [kw.print, kw.input, kw.snag, kw.invoke, kw.yeet, kw.enum].map { keyword in
+        return [kw.print, kw.input, kw.snag, kw.invoke, kw.yeet, kw.kaboom, kw.enum].map { keyword in
             if let braceIdx = keyword.firstIndex(of: "{") {
                 return esc(String(keyword[..<braceIdx])) + "\\{[a-zA-Z0-9]*\\}"
             }

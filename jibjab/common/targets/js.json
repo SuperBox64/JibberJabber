@@ -20,6 +20,7 @@
   "catch": "} catch (e) {",
   "func": "function {name}({params}) {",
   "return": "return {value};",
+  "throw": "throw {value};",
   "call": "{name}({args})",
   "blockEnd": "}",
   "indent": "    ",

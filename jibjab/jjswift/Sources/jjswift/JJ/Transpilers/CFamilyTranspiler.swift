@@ -235,6 +235,11 @@ public class CFamilyTranspiler: Transpiling {
             return funcToString(funcDef)
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
+        } else if let throwStmt = node as? ThrowStmt {
+            if let tmpl = T.throwStmt {
+                return ind() + tmpl.replacingOccurrences(of: "{value}", with: expr(throwStmt.value))
+            }
+            return ind() + T.comment + " throw " + expr(throwStmt.value)
         } else if let enumDef = node as? EnumDef {
             return enumToString(enumDef)
         } else if let comment = node as? CommentNode {

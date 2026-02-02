@@ -9,6 +9,7 @@ public enum TokenType {
     case `else`     // <~else>>
     case morph      // <~morph{...}>>
     case yeet       // ~>yeet{...}
+    case kaboom     // ~>kaboom{...}
     case snag       // ~>snag{...}
     case invoke     // ~>invoke{...}
     case `enum`     // ~>enum{...}

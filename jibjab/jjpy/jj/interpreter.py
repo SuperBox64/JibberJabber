@@ -9,7 +9,7 @@ from .lexer import JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
-    ReturnStmt, EnumDef, ArrayLiteral, DictLiteral, TupleLiteral,
+    ReturnStmt, ThrowStmt, EnumDef, ArrayLiteral, DictLiteral, TupleLiteral,
     IndexAccess, StringInterpolation
 )
 
@@ -103,6 +103,9 @@ class Interpreter:
         elif isinstance(node, EnumDef):
             # Store enum as a dictionary mapping case names to themselves
             self.locals[-1][node.name] = {case: case for case in node.cases}
+        elif isinstance(node, ThrowStmt):
+            value = self.evaluate(node.value)
+            raise Exception(self.stringify(value))
         elif isinstance(node, ReturnStmt):
             return ('return', self.evaluate(node.value))
         return None

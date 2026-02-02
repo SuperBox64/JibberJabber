@@ -243,6 +243,8 @@ public class AssemblyTranspiler: Transpiling {
             genLoop(loopStmt)
         } else if let ifStmt = node as? IfStmt {
             genIf(ifStmt)
+        } else if let throwStmt = node as? ThrowStmt {
+            genExpr(throwStmt.value)
         } else if let returnStmt = node as? ReturnStmt {
             genExpr(returnStmt.value)
             if let funcName = currentFunc {

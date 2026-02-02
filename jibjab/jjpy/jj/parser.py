@@ -10,7 +10,7 @@ from .lexer import Lexer, Token, TokenType, JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
-    ReturnStmt, EnumDef, ArrayLiteral, DictLiteral, TupleLiteral,
+    ReturnStmt, ThrowStmt, EnumDef, ArrayLiteral, DictLiteral, TupleLiteral,
     IndexAccess, StringInterpolation
 )
 
@@ -98,6 +98,8 @@ class Parser:
             return self.parse_func_def()
         if self.peek().type == TokenType.YEET:
             return self.parse_return()
+        if self.peek().type == TokenType.KABOOM:
+            return self.parse_throw()
         if self.peek().type == TokenType.ENUM:
             return self.parse_enum_def()
         if self.peek().type == TokenType.TRY:
@@ -174,6 +176,13 @@ class Parser:
         value = self.parse_expression()
         self.expect(TokenType.RBRACE)
         return ReturnStmt(value)
+
+    def parse_throw(self) -> ThrowStmt:
+        self.advance()  # KABOOM
+        self.expect(TokenType.LBRACE)
+        value = self.parse_expression()
+        self.expect(TokenType.RBRACE)
+        return ThrowStmt(value)
 
     def parse_enum_def(self) -> EnumDef:
         self.advance()  # ENUM

@@ -6,7 +6,7 @@ Uses emit values from common/jj.json
 from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
-    BinaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall, ReturnStmt,
+    BinaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall, ReturnStmt, ThrowStmt,
     EnumDef, ArrayLiteral, IndexAccess, TupleLiteral, DictLiteral,
     UnaryOp, StringInterpolation
 )
@@ -214,6 +214,8 @@ class AssemblyTranspiler:
             self.gen_loop(node)
         elif isinstance(node, IfStmt):
             self.gen_if(node)
+        elif isinstance(node, ThrowStmt):
+            self.gen_expr(node.value)
         elif isinstance(node, ReturnStmt):
             self.gen_expr(node.value)
             self.asm_lines.append(f"    b _{self.current_func}_ret")

@@ -8,7 +8,7 @@ from ..lexer import load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
-    ReturnStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
+    ReturnStmt, ThrowStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
     EnumDef, StringInterpolation
 )
 
@@ -167,6 +167,11 @@ class CFamilyTranspiler:
             return f"{header}\n{body}\n{self.T['blockEnd']}"
         elif isinstance(node, ReturnStmt):
             return self.ind() + self.T['return'].replace('{value}', self.expr(node.value))
+        elif isinstance(node, ThrowStmt):
+            tmpl = self.T.get('throw')
+            if tmpl:
+                return self.ind() + tmpl.replace('{value}', self.expr(node.value))
+            return self.ind() + self.T.get('comment', '//') + ' throw ' + self.expr(node.value)
         elif isinstance(node, EnumDef):
             return self._enum_def(node)
         return ""

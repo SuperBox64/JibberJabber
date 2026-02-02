@@ -113,6 +113,10 @@ public class Lexer {
             addToken(.yeet)
             return
         }
+        if match(JJ.keywords.kaboom) != nil {
+            addToken(.kaboom)
+            return
+        }
         if match(JJ.keywords.snag) != nil {
             addToken(.snag)
             return
@@ -502,8 +506,8 @@ public class Lexer {
     static func extractKeywordNames() -> [String] {
         let keywords = [
             JJ.keywords.print, JJ.keywords.input,
-            JJ.keywords.yeet, JJ.keywords.snag,
-            JJ.keywords.invoke, JJ.keywords.enum
+            JJ.keywords.yeet, JJ.keywords.kaboom,
+            JJ.keywords.snag, JJ.keywords.invoke, JJ.keywords.enum
         ]
         return keywords.compactMap { kw -> String? in
             guard kw.hasPrefix("~>") else { return nil }

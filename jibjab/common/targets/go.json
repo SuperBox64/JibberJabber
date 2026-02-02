@@ -30,6 +30,7 @@
   "func": "func {name}({params}) {type} {",
   "funcDecl": "",
   "return": "return {value}",
+  "throw": "panic({value})",
   "call": "{name}({args})",
   "blockEnd": "}",
   "indent": "    ",

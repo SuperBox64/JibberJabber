@@ -4,6 +4,7 @@
     "print": "~>frob{7a3}",
     "input": "~>slurp{9f2}",
     "yeet": "~>yeet",
+    "kaboom": "~>kaboom",
     "snag": "~>snag",
     "invoke": "~>invoke",
     "enum": "~>enum",

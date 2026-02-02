@@ -82,6 +82,11 @@
         "value": { "type": "ASTNode" }
       }
     },
+    "ThrowStmt": {
+      "fields": {
+        "value": { "type": "ASTNode" }
+      }
+    },
     "EnumDef": {
       "fields": {
         "name": { "type": "String" },

@@ -127,6 +127,7 @@ class PythonReverseTranspiler: ReverseTranspiling {
     private static let elseRegex = ReversePatterns.elsePattern(pyTarget)
     private static let defRegex = ReversePatterns.funcPattern(pyTarget)
     private static let returnRegex = ReversePatterns.returnPattern(pyTarget)
+    private static let throwRegex = ReversePatterns.throwPattern(pyTarget)
     private static let commentRegex = ReversePatterns.commentPattern(pyTarget)
 
     private static let printBoolRegex = ReversePatterns.pythonPrintBoolPattern(pyTarget)
@@ -225,6 +226,9 @@ class PythonReverseTranspiler: ReverseTranspiling {
             } else if let m = Self.returnRegex?.firstMatch(in: trimmed, range: range) {
                 let val = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, target: target)))")
+            } else if let m = Self.throwRegex?.firstMatch(in: trimmed, range: range) {
+                let val = reverseExpr(nsLine.substring(with: m.range(at: 1)))
+                result.append("\(indent(indentLevel))\(JJEmit.kaboom(reverseFuncCalls(val, target: target)))")
             } else if let m = Self.printRegex?.firstMatch(in: trimmed, range: range) {
                 let expr = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, target: target)))")
@@ -323,6 +327,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
         var elsePattern: NSRegularExpression?
         var funcPattern: NSRegularExpression?
         var returnPattern: NSRegularExpression?
+        var throwPattern: NSRegularExpression?
         var commentPrefix: String
         var trueValue: String
         var falseValue: String
@@ -345,6 +350,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
             self.elsePattern = ReversePatterns.elsePattern(target)
             self.funcPattern = ReversePatterns.funcPattern(target)
             self.returnPattern = ReversePatterns.returnPattern(target)
+            self.throwPattern = ReversePatterns.throwPattern(target)
             self.commentPrefix = ReversePatterns.commentPrefix(target)
             self.trueValue = target.true
             self.falseValue = target.false
@@ -493,6 +499,15 @@ class BraceReverseTranspiler: ReverseTranspiling {
                 if val.hasSuffix(";") { val = String(val.dropLast()) }
                 val = reverseExpr(val)
                 result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, target: config.target)))")
+                continue
+            }
+
+            // Throw
+            if let m = config.throwPattern?.firstMatch(in: trimmed, range: range) {
+                var val = nsLine.substring(with: m.range(at: 1))
+                if val.hasSuffix(";") { val = String(val.dropLast()) }
+                val = reverseExpr(val)
+                result.append("\(indent(indentLevel))\(JJEmit.kaboom(reverseFuncCalls(val, target: config.target)))")
                 continue
             }
 
@@ -826,6 +841,7 @@ class AppleScriptReverseTranspiler: ReverseTranspiling {
     private static let elseRegex = ReversePatterns.elsePattern(asTarget)
     private static let onRegex = ReversePatterns.funcPattern(asTarget)
     private static let returnRegex = ReversePatterns.returnPattern(asTarget)
+    private static let throwRegex = ReversePatterns.throwPattern(asTarget)
     private static let endRegex = try? NSRegularExpression(pattern: "^end\\s*(\\w*)$")
     private static let commentRegex = ReversePatterns.commentPattern(asTarget)
 
@@ -892,6 +908,9 @@ class AppleScriptReverseTranspiler: ReverseTranspiling {
             } else if let m = Self.returnRegex?.firstMatch(in: trimmed, range: range) {
                 let val = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(indent(indentLevel))\(JJEmit.yeet(reverseFuncCalls(val, target: target)))")
+            } else if let m = Self.throwRegex?.firstMatch(in: trimmed, range: range) {
+                let val = reverseExpr(nsLine.substring(with: m.range(at: 1)))
+                result.append("\(indent(indentLevel))\(JJEmit.kaboom(reverseFuncCalls(val, target: target)))")
             } else if let m = Self.logRegex?.firstMatch(in: trimmed, range: range) {
                 let expr = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(indent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, target: target)))")

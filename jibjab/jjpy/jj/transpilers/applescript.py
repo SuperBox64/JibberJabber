@@ -7,7 +7,7 @@ from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
-    ReturnStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
+    ReturnStmt, ThrowStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
     EnumDef, StringInterpolation
 )
 
@@ -128,6 +128,11 @@ class AppleScriptTranspiler:
             return f"{header}\n{body}\n{self.ind()}end {safe_name(node.name)}"
         elif isinstance(node, ReturnStmt):
             return self.ind() + T['return'].replace('{value}', self.expr(node.value))
+        elif isinstance(node, ThrowStmt):
+            tmpl = T.get('throw')
+            if tmpl:
+                return self.ind() + tmpl.replace('{value}', self.expr(node.value))
+            return self.ind() + T.get('comment', '--') + ' throw ' + self.expr(node.value)
         return ""
 
     def expr(self, node: ASTNode) -> str:

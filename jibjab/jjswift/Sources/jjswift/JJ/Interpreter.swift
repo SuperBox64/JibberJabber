@@ -100,6 +100,9 @@ public class Interpreter {
             // Store enum as ordered dict: ("dict", [(key, value)]) to preserve insertion order
             let pairs: [(String, Any?)] = enumDef.cases.map { ($0, $0 as Any?) }
             locals[locals.count - 1][enumDef.name] = ("dict", pairs)
+        } else if let throwStmt = node as? ThrowStmt {
+            let value = try evaluate(throwStmt.value)
+            throw RuntimeError.error(stringify(value))
         } else if let returnStmt = node as? ReturnStmt {
             return ("return", try evaluate(returnStmt.value) as Any)
         } else if node is CommentNode {

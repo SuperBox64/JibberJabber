@@ -25,6 +25,7 @@
   "func": "{type} {name}({params}) {",
   "funcDecl": "{type} {name}({params});",
   "return": "return {value};",
+  "throw": "/* throw */ abort();",
   "call": "{name}({args})",
   "blockEnd": "}",
   "indent": "    ",

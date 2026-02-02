@@ -21,6 +21,7 @@
   "catch": "except:",
   "func": "def {name}({params}):",
   "return": "return {value}",
+  "throw": "raise Exception({value})",
   "call": "{name}({args})",
   "indent": "    ",
   "true": "True",

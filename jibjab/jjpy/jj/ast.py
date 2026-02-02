@@ -92,6 +92,11 @@ class ReturnStmt(ASTNode):
 
 
 @dataclass
+class ThrowStmt(ASTNode):
+    value: ASTNode
+
+
+@dataclass
 class EnumDef(ASTNode):
     name: str
     cases: List[str]

@@ -90,6 +90,10 @@ public struct ReturnStmt: ASTNode {
     public let value: ASTNode
 }
 
+public struct ThrowStmt: ASTNode {
+    public let value: ASTNode
+}
+
 public struct EnumDef: ASTNode {
     public let name: String
     public let cases: [String]

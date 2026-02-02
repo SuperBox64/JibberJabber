@@ -385,6 +385,26 @@ public struct ReversePatterns {
         )
     }
 
+    // MARK: - Throw Pattern
+
+    /// Generates a regex to match throw/raise/panic statements. Captures: 1=value.
+    public static func throwPattern(_ target: TargetConfig) -> NSRegularExpression? {
+        guard let tmpl = target.throwStmt else { return nil }
+        // Build pattern from template
+        // "raise Exception({value})" -> ^raise Exception\((.+?)\)$
+        // "throw {value};" -> ^throw (.+?);?$
+        // "panic({value})" -> ^panic\((.+?)\)$
+        // "@throw [NSException ...]" -> ^@throw .*$
+        // "/* throw */ abort();" -> skip (no capture)
+        // "error {value}" -> ^error (.+?)$
+        let escaped = NSRegularExpression.escapedPattern(for: tmpl)
+        let pattern = escaped
+            .replacingOccurrences(of: "\\{value\\}", with: "(.+?)")
+        let hasSemicolon = tmpl.hasSuffix(";")
+        let finalPattern = hasSemicolon ? "^\(pattern.dropLast(1));?$" : "^\(pattern)$"
+        return try? NSRegularExpression(pattern: finalPattern)
+    }
+
     // MARK: - Bool Ternary Pattern
 
     /// Generates a regex for printf-style bool ternary:

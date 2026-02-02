@@ -20,6 +20,7 @@ class TokenType(Enum):
     ELSE = auto()
     MORPH = auto()
     YEET = auto()
+    KABOOM = auto()
     SNAG = auto()
     INVOKE = auto()
     ENUM = auto()
@@ -253,6 +254,9 @@ class Lexer:
             return
         if self.match(JJ['keywords']['yeet']):
             self.add_token(TokenType.YEET)
+            return
+        if self.match(JJ['keywords']['kaboom']):
+            self.add_token(TokenType.KABOOM)
             return
         if self.match(JJ['keywords']['snag']):
             self.add_token(TokenType.SNAG)

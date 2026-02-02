@@ -16,6 +16,7 @@
   "blockEndTry": "end try",
   "func": "on {name}({params})",
   "return": "return {value}",
+  "throw": "error {value}",
   "call": "{name}({args})",
   "blockEnd": "end",
   "blockEndRepeat": "end repeat",

@@ -25,6 +25,7 @@
   "catch": "} catch {",
   "func": "func {name}({params}) -> Int {",
   "return": "return {value}",
+  "throw": "throw NSError(domain: {value}, code: 1)",
   "call": "{name}({args})",
   "blockEnd": "}",
   "indent": "    ",

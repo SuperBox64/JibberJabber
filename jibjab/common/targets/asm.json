@@ -27,6 +27,7 @@
   "endif": "{label}_endif:",
   "func": ".global _{name}\n_{name}:",
   "return": "mov x0, {value}\nret",
+  "throw": "mov x0, {value}",
   "call": "bl _{name}",
   "blockEnd": "",
   "indent": "    ",

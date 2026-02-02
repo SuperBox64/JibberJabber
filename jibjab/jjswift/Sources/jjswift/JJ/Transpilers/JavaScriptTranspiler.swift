@@ -84,6 +84,11 @@ public class JavaScriptTranspiler: Transpiling {
             return "\(header)\n\(body)\n\(ind())\(T.blockEnd)"
         } else if let returnStmt = node as? ReturnStmt {
             return ind() + T.return.replacingOccurrences(of: "{value}", with: expr(returnStmt.value))
+        } else if let throwStmt = node as? ThrowStmt {
+            if let tmpl = T.throwStmt {
+                return ind() + tmpl.replacingOccurrences(of: "{value}", with: expr(throwStmt.value))
+            }
+            return ind() + T.comment + " throw " + expr(throwStmt.value)
         } else if let enumDef = node as? EnumDef {
             enums.insert(enumDef.name)
             let cases = enumDef.cases.map { "\($0): \"\($0)\"" }.joined(separator: ", ")

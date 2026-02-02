@@ -7,7 +7,7 @@ from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
-    ReturnStmt, EnumDef, IndexAccess, ArrayLiteral, DictLiteral,
+    ReturnStmt, ThrowStmt, EnumDef, IndexAccess, ArrayLiteral, DictLiteral,
     TupleLiteral, StringInterpolation
 )
 
@@ -119,6 +119,11 @@ class SwiftTranspiler:
             return f"{header}\n{body}\n{self.ind()}{T['blockEnd']}"
         elif isinstance(node, ReturnStmt):
             return self.ind() + T['return'].replace('{value}', self.expr(node.value))
+        elif isinstance(node, ThrowStmt):
+            tmpl = T.get('throw')
+            if tmpl:
+                return self.ind() + tmpl.replace('{value}', self.expr(node.value))
+            return self.ind() + T.get('comment', '//') + ' throw ' + self.expr(node.value)
         elif isinstance(node, EnumDef):
             self.enums.add(node.name)
             cases = ', '.join(node.cases)
