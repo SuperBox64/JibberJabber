@@ -262,14 +262,17 @@ public class AssemblyTranspiler: Transpiling {
             enumCaseStrings[enumDef.name] = enumDef.cases
             enumCaseLabels[enumDef.name] = caseLabels
         } else if let tryStmt = node as? TryStmt {
+            let endLabel = newLabel(prefix: "endtry")
             for stmt in tryStmt.tryBody {
                 genStmt(stmt)
             }
+            asmLines.append("    b \(endLabel)")
             if let oopsBody = tryStmt.oopsBody {
                 for stmt in oopsBody {
                     genStmt(stmt)
                 }
             }
+            asmLines.append("\(endLabel):")
         } else if let comment = node as? CommentNode {
             asmLines.append(T.comment + " " + comment.text)
         }
