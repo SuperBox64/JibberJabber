@@ -226,6 +226,26 @@ public class GoTranspiler: CFamilyTranspiler {
             .replacingOccurrences(of: "{cases}", with: casesStr)
     }
 
+    override func tryToString(_ node: TryStmt) -> String {
+        var result = ind() + "func() {"
+        indentLevel += 1
+        if let oopsBody = node.oopsBody {
+            result += "\n" + ind() + "defer func() {"
+            indentLevel += 1
+            result += "\n" + ind() + "if r := recover(); r != nil {"
+            indentLevel += 1
+            result += "\n" + oopsBody.map { stmtToString($0) }.joined(separator: "\n")
+            indentLevel -= 1
+            result += "\n" + ind() + "}"
+            indentLevel -= 1
+            result += "\n" + ind() + "}()"
+        }
+        result += "\n" + node.tryBody.map { stmtToString($0) }.joined(separator: "\n")
+        indentLevel -= 1
+        result += "\n" + ind() + "}()"
+        return result
+    }
+
     override func expr(_ node: ASTNode) -> String {
         if let idx = node as? IndexAccess {
             // Handle enum access

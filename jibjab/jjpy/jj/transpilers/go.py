@@ -8,7 +8,8 @@ Tuples: stored as numbered variables (_0, _1, _2)
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, PrintStmt, FuncDef, EnumDef, Program, StringInterpolation
+    IndexAccess, PrintStmt, FuncDef, EnumDef, Program, StringInterpolation,
+    TryStmt
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -87,6 +88,26 @@ class GoTranspiler(CFamilyTranspiler):
     def _emit_main(self, lines, program):
         # Not used - transpile() handles everything
         pass
+
+    def stmt(self, node) -> str:
+        if isinstance(node, TryStmt):
+            result = self.ind() + 'func() {'
+            self.indent += 1
+            if node.oops_body:
+                result += '\n' + self.ind() + 'defer func() {'
+                self.indent += 1
+                result += '\n' + self.ind() + 'if r := recover(); r != nil {'
+                self.indent += 1
+                result += '\n' + '\n'.join(self.stmt(s) for s in node.oops_body)
+                self.indent -= 1
+                result += '\n' + self.ind() + '}'
+                self.indent -= 1
+                result += '\n' + self.ind() + '}()'
+            result += '\n' + '\n'.join(self.stmt(s) for s in node.try_body)
+            self.indent -= 1
+            result += '\n' + self.ind() + '}()'
+            return result
+        return super().stmt(node)
 
     def _var_decl(self, node: VarDecl) -> str:
         if isinstance(node.value, ArrayLiteral):
