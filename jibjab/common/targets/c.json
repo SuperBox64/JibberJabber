@@ -20,6 +20,8 @@
   "while": "while ({condition}) {",
   "if": "if ({condition}) {",
   "else": "} else {",
+  "try": "if (1) {",
+  "catch": "} if (0) {",
   "func": "{type} {name}({params}) {",
   "funcDecl": "{type} {name}({params});",
   "return": "return {value};",

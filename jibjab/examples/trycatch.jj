@@ -1,0 +1,6 @@
+@@ Try Catch Example
+<~try>>
+  ~>frob{7a3}::emit("try block")
+<~oops>>
+  ~>frob{7a3}::emit("catch block")
+<~>>

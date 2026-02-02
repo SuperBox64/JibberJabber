@@ -17,6 +17,8 @@
   "while": "while {condition}:",
   "if": "if {condition}:",
   "else": "else:",
+  "try": "try:",
+  "catch": "except:",
   "func": "def {name}({params}):",
   "return": "return {value}",
   "call": "{name}({args})",

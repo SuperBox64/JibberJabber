@@ -36,6 +36,8 @@
   "while": "while ({condition}) {",
   "if": "if ({condition}) {",
   "else": "} else {",
+  "try": "@try {",
+  "catch": "} @catch (NSException *e) {",
   "func": "{type} {name}({params}) {",
   "funcDecl": "{type} {name}({params});",
   "return": "return {value};",

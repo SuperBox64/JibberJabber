@@ -108,6 +108,12 @@
         "array": { "type": "ASTNode" },
         "index": { "type": "ASTNode" }
       }
+    },
+    "TryStmt": {
+      "fields": {
+        "tryBody": { "type": "[ASTNode]" },
+        "oopsBody": { "type": "[ASTNode]?" }
+      }
     }
   }
 }

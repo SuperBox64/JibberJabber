@@ -21,6 +21,8 @@
   "while": "while {condition} {",
   "if": "if {condition} {",
   "else": "} else {",
+  "try": "do {",
+  "catch": "} catch {",
   "func": "func {name}({params}) -> Int {",
   "return": "return {value}",
   "call": "{name}({args})",

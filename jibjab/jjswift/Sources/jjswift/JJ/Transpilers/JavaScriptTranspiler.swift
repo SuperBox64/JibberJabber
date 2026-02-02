@@ -60,6 +60,20 @@ public class JavaScriptTranspiler: Transpiling {
                 result += "\n\(ind())\(T.blockEnd)"
             }
             return result
+        } else if let tryStmt = node as? TryStmt {
+            let header = ind() + T.tryBlock
+            indentLevel += 1
+            let tryBody = tryStmt.tryBody.map { stmtToString($0) }.joined(separator: "\n")
+            indentLevel -= 1
+            var result = "\(header)\n\(tryBody)\n\(ind())\(T.blockEnd)"
+            if let oopsBody = tryStmt.oopsBody {
+                result = String(result.dropLast(T.blockEnd.count)) + T.catchBlock
+                indentLevel += 1
+                result += "\n" + oopsBody.map { stmtToString($0) }.joined(separator: "\n")
+                indentLevel -= 1
+                result += "\n\(ind())\(T.blockEnd)"
+            }
+            return result
         } else if let funcDef = node as? FuncDef {
             let header = ind() + T.func
                 .replacingOccurrences(of: "{name}", with: funcDef.name)

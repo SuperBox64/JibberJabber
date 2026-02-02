@@ -68,6 +68,21 @@ public class PythonTranspiler: Transpiling {
                 indentLevel -= 1
             }
             return result
+        } else if let tryStmt = node as? TryStmt {
+            let header = ind() + T.tryBlock
+            indentLevel += 1
+            let tryStr = tryStmt.tryBody.map { stmtToString($0) }.joined(separator: "\n")
+            let tryBody = tryStr.isEmpty ? "\(ind())\(T.emptyBody ?? "pass")" : tryStr
+            indentLevel -= 1
+            var result = "\(header)\n\(tryBody)"
+            if let oopsBody = tryStmt.oopsBody {
+                result += "\n\(ind())\(T.catchBlock)"
+                indentLevel += 1
+                let oopsStr = oopsBody.map { stmtToString($0) }.joined(separator: "\n")
+                result += "\n" + (oopsStr.isEmpty ? "\(ind())\(T.emptyBody ?? "pass")" : oopsStr)
+                indentLevel -= 1
+            }
+            return result
         } else if let funcDef = node as? FuncDef {
             let header = ind() + T.func
                 .replacingOccurrences(of: "{name}", with: funcDef.name)

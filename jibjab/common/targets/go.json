@@ -24,6 +24,8 @@
   "while": "for {condition} {",
   "if": "if {condition} {",
   "else": "} else {",
+  "try": "func() {",
+  "catch": "}()\ndefer func() {",
   "func": "func {name}({params}) {type} {",
   "funcDecl": "",
   "return": "return {value}",

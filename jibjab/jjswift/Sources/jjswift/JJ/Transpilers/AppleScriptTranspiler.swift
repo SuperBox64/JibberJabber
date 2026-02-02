@@ -84,6 +84,21 @@ public class AppleScriptTranspiler: Transpiling {
             let blockEndIf = T.blockEndIf ?? T.blockEnd
             result += "\n\(ind())\(blockEndIf)"
             return result
+        } else if let tryStmt = node as? TryStmt {
+            let header = ind() + T.tryBlock
+            indentLevel += 1
+            let tryBody = tryStmt.tryBody.map { stmtToString($0) }.joined(separator: "\n")
+            indentLevel -= 1
+            var result = "\(header)\n\(tryBody)"
+            if let oopsBody = tryStmt.oopsBody {
+                result += "\n\(ind())\(T.catchBlock)"
+                indentLevel += 1
+                result += "\n" + oopsBody.map { stmtToString($0) }.joined(separator: "\n")
+                indentLevel -= 1
+            }
+            let blockEndTry = T.blockEndTry ?? T.blockEnd
+            result += "\n\(ind())\(blockEndTry)"
+            return result
         } else if let funcDef = node as? FuncDef {
             let safeParams = funcDef.params.map { safeName($0) }.joined(separator: ", ")
             let safeFuncName = safeName(funcDef.name)

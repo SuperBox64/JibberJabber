@@ -101,6 +101,8 @@ public class Parser {
             return try parseReturn()
         case .enum:
             return try parseEnumDef()
+        case .`try`:
+            return try parseTry()
         case .comment:
             let token = advance()
             return CommentNode(text: (token.value as? String) ?? "")
@@ -171,6 +173,17 @@ public class Parser {
         return IfStmt(condition: condition, thenBody: thenBody, elseBody: elseBody)
     }
 
+    private func parseTry() throws -> TryStmt {
+        _ = advance() // consume .try
+        let tryBody = try parseBlock()
+        var oopsBody: [ASTNode]? = nil
+        if peek().type == .oops {
+            _ = advance()
+            oopsBody = try parseBlock()
+        }
+        return TryStmt(tryBody: tryBody, oopsBody: oopsBody)
+    }
+
     private func parseFuncDef() throws -> FuncDef {
         let token = advance() // MORPH with signature
         let sig = (token.value as? String) ?? ""
@@ -228,7 +241,7 @@ public class Parser {
 
     private func parseBlock() throws -> [ASTNode] {
         var statements: [ASTNode] = []
-        while peek().type != .blockEnd && peek().type != .else && peek().type != .eof {
+        while peek().type != .blockEnd && peek().type != .else && peek().type != .oops && peek().type != .eof {
             if let stmt = try parseStatement() {
                 statements.append(stmt)
             } else {

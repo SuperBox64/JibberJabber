@@ -229,6 +229,8 @@ public class CFamilyTranspiler: Transpiling {
             return loopToString(loopStmt)
         } else if let ifStmt = node as? IfStmt {
             return ifToString(ifStmt)
+        } else if let tryStmt = node as? TryStmt {
+            return tryToString(tryStmt)
         } else if let funcDef = node as? FuncDef {
             return funcToString(funcDef)
         } else if let returnStmt = node as? ReturnStmt {
@@ -557,6 +559,27 @@ public class CFamilyTranspiler: Transpiling {
             result = String(result.dropLast(T.blockEnd.count)) + T.else
             indentLevel += 1
             result += "\n" + elseBody.map { stmtToString($0) }.joined(separator: "\n")
+            indentLevel -= 1
+            result += "\n\(ind())\(T.blockEnd)"
+        }
+        return result
+    }
+
+    func tryToString(_ node: TryStmt) -> String {
+        let header = ind() + T.tryBlock
+        indentLevel += 1
+        let tryBody = node.tryBody.map { stmtToString($0) }.joined(separator: "\n")
+        indentLevel -= 1
+        var result = "\(header)\n\(tryBody)\n\(ind())\(T.blockEnd)"
+        if let oopsBody = node.oopsBody {
+            // Handle multi-line catch templates (e.g. Go's "}()\ndefer func() {")
+            let catchLines = T.catchBlock.components(separatedBy: "\n")
+            let indentedCatch = catchLines.enumerated().map { i, line in
+                i == 0 ? line : ind() + line
+            }.joined(separator: "\n")
+            result = String(result.dropLast(T.blockEnd.count)) + indentedCatch
+            indentLevel += 1
+            result += "\n" + oopsBody.map { stmtToString($0) }.joined(separator: "\n")
             indentLevel -= 1
             result += "\n\(ind())\(T.blockEnd)"
         }

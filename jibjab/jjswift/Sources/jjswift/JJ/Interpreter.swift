@@ -78,6 +78,22 @@ public class Interpreter {
                     }
                 }
             }
+        } else if let tryStmt = node as? TryStmt {
+            do {
+                for stmt in tryStmt.tryBody {
+                    if let result = try execute(stmt), let tuple = result as? (String, Any), tuple.0 == "return" {
+                        return result
+                    }
+                }
+            } catch {
+                if let oopsBody = tryStmt.oopsBody {
+                    for stmt in oopsBody {
+                        if let result = try execute(stmt), let tuple = result as? (String, Any), tuple.0 == "return" {
+                            return result
+                        }
+                    }
+                }
+            }
         } else if let funcDef = node as? FuncDef {
             functions[funcDef.name] = funcDef
         } else if let enumDef = node as? EnumDef {

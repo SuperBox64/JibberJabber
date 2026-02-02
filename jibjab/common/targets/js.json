@@ -16,6 +16,8 @@
   "while": "while ({condition}) {",
   "if": "if ({condition}) {",
   "else": "} else {",
+  "try": "try {",
+  "catch": "} catch (e) {",
   "func": "function {name}({params}) {",
   "return": "return {value};",
   "call": "{name}({args})",

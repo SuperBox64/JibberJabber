@@ -109,6 +109,9 @@ public struct TargetConfig: Codable {
     public let blockEndRepeat: String?
     public let blockEndIf: String?
     public let blockEndFunc: String?
+    private let _try: String?
+    private let _catch: String?
+    private let _blockEndTry: String?
     public let indent: String
     public let `true`: String
     public let `false`: String
@@ -214,6 +217,9 @@ public struct TargetConfig: Codable {
         case _funcDecl = "funcDecl"
         case _blockEnd = "blockEnd"
         case blockEndRepeat, blockEndIf, blockEndFunc
+        case _try = "try"
+        case _catch = "catch"
+        case _blockEndTry = "blockEndTry"
         case _and = "and"
         case _or = "or"
         case _not = "not"
@@ -328,6 +334,9 @@ public struct TargetConfig: Codable {
         blockEndRepeat = try container.decodeIfPresent(String.self, forKey: .blockEndRepeat)
         blockEndIf = try container.decodeIfPresent(String.self, forKey: .blockEndIf)
         blockEndFunc = try container.decodeIfPresent(String.self, forKey: .blockEndFunc)
+        _try = try container.decodeIfPresent(String.self, forKey: ._try)
+        _catch = try container.decodeIfPresent(String.self, forKey: ._catch)
+        _blockEndTry = try container.decodeIfPresent(String.self, forKey: ._blockEndTry)
         indent = try container.decode(String.self, forKey: .indent)
         main = try container.decodeIfPresent(String.self, forKey: .main)
         compile = try container.decodeIfPresent([String].self, forKey: .compile)
@@ -441,6 +450,9 @@ public struct TargetConfig: Codable {
     public var forIn: String { _forIn ?? forRange }
     public var funcDecl: String { _funcDecl ?? `func` }
     public var blockEnd: String { _blockEnd ?? "" }
+    public var tryBlock: String { _try ?? "try {" }
+    public var catchBlock: String { _catch ?? "} catch {" }
+    public var blockEndTry: String? { _blockEndTry }
     public var and: String { _and ?? "&&" }
     public var or: String { _or ?? "||" }
     public var not: String { _not ?? "!" }
