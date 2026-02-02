@@ -406,7 +406,11 @@
       "Bash(for lang in py js c cpp swift objc objcpp go applescript)",
       "Bash(do echo \"=== $lang ===\")",
       "Bash(for lang in swift py js c cpp objc objcpp applescript)",
-      "Bash(for lang in swift py js c cpp objc objcpp go applescript)"
+      "Bash(for lang in swift py js c cpp objc objcpp go applescript)",
+      "Bash(for t in cpp objc objcpp go applescript c asm)",
+      "Bash(do echo \"=== $t ===\")",
+      "Bash(/tmp/trycatch_swift)",
+      "Bash(/tmp/test_c:*)"
     ]
   }
 }

@@ -43,7 +43,7 @@
   "func": "{type} {name}({params}) {",
   "funcDecl": "{type} {name}({params});",
   "return": "return {value};",
-  "throw": "@throw [NSException exceptionWithName:@\"JJError\" reason:{value} userInfo:nil];",
+  "throw": "@throw [NSException exceptionWithName:@\"JJError\" reason:@{value} userInfo:nil];",
   "call": "{name}({args})",
   "blockEnd": "}",
   "indent": "    ",
