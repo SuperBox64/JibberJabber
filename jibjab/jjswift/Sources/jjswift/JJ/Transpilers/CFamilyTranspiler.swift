@@ -592,6 +592,7 @@ public class CFamilyTranspiler: Transpiling {
             // Insert catchVarBind as first line if needed
             if let varName = node.oopsVar, let bind = T.catchVarBind {
                 result += "\n" + ind() + bind.replacingOccurrences(of: "{var}", with: varName)
+                stringVars.insert(varName)
             }
             result += "\n" + oopsBody.map { stmtToString($0) }.joined(separator: "\n")
             indentLevel -= 1

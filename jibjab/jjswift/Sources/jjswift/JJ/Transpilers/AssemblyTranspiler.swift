@@ -52,6 +52,8 @@ public class AssemblyTranspiler: Transpiling {
     private var arrays: [String: ArrayInfo] = [:]     // Track array variables
     private var tuples: [String: TupleInfo] = [:]     // Track tuple variables
     private var dicts: [String: DictInfo] = [:]       // Track dictionary variables
+    private var catchLabelStack: [String] = []        // Stack of catch labels for throw/kaboom
+    private var stringPtrVars = Set<String>()         // Variables that hold string pointers (x0-sized)
 
     public func transpile(_ program: Program) -> String {
         asmLines = []
@@ -244,7 +246,17 @@ public class AssemblyTranspiler: Transpiling {
         } else if let ifStmt = node as? IfStmt {
             genIf(ifStmt)
         } else if let throwStmt = node as? ThrowStmt {
-            genExpr(throwStmt.value)
+            // Load the thrown value (string) into x0 and branch to catch
+            if let lit = throwStmt.value as? Literal, let strVal = lit.value as? String {
+                let label = addString(strVal)
+                asmLines.append("    adrp x0, \(label)\(PD)")
+                asmLines.append("    add x0, x0, \(label)\(PO)")
+            } else {
+                genExpr(throwStmt.value)
+            }
+            if let catchLabel = catchLabelStack.last {
+                asmLines.append("    b \(catchLabel)")
+            }
         } else if let returnStmt = node as? ReturnStmt {
             genExpr(returnStmt.value)
             if let funcName = currentFunc {
@@ -265,11 +277,22 @@ public class AssemblyTranspiler: Transpiling {
             enumCaseLabels[enumDef.name] = caseLabels
         } else if let tryStmt = node as? TryStmt {
             let endLabel = newLabel(prefix: "endtry")
+            let catchLabel = newLabel(prefix: "catch")
+            catchLabelStack.append(catchLabel)
             for stmt in tryStmt.tryBody {
                 genStmt(stmt)
             }
             asmLines.append("    b \(endLabel)")
+            catchLabelStack.removeLast()
+            asmLines.append("\(catchLabel):")
             if let oopsBody = tryStmt.oopsBody {
+                // If oopsVar is set, store x0 (the thrown string pointer) as a variable
+                if let varName = tryStmt.oopsVar {
+                    stackOffset += 8
+                    variables[varName] = stackOffset
+                    stringPtrVars.insert(varName)
+                    asmLines.append("    stur x0, [x29, #-\(stackOffset + 16)]")
+                }
                 for stmt in oopsBody {
                     genStmt(stmt)
                 }
@@ -704,6 +727,15 @@ public class AssemblyTranspiler: Transpiling {
                 asmLines.append("    str x0, [sp]")
                 asmLines.append("    adrp x0, \(FI)\(PD)")
                 asmLines.append("    add x0, x0, \(FI)\(PO)")
+                asmLines.append("    bl \(PS)")
+            }
+        } else if let varRef = node.expr as? VarRef, stringPtrVars.contains(varRef.name) {
+            // String pointer variable (e.g. caught error)
+            if let offset = variables[varRef.name] {
+                asmLines.append("    ldur x0, [x29, #-\(offset + 16)]")
+                asmLines.append("    str x0, [sp]")
+                asmLines.append("    adrp x0, \(FS)\(PD)")
+                asmLines.append("    add x0, x0, \(FS)\(PO)")
                 asmLines.append("    bl \(PS)")
             }
         } else if isFloatExpr(node.expr) {

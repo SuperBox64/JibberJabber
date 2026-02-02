@@ -47,7 +47,7 @@ public class ObjCTranspiler: CFamilyTranspiler {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             if stringVars.contains(varRef.name) {
-                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
+                return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: selectorExpr(expr(e), "str"))
             }
             if boolVars.contains(varRef.name) {
                 return ind() + T.printBool.replacingOccurrences(of: "{expr}", with: expr(e))
