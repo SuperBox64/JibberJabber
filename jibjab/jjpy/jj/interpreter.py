@@ -8,9 +8,9 @@ from typing import Any, Dict, List
 from .lexer import JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    EnumDef, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
-    StringInterpolation
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
+    ReturnStmt, EnumDef, ArrayLiteral, DictLiteral, TupleLiteral,
+    IndexAccess, StringInterpolation
 )
 
 OP = JJ['operators']
@@ -86,6 +86,18 @@ class Interpreter:
                     result = self.execute(stmt)
                     if isinstance(result, tuple) and result[0] == 'return':
                         return result
+        elif isinstance(node, TryStmt):
+            try:
+                for stmt in node.try_body:
+                    result = self.execute(stmt)
+                    if isinstance(result, tuple) and result[0] == 'return':
+                        return result
+            except Exception:
+                if node.oops_body:
+                    for stmt in node.oops_body:
+                        result = self.execute(stmt)
+                        if isinstance(result, tuple) and result[0] == 'return':
+                            return result
         elif isinstance(node, FuncDef):
             self.functions[node.name] = node
         elif isinstance(node, EnumDef):

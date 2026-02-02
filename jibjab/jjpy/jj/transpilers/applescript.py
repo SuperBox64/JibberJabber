@@ -6,9 +6,9 @@ Uses shared config from common/jj.json
 from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef,
-    StringInterpolation
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
+    ReturnStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
+    EnumDef, StringInterpolation
 )
 
 # Get target config and operators
@@ -104,6 +104,20 @@ class AppleScriptTranspiler:
                 result += '\n' + '\n'.join(self.stmt(s) for s in node.else_body)
                 self.indent -= 1
             result += f"\n{self.ind()}end if"
+            return result
+        elif isinstance(node, TryStmt):
+            header = self.ind() + T['try']
+            self.indent += 1
+            try_body = '\n'.join(self.stmt(s) for s in node.try_body)
+            self.indent -= 1
+            result = f"{header}\n{try_body}"
+            if node.oops_body:
+                result += f"\n{self.ind()}{T['catch']}"
+                self.indent += 1
+                result += '\n' + '\n'.join(self.stmt(s) for s in node.oops_body)
+                self.indent -= 1
+            block_end_try = T.get('blockEndTry', T['blockEnd'])
+            result += f"\n{self.ind()}{block_end_try}"
             return result
         elif isinstance(node, FuncDef):
             params = ', '.join(safe_name(p) for p in node.params)

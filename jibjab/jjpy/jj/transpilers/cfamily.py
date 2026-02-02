@@ -7,9 +7,9 @@ Subclasses override specific methods for target-specific behavior.
 from ..lexer import load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef,
-    StringInterpolation
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
+    ReturnStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
+    EnumDef, StringInterpolation
 )
 
 
@@ -133,6 +133,25 @@ class CFamilyTranspiler:
                 result = result[:-len(self.T['blockEnd'])] + self.T['else']
                 self.indent += 1
                 result += '\n' + '\n'.join(self.stmt(s) for s in node.else_body)
+                self.indent -= 1
+                result += f"\n{self.ind()}{self.T['blockEnd']}"
+            return result
+        elif isinstance(node, TryStmt):
+            header = self.ind() + self.T['try']
+            self.indent += 1
+            try_body = '\n'.join(self.stmt(s) for s in node.try_body)
+            self.indent -= 1
+            result = f"{header}\n{try_body}\n{self.ind()}{self.T['blockEnd']}"
+            if node.oops_body:
+                # Handle multi-line catch templates (e.g. Go's "}()\ndefer func() {")
+                catch_lines = self.T['catch'].split('\n')
+                indented_catch = '\n'.join(
+                    line if i == 0 else self.ind() + line
+                    for i, line in enumerate(catch_lines)
+                )
+                result = result[:-len(self.T['blockEnd'])] + indented_catch
+                self.indent += 1
+                result += '\n' + '\n'.join(self.stmt(s) for s in node.oops_body)
                 self.indent -= 1
                 result += f"\n{self.ind()}{self.T['blockEnd']}"
             return result

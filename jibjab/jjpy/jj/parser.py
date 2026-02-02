@@ -9,9 +9,9 @@ from typing import List, Optional
 from .lexer import Lexer, Token, TokenType, JJ
 from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    EnumDef, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
-    StringInterpolation
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
+    ReturnStmt, EnumDef, ArrayLiteral, DictLiteral, TupleLiteral,
+    IndexAccess, StringInterpolation
 )
 
 # Get operator emit values from config
@@ -100,6 +100,8 @@ class Parser:
             return self.parse_return()
         if self.peek().type == TokenType.ENUM:
             return self.parse_enum_def()
+        if self.peek().type == TokenType.TRY:
+            return self.parse_try()
         return None
 
     def parse_print(self) -> PrintStmt:
@@ -189,9 +191,18 @@ class Parser:
         self.expect(TokenType.RPAREN)
         return EnumDef(name, cases)
 
+    def parse_try(self) -> TryStmt:
+        self.advance()  # TRY
+        try_body = self.parse_block()
+        oops_body = None
+        if self.peek().type == TokenType.OOPS:
+            self.advance()
+            oops_body = self.parse_block()
+        return TryStmt(try_body, oops_body)
+
     def parse_block(self) -> List[ASTNode]:
         statements = []
-        while self.peek().type not in (TokenType.BLOCK_END, TokenType.ELSE, TokenType.EOF):
+        while self.peek().type not in (TokenType.BLOCK_END, TokenType.ELSE, TokenType.OOPS, TokenType.EOF):
             stmt = self.parse_statement()
             if stmt:
                 statements.append(stmt)

@@ -119,5 +119,11 @@ class IndexAccess(ASTNode):
 
 
 @dataclass
+class TryStmt(ASTNode):
+    try_body: List[ASTNode]
+    oops_body: Optional[List[ASTNode]]
+
+
+@dataclass
 class StringInterpolation(ASTNode):
     parts: list  # List of ('literal', text) or ('variable', name) tuples

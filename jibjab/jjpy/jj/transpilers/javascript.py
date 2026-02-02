@@ -6,9 +6,9 @@ Uses shared config from common/jj.json
 from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
-    BinaryOp, UnaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
-    ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess, EnumDef,
-    StringInterpolation
+    BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
+    ReturnStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
+    EnumDef, StringInterpolation
 )
 
 # Get target config and operators
@@ -60,6 +60,19 @@ class JavaScriptTranspiler:
                 result = result[:-len(T['blockEnd'])] + T['else']
                 self.indent += 1
                 result += '\n' + '\n'.join(self.stmt(s) for s in node.else_body)
+                self.indent -= 1
+                result += f"\n{self.ind()}{T['blockEnd']}"
+            return result
+        elif isinstance(node, TryStmt):
+            header = self.ind() + T['try']
+            self.indent += 1
+            try_body = '\n'.join(self.stmt(s) for s in node.try_body)
+            self.indent -= 1
+            result = f"{header}\n{try_body}\n{self.ind()}{T['blockEnd']}"
+            if node.oops_body:
+                result = result[:-len(T['blockEnd'])] + T['catch']
+                self.indent += 1
+                result += '\n' + '\n'.join(self.stmt(s) for s in node.oops_body)
                 self.indent -= 1
                 result += f"\n{self.ind()}{T['blockEnd']}"
             return result
