@@ -261,6 +261,17 @@ public class AssemblyTranspiler: Transpiling {
             enums[enumDef.name] = caseValues
             enumCaseStrings[enumDef.name] = enumDef.cases
             enumCaseLabels[enumDef.name] = caseLabels
+        } else if let tryStmt = node as? TryStmt {
+            asmLines.append(T.comment + " try")
+            for stmt in tryStmt.tryBody {
+                genStmt(stmt)
+            }
+            if let oopsBody = tryStmt.oopsBody {
+                asmLines.append(T.comment + " catch (skipped - no exception support in asm)")
+                for stmt in oopsBody {
+                    _ = stmt  // skip catch body in assembly
+                }
+            }
         } else if let comment = node as? CommentNode {
             asmLines.append(T.comment + " " + comment.text)
         }

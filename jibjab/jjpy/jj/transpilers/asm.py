@@ -6,7 +6,7 @@ Uses emit values from common/jj.json
 from ..lexer import JJ, load_target_config
 from ..ast import (
     ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
-    BinaryOp, LoopStmt, IfStmt, FuncDef, FuncCall, ReturnStmt,
+    BinaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall, ReturnStmt,
     EnumDef, ArrayLiteral, IndexAccess, TupleLiteral, DictLiteral,
     UnaryOp, StringInterpolation
 )
@@ -217,6 +217,12 @@ class AssemblyTranspiler:
         elif isinstance(node, ReturnStmt):
             self.gen_expr(node.value)
             self.asm_lines.append(f"    b _{self.current_func}_ret")
+        elif isinstance(node, TryStmt):
+            self.asm_lines.append("// try")
+            for stmt in node.try_body:
+                self.gen_stmt(stmt)
+            if node.oops_body:
+                self.asm_lines.append("// catch (skipped - no exception support in asm)")
         elif isinstance(node, EnumDef):
             case_values = {}
             case_labels = {}
