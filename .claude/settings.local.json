@@ -412,7 +412,11 @@
       "Bash(/tmp/trycatch_swift)",
       "Bash(/tmp/test_c:*)",
       "Bash(/tmp/test_objc:*)",
-      "Bash(/tmp/test_objcpp:*)"
+      "Bash(/tmp/test_objcpp:*)",
+      "Bash(JJSWIFT=/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/debug/jjswift)",
+      "Bash($JJSWIFT transpile /Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/examples/trycatch.jj c)",
+      "Bash($JJSWIFT reverse /tmp/test_c.c c)",
+      "Bash($JJSWIFT reverse /tmp/test_fwd.c c)"
     ]
   }
 }
