@@ -644,6 +644,8 @@ public struct JJEmit {
     public static func when(_ cond: String) -> String {
         "\(JJ.blocks.when)\(cond)\(JJ.blockSuffix)"
     }
+    public static var `try`: String { JJ.blocks.try }
+    public static var oops: String { JJ.blocks.oops }
     public static var `else`: String { JJ.blocks.else }
     public static var end: String { JJ.blocks.end }
     public static var comment: String { JJ.literals.comment }

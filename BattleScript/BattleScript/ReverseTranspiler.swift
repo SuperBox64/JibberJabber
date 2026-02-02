@@ -213,6 +213,12 @@ class PythonReverseTranspiler: ReverseTranspiling {
                 let cond = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(indent(indentLevel))\(JJEmit.when(cond))")
                 indentLevel += 1
+            } else if trimmed == "try:" {
+                result.append("\(indent(indentLevel))\(JJEmit.try)")
+                indentLevel += 1
+            } else if trimmed == "except:" || trimmed.hasPrefix("except ") {
+                result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                indentLevel += 1
             } else if Self.elseRegex?.firstMatch(in: trimmed, range: range) != nil {
                 result.append("\(indent(indentLevel))\(JJEmit.else)")
                 indentLevel += 1
@@ -421,6 +427,20 @@ class BraceReverseTranspiler: ReverseTranspiling {
             if trimmed == blockEnd {
                 if indentLevel > 0 { indentLevel -= 1 }
                 result.append("\(indent(indentLevel))\(JJEmit.end)")
+                continue
+            }
+
+            // Try/catch blocks - match target config patterns
+            let tryPat = config.target.tryBlock.trimmingCharacters(in: .whitespaces)
+            let catchPat = config.target.catchBlock.trimmingCharacters(in: .whitespaces)
+            if trimmed == tryPat || trimmed.hasPrefix("@try") && trimmed.hasSuffix("{") {
+                result.append("\(indent(indentLevel))\(JJEmit.try)")
+                indentLevel += 1
+                continue
+            }
+            if trimmed == catchPat || trimmed.hasPrefix("} catch") || trimmed.hasPrefix("} @catch") {
+                result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                indentLevel += 1
                 continue
             }
 
@@ -842,6 +862,12 @@ class AppleScriptReverseTranspiler: ReverseTranspiling {
             if let m = Self.commentRegex?.firstMatch(in: trimmed, range: range) {
                 let comment = nsLine.substring(with: m.range(at: 1))
                 result.append("\(indent(indentLevel))\(JJEmit.comment) \(comment)")
+            } else if trimmed == "try" {
+                result.append("\(indent(indentLevel))\(JJEmit.try)")
+                indentLevel += 1
+            } else if trimmed == "on error" || trimmed.hasPrefix("on error ") {
+                result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                indentLevel += 1
             } else if Self.endRegex?.firstMatch(in: trimmed, range: range) != nil {
                 if indentLevel > 0 { indentLevel -= 1 }
                 result.append("\(indent(indentLevel))\(JJEmit.end)")

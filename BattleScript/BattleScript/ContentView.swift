@@ -27,6 +27,7 @@ struct ContentView: View {
         ("Enums", "enums"),
         ("Numbers", "numbers"),
         ("Tuples", "tuples"),
+        ("TryOops", "trycatch")
     ]
 
     var body: some View {
@@ -118,11 +119,7 @@ struct ContentView: View {
             } catch {
                 let errorMsg = "// Parse error: \(error)"
                 DispatchQueue.main.async {
-                    var outputs: [String: String] = [:]
-                    for target in targets where target != "jj" {
-                        outputs[target] = errorMsg
-                    }
-                    transpiledOutputs = outputs
+                    runOutput = errorMsg
                 }
             }
         }
