@@ -2,13 +2,15 @@
 JibJab C++ Transpiler - Converts JJ to C++
 Uses shared C-family base from cfamily.py
 
+Arrays: std::vector<T> instead of C-style arrays
+Enums: enum class with static_cast for indexing
 Dictionaries: expanded to individual variables (person_name, person_age, etc.)
 Tuples: stored as numbered variables (_0, _1, _2) with cout for printing
 """
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, PrintStmt
+    IndexAccess, PrintStmt, EnumDef
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -20,11 +22,12 @@ class CppTranspiler(CFamilyTranspiler):
         super().__init__()
         self.dict_fields = {}   # dict_name -> {key: (cpp_var_name, type)}
         self.tuple_fields = {}  # tuple_name -> [(cpp_var_name, type)]
+        self.array_vars = set()
 
     def transpile(self, program):
         code = super().transpile(program)
-        # Add <string> include if any string dict/tuple fields are used
         needs_string = False
+        needs_vector = len(self.array_vars) > 0
         for fields in self.dict_fields.values():
             for _, (_, typ) in fields.items():
                 if typ == 'str':
@@ -33,17 +36,58 @@ class CppTranspiler(CFamilyTranspiler):
             for _, typ in fields:
                 if typ == 'str':
                     needs_string = True
-        if needs_string:
+        if needs_string or needs_vector:
             lines = code.split('\n')
             insert_idx = 0
             for i, line in enumerate(lines):
                 if line.startswith('#include'):
                     insert_idx = i + 1
-            inc = self.T.get('stringInclude', '#include <string>')
-            if inc not in lines:
-                lines.insert(insert_idx, inc)
+            if needs_vector:
+                vec_inc = '#include <vector>'
+                if vec_inc not in lines:
+                    lines.insert(insert_idx, vec_inc)
+                    insert_idx += 1
+            if needs_string:
+                str_inc = self.T.get('stringInclude', '#include <string>')
+                if str_inc not in lines:
+                    lines.insert(insert_idx, str_inc)
             code = '\n'.join(lines)
         return code
+
+    # MARK: - Vector arrays
+
+    def _var_array(self, node: VarDecl) -> str:
+        self.array_vars.add(node.name)
+        if node.value.elements:
+            first = node.value.elements[0]
+            if isinstance(first, ArrayLiteral):
+                inner_type = self.get_target_type(infer_type(first.elements[0])) if first.elements else 'int'
+                elements = ', '.join(self.expr(e) for e in node.value.elements)
+                return self.ind() + f'std::vector<std::vector<{inner_type}>> {node.name} = {{{elements}}};'
+            if isinstance(first, Literal) and isinstance(first.value, str):
+                elem_type = self.T.get('stringType', 'std::string')
+            else:
+                elem_type = self.get_target_type(infer_type(first))
+            elements = ', '.join(self.expr(e) for e in node.value.elements)
+            return self.ind() + f'std::vector<{elem_type}> {node.name} = {{{elements}}};'
+        return self.ind() + f'std::vector<{self.get_target_type("Int")}> {node.name} = {{}};'
+
+    # MARK: - Enum class
+
+    def _enum_def(self, node: EnumDef) -> str:
+        self.enums.add(node.name)
+        cases = ', '.join(node.cases)
+        tmpl = self.T.get('enum', 'enum class {name} { {cases} };')
+        result = self.ind() + tmpl.replace('{name}', node.name).replace('{cases}', cases)
+        names_list = ', '.join(f'"{c}"' for c in node.cases)
+        result += '\n' + self.ind() + f'const char* {node.name}_names[] = {{{names_list}}};'
+        return result
+
+    def _interp_var_expr(self, name: str) -> str:
+        if name in self.enum_var_types:
+            enum_name = self.enum_var_types[name]
+            return f'{enum_name}_names[static_cast<int>({name})]'
+        return super()._interp_var_expr(name)
 
     def _var_dict(self, node: VarDecl) -> str:
         lines = []
@@ -77,10 +121,10 @@ class CppTranspiler(CFamilyTranspiler):
                         else:
                             elem_type = self.get_target_type(infer_type(first))
                         elements = ', '.join(self.expr(e) for e in v.elements)
-                        lines.append(self.ind() + f'{elem_type} {cpp_var}[] = {{{elements}}};')
+                        lines.append(self.ind() + f'std::vector<{elem_type}> {cpp_var} = {{{elements}}};')
                         self.dict_fields[node.name][key] = (cpp_var, 'array')
                     else:
-                        lines.append(self.ind() + f'int {cpp_var}[] = {{}};')
+                        lines.append(self.ind() + f'std::vector<int> {cpp_var} = {{}};')
                         self.dict_fields[node.name][key] = (cpp_var, 'array')
         return '\n'.join(lines)
 

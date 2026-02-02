@@ -1,13 +1,13 @@
 /// JibJab C++ Transpiler - Converts JJ to C++
-/// Overrides: transpile (string include), printWholeArray/printWholeTuple (cout syntax)
+/// Overrides: transpile (string/vector includes), arrays (std::vector), enums (enum class), print (cout)
 
 public class CppTranspiler: CFamilyTranspiler {
     public override init(target: String = "cpp") { super.init(target: target) }
 
     public override func transpile(_ program: Program) -> String {
         var code = super.transpile(program)
-        // Add <string> include if any string fields are used
         var needsString = false
+        var needsVector = false
         for (_, fields) in dictFields {
             for (_, info) in fields {
                 if info.1 == "str" { needsString = true }
@@ -18,19 +18,90 @@ public class CppTranspiler: CFamilyTranspiler {
                 if typ == "str" { needsString = true }
             }
         }
-        if needsString {
+        if !arrayVars.isEmpty { needsVector = true }
+        if needsString || needsVector {
             var lines = code.components(separatedBy: "\n")
             var insertIdx = 0
             for (i, line) in lines.enumerated() {
                 if line.hasPrefix("#include") { insertIdx = i + 1 }
             }
-            let inc = T.stringInclude ?? "#include <string>"
-            if !lines.contains(inc) {
-                lines.insert(inc, at: insertIdx)
+            if needsVector {
+                let vecInc = "#include <vector>"
+                if !lines.contains(vecInc) {
+                    lines.insert(vecInc, at: insertIdx)
+                    insertIdx += 1
+                }
+            }
+            if needsString {
+                let strInc = T.stringInclude ?? "#include <string>"
+                if !lines.contains(strInc) {
+                    lines.insert(strInc, at: insertIdx)
+                }
             }
             code = lines.joined(separator: "\n")
         }
         return code
+    }
+
+    // MARK: - Vector arrays
+
+    override func varArrayToString(_ node: VarDecl, _ arr: ArrayLiteral) -> String {
+        if let firstElem = arr.elements.first {
+            if let nestedArr = firstElem as? ArrayLiteral {
+                let innerType = nestedArr.elements.first.map { getTargetType(inferType($0)) } ?? "int"
+                let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+                return ind() + "std::vector<std::vector<\(innerType)>> \(node.name) = {\(elements)};"
+            }
+            let elemType: String
+            if let lit = firstElem as? Literal, lit.value is String {
+                elemType = T.stringType
+            } else {
+                elemType = getTargetType(inferType(firstElem))
+            }
+            let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+            return ind() + "std::vector<\(elemType)> \(node.name) = {\(elements)};"
+        }
+        return ind() + "std::vector<\(getTargetType("Int"))> \(node.name) = {};"
+    }
+
+    override func expandedArrayDecl(name: String, arr: ArrayLiteral) -> String {
+        if !arr.elements.isEmpty {
+            let first = arr.elements[0]
+            let elemType: String
+            if let lit = first as? Literal, lit.value is String {
+                elemType = expandedStringType()
+            } else {
+                elemType = getTargetType(inferType(first))
+            }
+            let elements = arr.elements.map { expr($0) }.joined(separator: ", ")
+            return ind() + "std::vector<\(elemType)> \(name) = {\(elements)};"
+        }
+        return ind() + "std::vector<\(getTargetType("Int"))> \(name) = {};"
+    }
+
+    // MARK: - Enum class helpers
+
+    override func enumToString(_ node: EnumDef) -> String {
+        enums.insert(node.name)
+        enumCases[node.name] = node.cases
+        let cases = node.cases.joined(separator: ", ")
+        let result: String
+        if let tmpl = T.enumTemplate {
+            result = ind() + tmpl.replacingOccurrences(of: "{name}", with: node.name)
+                               .replacingOccurrences(of: "{cases}", with: cases)
+        } else {
+            result = ind() + "enum class \(node.name) { \(cases) };"
+        }
+        // Names array uses const char* (not std::string) for C-compatible indexing
+        let namesList = node.cases.map { "\"\($0)\"" }.joined(separator: ", ")
+        return result + "\n" + ind() + "const char* \(node.name)_names[] = {\(namesList)};"
+    }
+
+    override func interpVarExpr(_ name: String) -> String {
+        if let enumName = enumVarTypes[name] {
+            return "\(enumName)_names[static_cast<int>(\(name))]"
+        }
+        return super.interpVarExpr(name)
     }
 
     override func printWholeArray(_ name: String) -> String {

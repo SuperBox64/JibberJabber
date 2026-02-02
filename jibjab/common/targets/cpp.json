@@ -13,7 +13,7 @@
   "coutSep": " << ",
   "coutNewline": "std::cout << {expr} << std::endl;",
   "coutInline": "std::cout << {expr};",
-  "enumAccess": "{key}",
+  "enumAccess": "static_cast<int>({name}::{key})",
   "stringInclude": "#include <string>",
   "header": "// Transpiled from JibJab\n#include <iostream>\n#include <cstdint>\n#include <cmath>\n",
   "printInt": "std::cout << {expr} << std::endl;",
@@ -44,7 +44,7 @@
   "main": "int main() {\n{body}    return 0;\n}",
   "stringType": "std::string",
   "floatMod": "fmod({left}, {right})",
-  "enum": "enum {name} { {cases} };",
+  "enum": "enum class {name} { {cases} };",
   "collectionStyle": "expand",
   "compile": ["clang++", "{src}", "-o", "{out}"],
   "types": {
