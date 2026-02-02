@@ -98,6 +98,8 @@ class GoTranspiler(CFamilyTranspiler):
                 self.indent += 1
                 result += '\n' + self.ind() + 'if r := recover(); r != nil {'
                 self.indent += 1
+                if node.oops_var:
+                    result += '\n' + self.ind() + f'{node.oops_var} := fmt.Sprint(r)'
                 result += '\n' + '\n'.join(self.stmt(s) for s in node.oops_body)
                 self.indent -= 1
                 result += '\n' + self.ind() + '}'

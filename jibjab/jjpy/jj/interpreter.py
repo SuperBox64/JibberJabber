@@ -92,8 +92,10 @@ class Interpreter:
                     result = self.execute(stmt)
                     if isinstance(result, tuple) and result[0] == 'return':
                         return result
-            except Exception:
+            except Exception as e:
                 if node.oops_body:
+                    if node.oops_var:
+                        self.locals[-1][node.oops_var] = str(e)
                     for stmt in node.oops_body:
                         result = self.execute(stmt)
                         if isinstance(result, tuple) and result[0] == 'return':

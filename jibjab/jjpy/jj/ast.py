@@ -127,6 +127,7 @@ class IndexAccess(ASTNode):
 class TryStmt(ASTNode):
     try_body: List[ASTNode]
     oops_body: Optional[List[ASTNode]]
+    oops_var: Optional[str] = None
 
 
 @dataclass

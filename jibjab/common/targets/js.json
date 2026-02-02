@@ -18,6 +18,7 @@
   "else": "} else {",
   "try": "try {",
   "catch": "} catch (e) {",
+  "catchVar": "} catch ({var}) {",
   "func": "function {name}({params}) {",
   "return": "return {value};",
   "throw": "throw {value};",

@@ -112,8 +112,13 @@ class AppleScriptTranspiler:
             self.indent -= 1
             result = f"{header}\n{try_body}"
             if node.oops_body:
-                result += f"\n{self.ind()}{T['catch']}"
+                catch_tmpl = T['catch']
+                if node.oops_var and 'catchVar' in T:
+                    catch_tmpl = T['catchVar'].replace('{var}', safe_name(node.oops_var))
+                result += f"\n{self.ind()}{catch_tmpl}"
                 self.indent += 1
+                if node.oops_var and 'catchVarBind' in T:
+                    result += '\n' + self.ind() + T['catchVarBind'].replace('{var}', safe_name(node.oops_var))
                 result += '\n' + '\n'.join(self.stmt(s) for s in node.oops_body)
                 self.indent -= 1
             block_end_try = T.get('blockEndTry', T['blockEnd'])

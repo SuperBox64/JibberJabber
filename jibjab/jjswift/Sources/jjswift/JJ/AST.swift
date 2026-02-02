@@ -128,6 +128,7 @@ public struct StringInterpolation: ASTNode {
 public struct TryStmt: ASTNode {
     public let tryBody: [ASTNode]
     public let oopsBody: [ASTNode]?
+    public let oopsVar: String?
 }
 
 public struct CommentNode: ASTNode {

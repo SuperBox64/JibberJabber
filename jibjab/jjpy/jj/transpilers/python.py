@@ -69,8 +69,13 @@ class PythonTranspiler:
             self.indent -= 1
             result = f"{header}\n{try_body}"
             if node.oops_body:
-                result += f"\n{self.ind()}{T['catch']}"
+                catch_tmpl = T['catch']
+                if node.oops_var and 'catchVar' in T:
+                    catch_tmpl = T['catchVar'].replace('{var}', node.oops_var)
+                result += f"\n{self.ind()}{catch_tmpl}"
                 self.indent += 1
+                if node.oops_var and 'catchVarBind' in T:
+                    result += '\n' + self.ind() + T['catchVarBind'].replace('{var}', node.oops_var)
                 oops_str = '\n'.join(self.stmt(s) for s in node.oops_body) or f"{self.ind()}pass"
                 result += f"\n{oops_str}"
                 self.indent -= 1

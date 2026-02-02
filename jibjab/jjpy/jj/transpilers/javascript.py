@@ -70,8 +70,13 @@ class JavaScriptTranspiler:
             self.indent -= 1
             result = f"{header}\n{try_body}\n{self.ind()}{T['blockEnd']}"
             if node.oops_body:
-                result = result[:-len(T['blockEnd'])] + T['catch']
+                catch_tmpl = T['catch']
+                if node.oops_var and 'catchVar' in T:
+                    catch_tmpl = T['catchVar'].replace('{var}', node.oops_var)
+                result = result[:-len(T['blockEnd'])] + catch_tmpl
                 self.indent += 1
+                if node.oops_var and 'catchVarBind' in T:
+                    result += '\n' + self.ind() + T['catchVarBind'].replace('{var}', node.oops_var)
                 result += '\n' + '\n'.join(self.stmt(s) for s in node.oops_body)
                 self.indent -= 1
                 result += f"\n{self.ind()}{T['blockEnd']}"

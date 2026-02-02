@@ -26,6 +26,8 @@
   "else": "} else {",
   "try": "func() {",
   "catch": "}()\ndefer func() {",
+  "catchVar": "}()\ndefer func() {",
+  "catchVarBind": "{var} := fmt.Sprint(r)",
   "blockEndTry": "}()",
   "func": "func {name}({params}) {type} {",
   "funcDecl": "",

@@ -13,6 +13,7 @@
   "else": "else",
   "try": "try",
   "catch": "on error",
+  "catchVar": "on error {var}",
   "blockEndTry": "end try",
   "func": "on {name}({params})",
   "return": "return {value}",

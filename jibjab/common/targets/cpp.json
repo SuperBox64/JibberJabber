@@ -29,6 +29,8 @@
   "else": "} else {",
   "try": "try {",
   "catch": "} catch (...) {",
+  "catchVar": "} catch (const std::exception& _e) {",
+  "catchVarBind": "std::string {var} = _e.what();",
   "func": "{type} {name}({params}) {",
   "funcDecl": "{type} {name}({params});",
   "return": "return {value};",

@@ -117,7 +117,8 @@
     "TryStmt": {
       "fields": {
         "tryBody": { "type": "[ASTNode]" },
-        "oopsBody": { "type": "[ASTNode]?" }
+        "oopsBody": { "type": "[ASTNode]?" },
+        "oopsVar": { "type": "String?" }
       }
     }
   }

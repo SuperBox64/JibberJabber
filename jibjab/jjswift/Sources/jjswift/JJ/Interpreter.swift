@@ -87,6 +87,9 @@ public class Interpreter {
                 }
             } catch {
                 if let oopsBody = tryStmt.oopsBody {
+                    if let varName = tryStmt.oopsVar {
+                        locals[locals.count - 1][varName] = "\(error)"
+                    }
                     for stmt in oopsBody {
                         if let result = try execute(stmt), let tuple = result as? (String, Any), tuple.0 == "return" {
                             return result

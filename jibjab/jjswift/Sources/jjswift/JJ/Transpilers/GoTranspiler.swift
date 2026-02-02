@@ -234,6 +234,9 @@ public class GoTranspiler: CFamilyTranspiler {
             indentLevel += 1
             result += "\n" + ind() + "if r := recover(); r != nil {"
             indentLevel += 1
+            if let varName = node.oopsVar {
+                result += "\n" + ind() + "\(varName) := fmt.Sprint(r)"
+            }
             result += "\n" + oopsBody.map { stmtToString($0) }.joined(separator: "\n")
             indentLevel -= 1
             result += "\n" + ind() + "}"

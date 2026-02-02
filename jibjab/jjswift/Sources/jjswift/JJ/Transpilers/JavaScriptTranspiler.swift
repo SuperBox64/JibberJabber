@@ -67,8 +67,15 @@ public class JavaScriptTranspiler: Transpiling {
             indentLevel -= 1
             var result = "\(header)\n\(tryBody)\n\(ind())\(T.blockEnd)"
             if let oopsBody = tryStmt.oopsBody {
-                result = String(result.dropLast(T.blockEnd.count)) + T.catchBlock
+                var catchTemplate = T.catchBlock
+                if let varName = tryStmt.oopsVar, let cv = T.catchVar {
+                    catchTemplate = cv.replacingOccurrences(of: "{var}", with: varName)
+                }
+                result = String(result.dropLast(T.blockEnd.count)) + catchTemplate
                 indentLevel += 1
+                if let varName = tryStmt.oopsVar, let bind = T.catchVarBind {
+                    result += "\n" + ind() + bind.replacingOccurrences(of: "{var}", with: varName)
+                }
                 result += "\n" + oopsBody.map { stmtToString($0) }.joined(separator: "\n")
                 indentLevel -= 1
                 result += "\n\(ind())\(T.blockEnd)"

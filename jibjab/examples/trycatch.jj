@@ -3,6 +3,6 @@
   ~>frob{7a3}::emit("try block")
   ~>kaboom{"something broke"}
   ~>frob{7a3}::emit("this should not print")
-<~oops>>
-  ~>frob{7a3}::emit("caught it")
+<~oops>> err
+  ~>frob{7a3}::emit(err)
 <~>>

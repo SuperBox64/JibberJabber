@@ -76,8 +76,15 @@ public class PythonTranspiler: Transpiling {
             indentLevel -= 1
             var result = "\(header)\n\(tryBody)"
             if let oopsBody = tryStmt.oopsBody {
-                result += "\n\(ind())\(T.catchBlock)"
+                var catchTemplate = T.catchBlock
+                if let varName = tryStmt.oopsVar, let cv = T.catchVar {
+                    catchTemplate = cv.replacingOccurrences(of: "{var}", with: varName)
+                }
+                result += "\n\(ind())\(catchTemplate)"
                 indentLevel += 1
+                if let varName = tryStmt.oopsVar, let bind = T.catchVarBind {
+                    result += "\n" + ind() + bind.replacingOccurrences(of: "{var}", with: varName)
+                }
                 let oopsStr = oopsBody.map { stmtToString($0) }.joined(separator: "\n")
                 result += "\n" + (oopsStr.isEmpty ? "\(ind())\(T.emptyBody ?? "pass")" : oopsStr)
                 indentLevel -= 1

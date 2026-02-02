@@ -218,7 +218,14 @@ class PythonReverseTranspiler: ReverseTranspiling {
                 result.append("\(indent(indentLevel))\(JJEmit.try)")
                 indentLevel += 1
             } else if trimmed == "except:" || trimmed.hasPrefix("except ") {
-                result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                // Check for "except Exception as varName:"
+                if let asRange = trimmed.range(of: " as ") {
+                    let varName = String(trimmed[asRange.upperBound...].dropLast()) // drop ":"
+                        .trimmingCharacters(in: .whitespaces)
+                    result.append("\(indent(indentLevel))\(JJEmit.oops) \(varName)")
+                } else {
+                    result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                }
                 indentLevel += 1
             } else if Self.elseRegex?.firstMatch(in: trimmed, range: range) != nil {
                 result.append("\(indent(indentLevel))\(JJEmit.else)")
@@ -445,7 +452,20 @@ class BraceReverseTranspiler: ReverseTranspiling {
                 continue
             }
             if trimmed == catchPat || trimmed.hasPrefix("} catch") || trimmed.hasPrefix("} @catch") {
-                result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                // Extract catch variable name from patterns like "} catch (varName) {"
+                if let openParen = trimmed.firstIndex(of: "("),
+                   let closeParen = trimmed.firstIndex(of: ")") {
+                    let varName = String(trimmed[trimmed.index(after: openParen)..<closeParen])
+                        .trimmingCharacters(in: .whitespaces)
+                    // Simple variable name (JS style) — not a type declaration
+                    if !varName.isEmpty && !varName.contains(" ") {
+                        result.append("\(indent(indentLevel))\(JJEmit.oops) \(varName)")
+                    } else {
+                        result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                    }
+                } else {
+                    result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                }
                 indentLevel += 1
                 continue
             }
@@ -882,7 +902,17 @@ class AppleScriptReverseTranspiler: ReverseTranspiling {
                 result.append("\(indent(indentLevel))\(JJEmit.try)")
                 indentLevel += 1
             } else if trimmed == "on error" || trimmed.hasPrefix("on error ") {
-                result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                if trimmed.hasPrefix("on error ") {
+                    let varName = String(trimmed.dropFirst("on error ".count))
+                        .trimmingCharacters(in: .whitespaces)
+                    if !varName.isEmpty {
+                        result.append("\(indent(indentLevel))\(JJEmit.oops) \(varName)")
+                    } else {
+                        result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                    }
+                } else {
+                    result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                }
                 indentLevel += 1
             } else if Self.endRegex?.firstMatch(in: trimmed, range: range) != nil {
                 if indentLevel > 0 { indentLevel -= 1 }

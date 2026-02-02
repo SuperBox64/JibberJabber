@@ -143,14 +143,19 @@ class CFamilyTranspiler:
             self.indent -= 1
             result = f"{header}\n{try_body}\n{self.ind()}{self.T['blockEnd']}"
             if node.oops_body:
+                catch_tmpl = self.T['catch']
+                if node.oops_var and 'catchVar' in self.T:
+                    catch_tmpl = self.T['catchVar'].replace('{var}', node.oops_var)
                 # Handle multi-line catch templates (e.g. Go's "}()\ndefer func() {")
-                catch_lines = self.T['catch'].split('\n')
+                catch_lines = catch_tmpl.split('\n')
                 indented_catch = '\n'.join(
                     line if i == 0 else self.ind() + line
                     for i, line in enumerate(catch_lines)
                 )
                 result = result[:-len(self.T['blockEnd'])] + indented_catch
                 self.indent += 1
+                if node.oops_var and 'catchVarBind' in self.T:
+                    result += '\n' + self.ind() + self.T['catchVarBind'].replace('{var}', node.oops_var)
                 result += '\n' + '\n'.join(self.stmt(s) for s in node.oops_body)
                 self.indent -= 1
                 end_block = self.T.get('blockEndTry', self.T['blockEnd'])

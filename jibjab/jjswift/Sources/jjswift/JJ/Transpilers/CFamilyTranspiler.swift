@@ -577,13 +577,22 @@ public class CFamilyTranspiler: Transpiling {
         indentLevel -= 1
         var result = "\(header)\n\(tryBody)\n\(ind())\(T.blockEnd)"
         if let oopsBody = node.oopsBody {
+            // Use catchVar template when oopsVar is set, otherwise use catch
+            var catchTemplate = T.catchBlock
+            if let varName = node.oopsVar, let cv = T.catchVar {
+                catchTemplate = cv.replacingOccurrences(of: "{var}", with: varName)
+            }
             // Handle multi-line catch templates (e.g. Go's "}()\ndefer func() {")
-            let catchLines = T.catchBlock.components(separatedBy: "\n")
+            let catchLines = catchTemplate.components(separatedBy: "\n")
             let indentedCatch = catchLines.enumerated().map { i, line in
                 i == 0 ? line : ind() + line
             }.joined(separator: "\n")
             result = String(result.dropLast(T.blockEnd.count)) + indentedCatch
             indentLevel += 1
+            // Insert catchVarBind as first line if needed
+            if let varName = node.oopsVar, let bind = T.catchVarBind {
+                result += "\n" + ind() + bind.replacingOccurrences(of: "{var}", with: varName)
+            }
             result += "\n" + oopsBody.map { stmtToString($0) }.joined(separator: "\n")
             indentLevel -= 1
             let endBlock = T.blockEndTry ?? T.blockEnd

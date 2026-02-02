@@ -19,6 +19,7 @@
   "else": "else:",
   "try": "try:",
   "catch": "except:",
+  "catchVar": "except Exception as {var}:",
   "func": "def {name}({params}):",
   "return": "return {value}",
   "throw": "raise Exception({value})",

@@ -38,6 +38,8 @@
   "else": "} else {",
   "try": "@try {",
   "catch": "} @catch (NSException *e) {",
+  "catchVar": "} @catch (NSException *_e) {",
+  "catchVarBind": "NSString *{var} = [_e reason];",
   "func": "{type} {name}({params}) {",
   "funcDecl": "{type} {name}({params});",
   "return": "return {value};",

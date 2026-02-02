@@ -204,10 +204,13 @@ class Parser:
         self.advance()  # TRY
         try_body = self.parse_block()
         oops_body = None
+        oops_var = None
         if self.peek().type == TokenType.OOPS:
             self.advance()
+            if self.peek().type == TokenType.IDENTIFIER:
+                oops_var = self.advance().value
             oops_body = self.parse_block()
-        return TryStmt(try_body, oops_body)
+        return TryStmt(try_body, oops_body, oops_var)
 
     def parse_block(self) -> List[ASTNode]:
         statements = []

@@ -113,6 +113,8 @@ public struct TargetConfig: Codable {
     public let blockEndFunc: String?
     private let _try: String?
     private let _catch: String?
+    private let _catchVar: String?
+    private let _catchVarBind: String?
     private let _blockEndTry: String?
     public let indent: String
     public let `true`: String
@@ -222,6 +224,8 @@ public struct TargetConfig: Codable {
         case blockEndRepeat, blockEndIf, blockEndFunc
         case _try = "try"
         case _catch = "catch"
+        case _catchVar = "catchVar"
+        case _catchVarBind = "catchVarBind"
         case _blockEndTry = "blockEndTry"
         case _and = "and"
         case _or = "or"
@@ -340,6 +344,8 @@ public struct TargetConfig: Codable {
         blockEndFunc = try container.decodeIfPresent(String.self, forKey: .blockEndFunc)
         _try = try container.decodeIfPresent(String.self, forKey: ._try)
         _catch = try container.decodeIfPresent(String.self, forKey: ._catch)
+        _catchVar = try container.decodeIfPresent(String.self, forKey: ._catchVar)
+        _catchVarBind = try container.decodeIfPresent(String.self, forKey: ._catchVarBind)
         _blockEndTry = try container.decodeIfPresent(String.self, forKey: ._blockEndTry)
         indent = try container.decode(String.self, forKey: .indent)
         main = try container.decodeIfPresent(String.self, forKey: .main)
@@ -456,6 +462,8 @@ public struct TargetConfig: Codable {
     public var blockEnd: String { _blockEnd ?? "" }
     public var tryBlock: String { _try ?? "try {" }
     public var catchBlock: String { _catch ?? "} catch {" }
+    public var catchVar: String? { _catchVar }
+    public var catchVarBind: String? { _catchVarBind }
     public var blockEndTry: String? { _blockEndTry }
     public var throwStmt: String? { _throw }
     public var and: String { _and ?? "&&" }

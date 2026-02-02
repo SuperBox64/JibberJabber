@@ -179,11 +179,15 @@ public class Parser {
         _ = advance() // consume .try
         let tryBody = try parseBlock()
         var oopsBody: [ASTNode]? = nil
+        var oopsVar: String? = nil
         if peek().type == .oops {
             _ = advance()
+            if peek().type == .identifier {
+                oopsVar = advance().value as? String
+            }
             oopsBody = try parseBlock()
         }
-        return TryStmt(tryBody: tryBody, oopsBody: oopsBody)
+        return TryStmt(tryBody: tryBody, oopsBody: oopsBody, oopsVar: oopsVar)
     }
 
     private func parseFuncDef() throws -> FuncDef {
