@@ -343,6 +343,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
         var forwardDeclPattern: NSRegularExpression?
         var stripSemicolons: Bool
         var autoreleasepoolWrapper: Bool
+        var catchVarBindPattern: NSRegularExpression?
 
         /// Build a Config entirely from a TargetConfig — no hard-coded defaults
         init(from target: TargetConfig) {
@@ -366,6 +367,7 @@ class BraceReverseTranspiler: ReverseTranspiling {
             self.forwardDeclPattern = ReversePatterns.funcDeclPattern(target)
             self.stripSemicolons = target.return.hasSuffix(";")
             self.autoreleasepoolWrapper = ReversePatterns.hasAutoreleasepool(target)
+            self.catchVarBindPattern = ReversePatterns.catchVarBindPattern(target)
         }
     }
 
@@ -411,10 +413,36 @@ class BraceReverseTranspiler: ReverseTranspiling {
         var inMain = false
         var skipReturn0 = false
         var inAutoreleasepool = false
+        var justEmittedOops = false
 
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty { result.append(""); continue }
+
+            // Check if this line is a catchVarBind pattern (first line after oops)
+            if justEmittedOops, let cvbPattern = config.catchVarBindPattern {
+                let nsCheck = trimmed as NSString
+                let checkRange = NSRange(location: 0, length: nsCheck.length)
+                // Also strip semicolons for matching
+                var trimmedForMatch = trimmed
+                if trimmedForMatch.hasSuffix(";") { trimmedForMatch = String(trimmedForMatch.dropLast()) }
+                let nsCheck2 = trimmedForMatch as NSString
+                let checkRange2 = NSRange(location: 0, length: nsCheck2.length)
+                if let m = cvbPattern.firstMatch(in: trimmed, range: checkRange) ??
+                          cvbPattern.firstMatch(in: trimmedForMatch, range: checkRange2) {
+                    let varName = (trimmed as NSString).substring(with: m.range(at: 1))
+                    // Retroactively add variable name to the last oops line
+                    if let lastIdx = result.indices.last {
+                        let lastLine = result[lastIdx]
+                        if lastLine.hasSuffix(JJEmit.oops) {
+                            result[lastIdx] = lastLine + " \(varName)"
+                        }
+                    }
+                    justEmittedOops = false
+                    continue
+                }
+                justEmittedOops = false
+            }
 
             // Skip main wrapper (patterns derived from target config)
             let blockEnd = ReversePatterns.blockEndString(config.target)
@@ -452,6 +480,8 @@ class BraceReverseTranspiler: ReverseTranspiling {
                 continue
             }
             if trimmed == catchPat || trimmed.hasPrefix("} catch") || trimmed.hasPrefix("} @catch") {
+                // Close try body level, emit oops at try level, open oops body
+                if indentLevel > 0 { indentLevel -= 1 }
                 // Extract catch variable name from patterns like "} catch (varName) {"
                 if let openParen = trimmed.firstIndex(of: "("),
                    let closeParen = trimmed.firstIndex(of: ")") {
@@ -462,9 +492,11 @@ class BraceReverseTranspiler: ReverseTranspiling {
                         result.append("\(indent(indentLevel))\(JJEmit.oops) \(varName)")
                     } else {
                         result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                        justEmittedOops = true
                     }
                 } else {
                     result.append("\(indent(indentLevel))\(JJEmit.oops)")
+                    justEmittedOops = true
                 }
                 indentLevel += 1
                 continue
@@ -902,6 +934,8 @@ class AppleScriptReverseTranspiler: ReverseTranspiling {
                 result.append("\(indent(indentLevel))\(JJEmit.try)")
                 indentLevel += 1
             } else if trimmed == "on error" || trimmed.hasPrefix("on error ") {
+                // Close try body level, emit oops at try level, open oops body
+                if indentLevel > 0 { indentLevel -= 1 }
                 if trimmed.hasPrefix("on error ") {
                     let varName = String(trimmed.dropFirst("on error ".count))
                         .trimmingCharacters(in: .whitespaces)

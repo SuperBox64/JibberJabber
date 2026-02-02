@@ -559,6 +559,19 @@ public struct ReversePatterns {
         return try? NSRegularExpression(pattern: "^\(esc(prefix))\\s*(.*)$")
     }
 
+    // MARK: - CatchVarBind Pattern
+
+    /// Generates a regex from the target's catchVarBind template to extract the variable name.
+    /// E.g. "let {var} = (error as? JJError)?.message ?? \"\\(error)\"" → captures the variable name.
+    public static func catchVarBindPattern(_ target: TargetConfig) -> NSRegularExpression? {
+        guard let tmpl = target.catchVarBind else { return nil }
+        let escaped = NSRegularExpression.escapedPattern(for: tmpl)
+        let pattern = escaped.replacingOccurrences(of: "\\{var\\}", with: "(\\w+)")
+        let hasSemicolon = tmpl.hasSuffix(";")
+        let finalPattern = hasSemicolon ? "^\(pattern.dropLast(1));?$" : "^\(pattern)$"
+        return try? NSRegularExpression(pattern: finalPattern)
+    }
+
     // MARK: - Operator Replacements
 
     /// Returns target-specific operator replacements for reverse transpiling.
