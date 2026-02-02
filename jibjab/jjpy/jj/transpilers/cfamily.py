@@ -153,7 +153,8 @@ class CFamilyTranspiler:
                 self.indent += 1
                 result += '\n' + '\n'.join(self.stmt(s) for s in node.oops_body)
                 self.indent -= 1
-                result += f"\n{self.ind()}{self.T['blockEnd']}"
+                end_block = self.T.get('blockEndTry', self.T['blockEnd'])
+                result += f"\n{self.ind()}{end_block}"
             return result
         elif isinstance(node, FuncDef):
             param_type = self.get_target_type('Int')

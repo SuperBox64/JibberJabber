@@ -581,7 +581,8 @@ public class CFamilyTranspiler: Transpiling {
             indentLevel += 1
             result += "\n" + oopsBody.map { stmtToString($0) }.joined(separator: "\n")
             indentLevel -= 1
-            result += "\n\(ind())\(T.blockEnd)"
+            let endBlock = T.blockEndTry ?? T.blockEnd
+            result += "\n\(ind())\(endBlock)"
         }
         return result
     }

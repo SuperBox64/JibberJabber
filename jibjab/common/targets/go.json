@@ -26,6 +26,7 @@
   "else": "} else {",
   "try": "func() {",
   "catch": "}()\ndefer func() {",
+  "blockEndTry": "}()",
   "func": "func {name}({params}) {type} {",
   "funcDecl": "",
   "return": "return {value}",
