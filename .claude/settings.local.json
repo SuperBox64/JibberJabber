@@ -410,7 +410,9 @@
       "Bash(for t in cpp objc objcpp go applescript c asm)",
       "Bash(do echo \"=== $t ===\")",
       "Bash(/tmp/trycatch_swift)",
-      "Bash(/tmp/test_c:*)"
+      "Bash(/tmp/test_c:*)",
+      "Bash(/tmp/test_objc:*)",
+      "Bash(/tmp/test_objcpp:*)"
     ]
   }
 }
