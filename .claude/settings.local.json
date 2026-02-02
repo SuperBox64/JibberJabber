@@ -402,7 +402,11 @@
       "Bash(for f in jibjab/common/targets/{py,js,c,cpp,swift,objc,objcpp,go,applescript}.json)",
       "Bash(do echo -n \"$f: \")",
       "WebFetch(domain:jj.xcf.ai)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(for lang in py js c cpp swift objc objcpp go applescript)",
+      "Bash(do echo \"=== $lang ===\")",
+      "Bash(for lang in swift py js c cpp objc objcpp applescript)",
+      "Bash(for lang in swift py js c cpp objc objcpp go applescript)"
     ]
   }
 }
