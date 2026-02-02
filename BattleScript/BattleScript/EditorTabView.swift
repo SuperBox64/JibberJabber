@@ -1,6 +1,13 @@
 import SwiftUI
 import AppKit
 
+/// NSTextView subclass that inserts spaces instead of tabs
+class SpacesTextView: NSTextView {
+    override func insertTab(_ sender: Any?) {
+        insertText("    ", replacementRange: selectedRange())
+    }
+}
+
 /// NSViewRepresentable wrapping NSTextView with smart quotes disabled and JJ syntax highlighting
 struct CodeEditor: NSViewRepresentable {
     @Binding var text: String
@@ -9,7 +16,7 @@ struct CodeEditor: NSViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
     func makeNSView(context: Context) -> NSScrollView {
-        let textView = NSTextView()
+        let textView = SpacesTextView()
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false
