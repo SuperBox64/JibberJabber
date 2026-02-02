@@ -803,7 +803,6 @@ class GoReverseTranspiler: BraceReverseTranspiler {
     }
 
     override func reverseTranspile(_ code: String) -> String? {
-        // Pre-process: convert fmt.Printf with %v placeholders to fmt.Println with interpolation braces
         var lines = code.components(separatedBy: "\n")
         // Strip multi-line import block (Go-specific header content)
         var inImportBlock = false
@@ -816,6 +815,8 @@ class GoReverseTranspiler: BraceReverseTranspiler {
             }
             return line
         }
+
+        // Pre-process: convert fmt.Printf with %v placeholders to fmt.Println
         for i in 0..<lines.count {
             let trimmed = lines[i].trimmingCharacters(in: .whitespaces)
             let leading = String(lines[i].prefix(while: { $0 == " " || $0 == "\t" }))
@@ -824,7 +825,6 @@ class GoReverseTranspiler: BraceReverseTranspiler {
             if let m = Self.printfRegex?.firstMatch(in: trimmed, range: range) {
                 let fmt = ns.substring(with: m.range(at: 2))
                 let argsRange = m.range(at: 3)
-                // Build the replacement using the target's printStr template
                 let printlnTemplate = Self.goTarget.printStr
                 if argsRange.location != NSNotFound {
                     let argsStr = ns.substring(with: argsRange)
@@ -841,7 +841,117 @@ class GoReverseTranspiler: BraceReverseTranspiler {
                 }
             }
         }
+
+        // Pre-process: rewrite Go defer/recover try-catch into standard brace form
+        // Go pattern:
+        //   func() {
+        //       defer func() {
+        //           if r := recover(); r != nil {
+        //               <oops body lines>
+        //           }
+        //       }()
+        //       <try body lines>
+        //   }()
+        // Rewrite to:
+        //   try {
+        //       <try body lines>
+        //   } catch {
+        //       <oops body lines>
+        //   }
+        lines = rewriteGoTryCatch(lines)
+
         return super.reverseTranspile(lines.joined(separator: "\n"))
+    }
+
+    /// Rewrite Go's defer/recover pattern into standard try/catch braces
+    private func rewriteGoTryCatch(_ input: [String]) -> [String] {
+        var output: [String] = []
+        var i = 0
+        while i < input.count {
+            let trimmed = input[i].trimmingCharacters(in: .whitespaces)
+            let leading = String(input[i].prefix(while: { $0 == " " || $0 == "\t" }))
+
+            // Detect "func() {" that starts a Go try block
+            if trimmed == "func() {" && i + 1 < input.count &&
+               input[i + 1].trimmingCharacters(in: .whitespaces).hasPrefix("defer func()") {
+                // Found Go try/catch pattern — collect defer body (oops) and try body
+                var oopsLines: [String] = []
+                var tryLines: [String] = []
+                var oopsVar: String? = nil
+                var j = i + 1 // skip "func() {"
+
+                // Skip "defer func() {"
+                j += 1
+
+                // Look for "if r := recover(); r != nil {"
+                if j < input.count && input[j].trimmingCharacters(in: .whitespaces).contains("recover()") {
+                    j += 1 // skip the if line
+                }
+
+                // Collect oops body until closing "}"
+                var depth = 1
+                while j < input.count && depth > 0 {
+                    let t = input[j].trimmingCharacters(in: .whitespaces)
+                    if t == "}" || t == "}()" {
+                        depth -= 1
+                        if depth == 0 { j += 1; break }
+                    }
+                    if t.hasSuffix("{") { depth += 1 }
+                    // Check for catchVarBind: "err := fmt.Sprint(r)"
+                    if t.contains(":= fmt.Sprint(r)") {
+                        let parts = t.components(separatedBy: ":=")
+                        if let varName = parts.first?.trimmingCharacters(in: .whitespaces), !varName.isEmpty {
+                            oopsVar = varName
+                        }
+                        j += 1
+                        continue
+                    }
+                    oopsLines.append(input[j])
+                    j += 1
+                }
+
+                // Skip remaining closing braces of defer: "}" and "}()"
+                while j < input.count {
+                    let t = input[j].trimmingCharacters(in: .whitespaces)
+                    if t == "}" || t == "}()" {
+                        j += 1
+                        continue
+                    }
+                    break
+                }
+
+                // Collect try body until closing "}()"
+                while j < input.count {
+                    let t = input[j].trimmingCharacters(in: .whitespaces)
+                    if t == "}()" {
+                        j += 1
+                        break
+                    }
+                    tryLines.append(input[j])
+                    j += 1
+                }
+
+                // Emit rewritten standard try/catch
+                output.append("\(leading)try {")
+                for line in tryLines {
+                    output.append(line)
+                }
+                if let v = oopsVar {
+                    output.append("\(leading)} catch (\(v)) {")
+                } else {
+                    output.append("\(leading)} catch {")
+                }
+                for line in oopsLines {
+                    output.append(line)
+                }
+                output.append("\(leading)}")
+                i = j
+            } else {
+                output.append(input[i])
+                i += 1
+            }
+        }
+        return output
     }
 }
 
