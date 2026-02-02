@@ -6,7 +6,7 @@ struct ContentView: View {
     @State private var selectedExample = "hello"
     @State private var selectedTab = "jj"
     @State private var transpiledOutputs: [String: String] = [:]
-    @State private var runOutput = ""
+    @State private var runOutputs: [String: String] = [:]
     @State private var isRunning = false
     @State private var userHasEdited = false
     @AppStorage("editMode") private var editMode = false
@@ -69,7 +69,7 @@ struct ContentView: View {
                 )
             } bottom: {
                 // Bottom: output pane
-                OutputView(output: runOutput, isRunning: isRunning)
+                OutputView(output: runOutputs[selectedTab] ?? "", isRunning: isRunning)
             }
         }
         .frame(minWidth: 640, minHeight: 600)
@@ -119,7 +119,8 @@ struct ContentView: View {
             } catch {
                 let errorMsg = "// Parse error: \(error)"
                 DispatchQueue.main.async {
-                    runOutput = errorMsg
+                    runOutputs["jj"] = errorMsg
+                    selectedTab = "jj"
                 }
             }
         }
@@ -132,7 +133,7 @@ struct ContentView: View {
         runWork = nil
         JJEngine.stopRunning()
         isRunning = false
-        runOutput = "Stopped"
+        runOutputs[selectedTab] = "Stopped"
     }
 
     private func runCurrentTab() {
@@ -140,7 +141,7 @@ struct ContentView: View {
         if tab != "jj" {
             isRunning = true
         }
-        runOutput = ""
+        runOutputs[tab] = ""
         let code: String
         if tab == "jj" {
             code = sourceCode
@@ -180,7 +181,7 @@ struct ContentView: View {
             }
             DispatchQueue.main.async {
                 if self.runWork?.isCancelled != true {
-                    runOutput = result
+                    runOutputs[tab] = result
                     isRunning = false
                 }
             }
