@@ -108,6 +108,7 @@ func main() {
         print("  jjswift transpile <file.jj> <target> - Transpile to target language")
         print("  jjswift build <file.jj> <target> [output] - Transpile + compile")
         print("  jjswift exec <file.jj> <target>      - Transpile + compile + run")
+        print("  jjswift reverse <file> <source_lang>  - Reverse transpile back to JJ")
         print("")
         print("Targets: \(transpilerRegistry.keys.sorted().joined(separator: ", "))")
         exit(1)
@@ -119,6 +120,28 @@ func main() {
     guard let source = try? String(contentsOfFile: filename, encoding: .utf8) else {
         print("Error: Could not read file '\(filename)'")
         exit(1)
+    }
+
+    // Handle reverse command before parsing (it doesn't parse JJ)
+    if command == "reverse" {
+        let sourceLang = args.count > 3 ? args[3] : ""
+        if sourceLang.isEmpty {
+            print("Usage: jjswift reverse <file> <source_lang>")
+            print("Languages: py, js, c, cpp, swift, objc, objcpp, go, applescript")
+            exit(1)
+        }
+        guard let reverser = ReverseTranspilerFactory.transpiler(for: sourceLang) else {
+            print("Unknown source language: \(sourceLang)")
+            print("Languages: py, js, c, cpp, swift, objc, objcpp, go, applescript")
+            exit(1)
+        }
+        if let jjCode = reverser.reverseTranspile(source) {
+            print(jjCode, terminator: "")
+        } else {
+            print("Reverse transpile produced no output")
+            exit(1)
+        }
+        exit(0)
     }
 
     let lexer = Lexer(source: source)
