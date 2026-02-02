@@ -41,6 +41,17 @@ swift run jjswift transpile ../examples/fibonacci.jj objc        # Objective-C
 swift run jjswift transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 swift run jjswift transpile ../examples/fibonacci.jj go          # Go
 
+# Reverse transpile (target language → JJ)
+swift run jjswift reverse output.py py            # Python → JJ
+swift run jjswift reverse output.js js            # JavaScript → JJ
+swift run jjswift reverse output.c c              # C → JJ
+swift run jjswift reverse output.cpp cpp          # C++ → JJ
+swift run jjswift reverse output.swift swift      # Swift → JJ
+swift run jjswift reverse output.m objc           # Objective-C → JJ
+swift run jjswift reverse output.mm objcpp        # Objective-C++ → JJ
+swift run jjswift reverse output.go go            # Go → JJ
+swift run jjswift reverse output.applescript applescript # AppleScript → JJ
+
 # Build (transpile + compile to binary)
 swift run jjswift build ../examples/fibonacci.jj c               # Build C binary
 swift run jjswift build ../examples/fibonacci.jj swift           # Build Swift binary
@@ -91,6 +102,8 @@ jjswift/
         ├── Interpreter.swift # Direct execution
         ├── NativeCompiler.swift # ARM64 Mach-O generator
         ├── JJConfig.swift  # Configuration loader
+        ├── ReverseTranspiler.swift  # Reverse transpiler (target → JJ)
+        ├── ReversePatterns.swift    # Regex patterns from target configs
         └── Transpilers/
             ├── PythonTranspiler.swift
             ├── JavaScriptTranspiler.swift
@@ -111,6 +124,8 @@ jjswift/
 .jj source → Lexer → Tokens → Parser → AST → Interpreter (run)
                                           → NativeCompiler (compile)
                                           → Transpiler (transpile/asm)
+
+target source → ReverseTranspiler → .jj source (reverse)
 ```
 
 ## See Also

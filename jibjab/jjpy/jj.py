@@ -16,6 +16,7 @@ from jj import (
     GoTranspiler
 )
 from jj.lexer import load_target_config
+from jj.reverse_transpiler import get_reverse_transpiler
 
 TRANSPILERS = {
     'py': PythonTranspiler, 'js': JavaScriptTranspiler,
@@ -91,8 +92,10 @@ def main():
         print("  python3 jj.py transpile <file.jj> <target>           - Transpile to target")
         print("  python3 jj.py build <file.jj> <target> [output]      - Transpile + compile")
         print("  python3 jj.py exec <file.jj> <target>                - Transpile + compile + run")
+        print("  python3 jj.py reverse <file> <source_lang>           - Reverse transpile to JJ")
         print("")
         print(f"Targets: {', '.join(TRANSPILERS.keys())}")
+        print(f"Reverse: py, js, c, cpp, swift, objc, objcpp, go, applescript")
         sys.exit(1)
 
     command = sys.argv[1]
@@ -100,6 +103,26 @@ def main():
 
     with open(filename, 'r') as f:
         source = f.read()
+
+    # Handle reverse command before parsing (it doesn't parse JJ)
+    if command == 'reverse':
+        source_lang = sys.argv[3] if len(sys.argv) > 3 else ''
+        if not source_lang:
+            print("Usage: python3 jj.py reverse <file> <source_lang>")
+            print("Languages: py, js, c, cpp, swift, objc, objcpp, go, applescript")
+            sys.exit(1)
+        reverser = get_reverse_transpiler(source_lang)
+        if not reverser:
+            print(f"Unknown source language: {source_lang}")
+            print("Languages: py, js, c, cpp, swift, objc, objcpp, go, applescript")
+            sys.exit(1)
+        jj_code = reverser.reverse_transpile(source)
+        if jj_code:
+            print(jj_code, end='')
+        else:
+            print("Reverse transpile produced no output")
+            sys.exit(1)
+        sys.exit(0)
 
     lexer = Lexer(source)
     tokens = lexer.tokenize()

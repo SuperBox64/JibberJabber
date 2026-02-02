@@ -72,7 +72,7 @@ struct ContentView: View {
                 OutputView(output: runOutputs[selectedTab] ?? "", isRunning: isRunning)
             }
         }
-        .frame(minWidth: 640, minHeight: 600)
+        .frame(minWidth: 640, minHeight: 450)
         .overlay {
             DependencyOverlay(status: dependencyStatus, isVisible: $showDependencyCheck)
         }

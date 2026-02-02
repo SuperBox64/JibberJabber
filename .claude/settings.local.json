@@ -416,7 +416,9 @@
       "Bash(JJSWIFT=/Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/jjswift/.build/debug/jjswift)",
       "Bash($JJSWIFT transpile /Users/toddbruss/Documents/GitHub/JibberJabber/jibjab/examples/trycatch.jj c)",
       "Bash($JJSWIFT reverse /tmp/test_c.c c)",
-      "Bash($JJSWIFT reverse /tmp/test_fwd.c c)"
+      "Bash($JJSWIFT reverse /tmp/test_fwd.c c)",
+      "Bash(JJSWIFT=jjswift/.build/release/jjswift)",
+      "Bash($JJSWIFT transpile examples/comparisons.jj py)"
     ]
   }
 }

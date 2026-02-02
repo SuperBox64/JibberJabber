@@ -33,6 +33,17 @@ python3 jj.py transpile ../examples/fibonacci.jj objc        # Objective-C
 python3 jj.py transpile ../examples/fibonacci.jj objcpp      # Objective-C++
 python3 jj.py transpile ../examples/fibonacci.jj go          # Go
 
+# Reverse transpile (target language → JJ)
+python3 jj.py reverse output.py py            # Python → JJ
+python3 jj.py reverse output.js js            # JavaScript → JJ
+python3 jj.py reverse output.c c              # C → JJ
+python3 jj.py reverse output.cpp cpp          # C++ → JJ
+python3 jj.py reverse output.swift swift      # Swift → JJ
+python3 jj.py reverse output.m objc           # Objective-C → JJ
+python3 jj.py reverse output.mm objcpp        # Objective-C++ → JJ
+python3 jj.py reverse output.go go            # Go → JJ
+python3 jj.py reverse output.applescript applescript # AppleScript → JJ
+
 # Build (transpile + compile to binary)
 python3 jj.py build ../examples/fibonacci.jj c               # Build C binary
 python3 jj.py build ../examples/fibonacci.jj swift           # Build Swift binary
@@ -54,6 +65,7 @@ jjpy/
     ├── parser.py      # Recursive descent parser
     ├── interpreter.py # Direct execution
     ├── native_compiler.py # ARM64 Mach-O generator
+    ├── reverse_transpiler.py # Reverse transpiler (target → JJ)
     └── transpilers/
         ├── python.py
         ├── javascript.py
@@ -74,6 +86,8 @@ jjpy/
 .jj source → Lexer → Tokens → Parser → AST → Interpreter (run)
                                           → NativeCompiler (compile)
                                           → Transpiler (transpile/asm)
+
+target source → ReverseTranspiler → .jj source (reverse)
 ```
 
 ## See Also

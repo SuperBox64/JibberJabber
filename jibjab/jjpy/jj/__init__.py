@@ -24,6 +24,7 @@ from .transpilers import (
     GoTranspiler
 )
 from .native_compiler import NativeCompiler
+from .reverse_transpiler import get_reverse_transpiler
 
 __version__ = '1.0.0'
 
@@ -50,4 +51,7 @@ __all__ = [
     'ObjCTranspiler',
     'ObjCppTranspiler',
     'GoTranspiler',
+
+    # Reverse Transpiler
+    'get_reverse_transpiler',
 ]
