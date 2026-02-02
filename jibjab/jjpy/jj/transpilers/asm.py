@@ -218,11 +218,11 @@ class AssemblyTranspiler:
             self.gen_expr(node.value)
             self.asm_lines.append(f"    b _{self.current_func}_ret")
         elif isinstance(node, TryStmt):
-            self.asm_lines.append("// try")
             for stmt in node.try_body:
                 self.gen_stmt(stmt)
             if node.oops_body:
-                self.asm_lines.append("// catch (skipped - no exception support in asm)")
+                for stmt in node.oops_body:
+                    self.gen_stmt(stmt)
         elif isinstance(node, EnumDef):
             case_values = {}
             case_labels = {}
