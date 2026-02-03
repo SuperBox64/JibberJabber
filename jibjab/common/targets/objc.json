@@ -28,7 +28,7 @@
   "printBool": "printf(\"%s\\n\", {expr} ? \"true\" : \"false\");",
   "printDouble": "printf(\"%lf\\n\", {expr});",
   "var": "{type} {name} = {value};",
-  "forRange": "for (int {var} = {start}; {var} < {end}; {var}++) {",
+  "forRange": "for (NSInteger {var} = {start}; {var} < {end}; {var}++) {",
   "while": "while ({condition}) {",
   "if": "if ({condition}) {",
   "else": "} else {",

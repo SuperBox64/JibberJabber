@@ -102,6 +102,7 @@ struct HighlightedTextView: NSViewRepresentable {
                 length: 0
             )
             textView.setSelectedRange(safeSel)
+            scrollView.verticalRulerView?.needsDisplay = true
         }
     }
 

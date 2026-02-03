@@ -4,6 +4,11 @@
 public class ObjCTranspiler: CFamilyTranspiler {
     public override init(target: String = "objc") { super.init(target: target) }
 
+    // MARK: - ObjC idiomatic bool: BOOL with YES/NO
+
+    override func boolExpandType() -> String { "BOOL" }
+    override func boolExpandValue(_ val: Bool) -> String { val ? "YES" : "NO" }
+
     override func loopToString(_ node: LoopStmt) -> String {
         intVars.insert(node.var)
         return super.loopToString(node)

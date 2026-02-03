@@ -205,6 +205,14 @@ class ObjCTranspiler(CFamilyTranspiler):
         tmpl = self.T.get('printfInterp', 'printf("{fmt}\\n"{args});')
         return self.ind() + tmpl.replace('{fmt}', fmt_str).replace('{args}', f', {args}')
 
+    # MARK: - ObjC idiomatic bool: BOOL with YES/NO
+
+    def _expand_bool_type(self):
+        return 'BOOL'
+
+    def _expand_bool_value(self, val):
+        return 'YES' if val else 'NO'
+
     # MARK: - Dict/Tuple expansion with NSString *
 
     def _var_dict(self, node: VarDecl) -> str:
@@ -222,8 +230,8 @@ class ObjCTranspiler(CFamilyTranspiler):
                         lines.append(self.ind() + f'NSString *{var_name} = @"{v.value}";')
                         self.dict_fields[node.name][key] = (var_name, 'str')
                     elif isinstance(v.value, bool):
-                        val = '1' if v.value else '0'
-                        lines.append(self.ind() + f'int {var_name} = {val};')
+                        val = self._expand_bool_value(v.value)
+                        lines.append(self.ind() + f'{self._expand_bool_type()} {var_name} = {val};')
                         self.dict_fields[node.name][key] = (var_name, 'int')
                     elif isinstance(v.value, int):
                         target_type = self.get_target_type('Int')
@@ -260,8 +268,8 @@ class ObjCTranspiler(CFamilyTranspiler):
                     lines.append(self.ind() + f'NSString *{var_name} = @"{e.value}";')
                     self.tuple_fields[node.name].append((var_name, 'str'))
                 elif isinstance(e.value, bool):
-                    val = '1' if e.value else '0'
-                    lines.append(self.ind() + f'int {var_name} = {val};')
+                    val = self._expand_bool_value(e.value)
+                    lines.append(self.ind() + f'{self._expand_bool_type()} {var_name} = {val};')
                     self.tuple_fields[node.name].append((var_name, 'int'))
                 elif isinstance(e.value, int):
                     target_type = self.get_target_type('Int')

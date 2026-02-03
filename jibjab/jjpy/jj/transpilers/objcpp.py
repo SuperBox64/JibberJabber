@@ -17,6 +17,14 @@ from .cfamily import infer_type
 class ObjCppTranspiler(ObjCTranspiler):
     target_name = 'objcpp'
 
+    # MARK: - C++ style bools (override ObjC's BOOL/YES/NO)
+
+    def _expand_bool_type(self):
+        return 'bool'
+
+    def _expand_bool_value(self, val):
+        return 'true' if val else 'false'
+
     # MARK: - Cout helpers
 
     def _cout_line(self, e: str) -> str:

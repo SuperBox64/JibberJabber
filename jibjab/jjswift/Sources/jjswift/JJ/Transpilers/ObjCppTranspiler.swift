@@ -4,6 +4,11 @@
 public class ObjCppTranspiler: ObjCTranspiler {
     public override init(target: String = "objcpp") { super.init(target: target) }
 
+    // MARK: - C++ style bools (override ObjC's BOOL/YES/NO)
+
+    override func boolExpandType() -> String { "bool" }
+    override func boolExpandValue(_ val: Bool) -> String { val ? "true" : "false" }
+
     // MARK: - Print overrides using cout
 
     override func printStmtToString(_ node: PrintStmt) -> String {
