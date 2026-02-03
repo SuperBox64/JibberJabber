@@ -222,14 +222,22 @@ public struct ReversePatterns {
             )
         }
 
-        // JS/Go: const {name} = {value}
+        // JS: const {name} = {value}
         if template.hasPrefix("const ") && !template.contains("{type}") {
+            return try? NSRegularExpression(
+                pattern: "^const\\s+(\\w+)\\s*=\\s*(.+)$"
+            )
+        }
+
+        // Go: const {name} {type} = {value} or const {name} = {value} (inferred)
+        // Type comes AFTER name in Go, so pattern is different from C-family
+        if template.hasPrefix("const {name}") {
             return try? NSRegularExpression(
                 pattern: "^const\\s+(\\w+)(?:\\s+\\w+)?\\s*=\\s*(.+)$"
             )
         }
 
-        // C-family: const {type} {name} = {value};
+        // C-family: const {type} {name} = {value}; (type comes BEFORE name)
         if template.contains("{type}") && template.contains("const") {
             let types = typeAlternation(target)
             let hasSemicolon = template.hasSuffix(";")

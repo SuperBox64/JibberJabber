@@ -297,11 +297,16 @@ def _const_pattern(target):
         types = _type_alternation(target)
         return re.compile(f'^let\\s+(\\w+)(?:\\s*:\\s*{types})?\\s*=\\s*(.+)$')
 
-    # JS/Go: const {name} = {value}
+    # JS: const {name} = {value}
     if template.startswith('const ') and '{type}' not in template:
+        return re.compile(r'^const\s+(\w+)\s*=\s*(.+)$')
+
+    # Go: const {name} {type} = {value} or const {name} = {value} (inferred)
+    # Type comes AFTER name in Go, so pattern is different from C-family
+    if template.startswith('const {name}'):
         return re.compile(r'^const\s+(\w+)(?:\s+\w+)?\s*=\s*(.+)$')
 
-    # C-family: const {type} {name} = {value};
+    # C-family: const {type} {name} = {value}; (type comes BEFORE name)
     if '{type}' in template and 'const' in template:
         types = _type_alternation(target)
         has_semi = template.endswith(';')
