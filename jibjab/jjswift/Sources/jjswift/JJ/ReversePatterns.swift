@@ -139,6 +139,13 @@ public struct ReversePatterns {
         let template = target.logInt
         if template.isEmpty { return nil }
 
+        // os_log-style: os_log("%{public}@", "\(expr)")
+        if template.contains("os_log") {
+            return try? NSRegularExpression(
+                pattern: #"^os_log\("%\{public\}@",\s*"\\?\((.+)\)"\)$"#
+            )
+        }
+
         // NSLog-style: NSLog(@"%ld", (long)expr); or NSLog(@"%@", expr);
         if template.contains("NSLog") {
             return try? NSRegularExpression(
