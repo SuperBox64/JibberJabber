@@ -733,7 +733,7 @@ public struct JJPatterns {
 
     public static var keyword: String {
         let kw = JJ.keywords
-        return [kw.print, kw.input, kw.snag, kw.invoke, kw.yeet, kw.kaboom, kw.enum].map { keyword in
+        return [kw.print, kw.log, kw.input, kw.snag, kw.invoke, kw.yeet, kw.kaboom, kw.enum].map { keyword in
             if let braceIdx = keyword.firstIndex(of: "{") {
                 return esc(String(keyword[..<braceIdx])) + "\\{[a-zA-Z0-9]*\\}"
             }

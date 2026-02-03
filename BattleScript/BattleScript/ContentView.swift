@@ -27,7 +27,8 @@ struct ContentView: View {
         ("Enums", "enums"),
         ("Numbers", "numbers"),
         ("Tuples", "tuples"),
-        ("TryOops", "trycatch")
+        ("TryOops", "trycatch"),
+        ("Logging", "logging")
     ]
 
     var body: some View {
