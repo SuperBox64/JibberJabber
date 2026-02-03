@@ -28,7 +28,9 @@ struct ContentView: View {
         ("Numbers", "numbers"),
         ("Tuples", "tuples"),
         ("TryOops", "trycatch"),
-        ("Logging", "logging")
+        ("Logging", "logging"),
+        ("Constants", "constants"),
+
     ]
 
     var body: some View {
