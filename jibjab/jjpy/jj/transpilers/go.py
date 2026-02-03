@@ -22,6 +22,7 @@ class GoTranspiler(CFamilyTranspiler):
         self.dict_fields = {}   # dict_name -> {key: (go_var_name, type)}
         self.tuple_fields = {}  # tuple_name -> [(go_var_name, type)]
         self.needs_math = False
+        self.needs_log = False
 
     def transpile(self, program: Program) -> str:
         lines = []
@@ -54,12 +55,16 @@ class GoTranspiler(CFamilyTranspiler):
 
         # Build header with correct imports
         header = self.T['header'].replace('\\n', '\n').rstrip()
-        if self.needs_math:
+        if self.needs_math or self.needs_log:
             single_import = self.T.get('importSingle', 'import "fmt"').replace('{name}', 'fmt')
             indent = self.T['indent']
-            fmt_item = self.T.get('importItem', '"{name}"').replace('{name}', 'fmt')
-            math_item = self.T.get('importItem', '"{name}"').replace('{name}', 'math')
-            imports = f'{indent}{fmt_item}\n{indent}{math_item}'
+            import_items = [self.T.get('importItem', '"{name}"').replace('{name}', 'fmt')]
+            if self.needs_log:
+                log_pkg = self.T.get('logImport', 'log')
+                import_items.append(self.T.get('importItem', '"{name}"').replace('{name}', log_pkg))
+            if self.needs_math:
+                import_items.append(self.T.get('importItem', '"{name}"').replace('{name}', 'math'))
+            imports = '\n'.join(f'{indent}{item}' for item in import_items)
             multi_import = self.T.get('importMulti', 'import (\n{imports}\n)').replace('{imports}', imports)
             header = header.replace(single_import, multi_import)
         lines.append(header)
@@ -216,6 +221,10 @@ class GoTranspiler(CFamilyTranspiler):
                 lines.append(self.ind() + f'{go_var} := {self.expr(e)}')
                 self.tuple_fields[node.name].append((go_var, 'int'))
         return '\n'.join(lines)
+
+    def _log_stmt(self, node: LogStmt) -> str:
+        self.needs_log = True
+        return super()._log_stmt(node)
 
     def _print_stmt(self, node: PrintStmt) -> str:
         expr_node = node.expr

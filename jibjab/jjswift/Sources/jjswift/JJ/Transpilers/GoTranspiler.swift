@@ -6,6 +6,7 @@
 
 public class GoTranspiler: CFamilyTranspiler {
     var needsMath = false
+    var needsLog = false
 
     public override init(target: String = "go") { super.init(target: target) }
 
@@ -33,15 +34,20 @@ public class GoTranspiler: CFamilyTranspiler {
             mainLines.append(expanded)
         }
 
-        // Build header from config, adding math import if needed
+        // Build header from config, adding math/log imports if needed
         var header = T.header.replacingOccurrences(of: "\\n", with: "\n")
             .trimmingCharacters(in: .newlines)
-        if needsMath {
+        if needsMath || needsLog {
             // Replace single import with multi-import block
             let singleImport = T.importSingle.replacingOccurrences(of: "{name}", with: "fmt")
-            let fmtItem = T.importItem.replacingOccurrences(of: "{name}", with: "fmt")
-            let mathItem = T.importItem.replacingOccurrences(of: "{name}", with: "math")
-            let imports = "\(T.indent)\(fmtItem)\n\(T.indent)\(mathItem)"
+            var importItems = [T.importItem.replacingOccurrences(of: "{name}", with: "fmt")]
+            if needsLog, let logPkg = T.logImport {
+                importItems.append(T.importItem.replacingOccurrences(of: "{name}", with: logPkg))
+            }
+            if needsMath {
+                importItems.append(T.importItem.replacingOccurrences(of: "{name}", with: "math"))
+            }
+            let imports = importItems.map { "\(T.indent)\($0)" }.joined(separator: "\n")
             let multiImport = T.importMulti.replacingOccurrences(of: "{imports}", with: imports)
             header = header.replacingOccurrences(of: singleImport, with: multiImport)
         }
@@ -135,6 +141,11 @@ public class GoTranspiler: CFamilyTranspiler {
         }
         let intType = getTargetType("Int")
         return ind() + "\(node.name) := []\(intType){}"
+    }
+
+    override func logStmtToString(_ node: LogStmt) -> String {
+        needsLog = true
+        return super.logStmtToString(node)
     }
 
     override func printStmtToString(_ node: PrintStmt) -> String {
