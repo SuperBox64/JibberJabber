@@ -448,7 +448,13 @@
       "Bash(jjswift/.build/release/jjswift transpile:*)",
       "Bash(\"$JJ\" transpile examples/logging.jj swift)",
       "Bash(\"$JJ\" transpile examples/hello.jj swift)",
-      "Bash(jjswift/.build/release/jjswift reverse:*)"
+      "Bash(jjswift/.build/release/jjswift reverse:*)",
+      "Bash(for target in js py go c cpp objc objcpp applescript)",
+      "Bash(do echo \"=== $target ===\")",
+      "Bash(for target in c objc objcpp)",
+      "Bash(for target in c py js go)",
+      "Bash(./jjswift/jjswift:*)",
+      "Bash(gofmt:*)"
     ]
   }
 }
