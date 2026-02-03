@@ -29,6 +29,9 @@ public class Interpreter {
         if let printStmt = node as? PrintStmt {
             let value = try evaluate(printStmt.expr)
             print(stringify(value))
+        } else if let logStmt = node as? LogStmt {
+            let value = try evaluate(logStmt.expr)
+            print(stringify(value))
         } else if let varDecl = node as? VarDecl {
             locals[locals.count - 1][varDecl.name] = try evaluate(varDecl.value)
         } else if let loopStmt = node as? LoopStmt {
