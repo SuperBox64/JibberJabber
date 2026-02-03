@@ -28,6 +28,9 @@ public class SwiftTranspiler: Transpiling {
 
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
+        if needsLogImport(program.statements), let logImport = T.logImport {
+            lines.append(logImport)
+        }
         if needsErrorStruct(program.statements), let errStruct = T.errorStruct {
             lines.append("")
             lines.append(errStruct)
@@ -36,6 +39,19 @@ public class SwiftTranspiler: Transpiling {
             lines.append(stmtToString(s))
         }
         return lines.joined(separator: "\n")
+    }
+
+    private func needsLogImport(_ stmts: [ASTNode]) -> Bool {
+        for s in stmts {
+            if s is LogStmt { return true }
+            if let ifStmt = s as? IfStmt {
+                if needsLogImport(ifStmt.thenBody) { return true }
+                if let elseBody = ifStmt.elseBody, needsLogImport(elseBody) { return true }
+            }
+            if let loop = s as? LoopStmt, needsLogImport(loop.body) { return true }
+            if let fn = s as? FuncDef, needsLogImport(fn.body) { return true }
+        }
+        return false
     }
 
     private func needsErrorStruct(_ stmts: [ASTNode]) -> Bool {

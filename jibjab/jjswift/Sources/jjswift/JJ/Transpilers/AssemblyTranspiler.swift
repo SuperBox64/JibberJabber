@@ -239,9 +239,9 @@ public class AssemblyTranspiler: Transpiling {
     private func genStmt(_ node: ASTNode) {
         if let printStmt = node as? PrintStmt {
             genPrint(printStmt)
-        } else if node is LogStmt {
-            // ASM: log not supported, emit as comment
-            asmLines.append("    // log statement (not supported in assembly)")
+        } else if let logStmt = node as? LogStmt {
+            // ASM: no stderr, use printf (same as print)
+            genPrint(PrintStmt(expr: logStmt.expr))
         } else if let varDecl = node as? VarDecl {
             genVarDecl(varDecl)
         } else if let loopStmt = node as? LoopStmt {

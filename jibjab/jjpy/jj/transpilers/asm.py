@@ -209,7 +209,8 @@ class AssemblyTranspiler:
         if isinstance(node, PrintStmt):
             self.gen_print(node)
         elif isinstance(node, LogStmt):
-            self.asm_lines.append('    // log statement (not supported in assembly)')
+            # ASM: no stderr, use printf (same as print)
+            self.gen_print(PrintStmt(expr=node.expr))
         elif isinstance(node, VarDecl):
             self.gen_var_decl(node)
         elif isinstance(node, LoopStmt):

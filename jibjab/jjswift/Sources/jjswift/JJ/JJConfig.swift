@@ -130,6 +130,7 @@ public struct TargetConfig: Codable {
     private let _catchVarBind: String?
     private let _blockEndTry: String?
     private let _errorStruct: String?
+    private let _logImport: String?
     public let indent: String
     public let `true`: String
     public let `false`: String
@@ -254,6 +255,7 @@ public struct TargetConfig: Codable {
         case _catchVarBind = "catchVarBind"
         case _blockEndTry = "blockEndTry"
         case _errorStruct = "errorStruct"
+        case _logImport = "logImport"
         case _and = "and"
         case _or = "or"
         case _not = "not"
@@ -387,6 +389,7 @@ public struct TargetConfig: Codable {
         _catchVarBind = try container.decodeIfPresent(String.self, forKey: ._catchVarBind)
         _blockEndTry = try container.decodeIfPresent(String.self, forKey: ._blockEndTry)
         _errorStruct = try container.decodeIfPresent(String.self, forKey: ._errorStruct)
+        _logImport = try container.decodeIfPresent(String.self, forKey: ._logImport)
         indent = try container.decode(String.self, forKey: .indent)
         main = try container.decodeIfPresent(String.self, forKey: .main)
         compile = try container.decodeIfPresent([String].self, forKey: .compile)
@@ -518,6 +521,7 @@ public struct TargetConfig: Codable {
     public var catchVarBind: String? { _catchVarBind }
     public var blockEndTry: String? { _blockEndTry }
     public var errorStruct: String? { _errorStruct }
+    public var logImport: String? { _logImport }
     public var throwStmt: String? { _throw }
     public var and: String { _and ?? "&&" }
     public var or: String { _or ?? "||" }
