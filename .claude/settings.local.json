@@ -447,7 +447,8 @@
       "Bash(/tmp/test_log)",
       "Bash(jjswift/.build/release/jjswift transpile:*)",
       "Bash(\"$JJ\" transpile examples/logging.jj swift)",
-      "Bash(\"$JJ\" transpile examples/hello.jj swift)"
+      "Bash(\"$JJ\" transpile examples/hello.jj swift)",
+      "Bash(jjswift/.build/release/jjswift reverse:*)"
     ]
   }
 }
