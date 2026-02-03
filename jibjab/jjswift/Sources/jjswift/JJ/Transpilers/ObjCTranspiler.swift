@@ -356,7 +356,8 @@ public class ObjCTranspiler: CFamilyTranspiler {
         }
         if let varRef = e as? VarRef {
             if stringVars.contains(varRef.name) {
-                return ind() + T.logStr.replacingOccurrences(of: "{expr}", with: expr(e))
+                // const char* needs @() boxing for NSLog %@
+                return ind() + T.logStr.replacingOccurrences(of: "{expr}", with: "@(\(expr(e)))")
             }
             if doubleVars.contains(varRef.name) {
                 return ind() + T.logFloat.replacingOccurrences(of: "{expr}", with: expr(e))
@@ -367,6 +368,8 @@ public class ObjCTranspiler: CFamilyTranspiler {
             if intVars.contains(varRef.name) {
                 return ind() + T.logInt.replacingOccurrences(of: "{expr}", with: expr(e))
             }
+            // Default: unknown var type, use %@ with @() boxing
+            return ind() + T.logStr.replacingOccurrences(of: "{expr}", with: "@(\(expr(e)))")
         }
         return super.logStmtToString(node)
     }

@@ -109,11 +109,14 @@ class ObjCTranspiler(CFamilyTranspiler):
             if expr_node.name in self.double_vars:
                 return self.ind() + self.T.get('logFloat', self.T.get('logDouble', 'NSLog(@"%f", {expr});')).replace('{expr}', self.expr(expr_node))
             if expr_node.name in self.string_vars:
-                return self.ind() + self.T.get('logStr', 'NSLog(@"%@", {expr});').replace('{expr}', self.expr(expr_node))
+                # const char* needs @() boxing for NSLog %@
+                return self.ind() + self.T.get('logStr', 'NSLog(@"%@", {expr});').replace('{expr}', f'@({self.expr(expr_node)})')
             if expr_node.name in self.bool_vars:
                 return self.ind() + self.T.get('logBool', 'NSLog(@"%@", {expr} ? @"true" : @"false");').replace('{expr}', self.expr(expr_node))
             if expr_node.name in self.int_vars:
                 return self.ind() + self.T.get('logInt', 'NSLog(@"%ld", (long){expr});').replace('{expr}', self.expr(expr_node))
+            # Default: unknown var type, use %@ with @() boxing
+            return self.ind() + self.T.get('logStr', 'NSLog(@"%@", {expr});').replace('{expr}', f'@({self.expr(expr_node)})')
         return super()._log_stmt(node)
 
     # MARK: - Print statement
