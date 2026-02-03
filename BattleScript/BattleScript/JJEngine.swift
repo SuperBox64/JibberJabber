@@ -108,6 +108,11 @@ struct JJEngine {
     private static func runBinary(_ path: String) -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
+        // Ensure NSLog/os_log output reaches stderr even when not in a terminal
+        var env = ProcessInfo.processInfo.environment
+        env["OS_ACTIVITY_DT_MODE"] = "YES"
+        env["CFLOG_FORCE_STDERR"] = "YES"
+        process.environment = env
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe  // merge stderr into stdout
