@@ -1,4 +1,38 @@
 import SwiftUI
+import AppKit
+
+/// NSTextView wrapper for easy text selection like a terminal
+struct OutputTextView: NSViewRepresentable {
+    let text: String
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSScrollView()
+        let textView = NSTextView()
+
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.isRichText = false
+        textView.font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+        textView.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.4)
+        textView.textColor = NSColor.labelColor
+        textView.autoresizingMask = [.width]
+        textView.textContainerInset = NSSize(width: 8, height: 8)
+
+        scrollView.documentView = textView
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.autohidesScrollers = true
+        scrollView.borderType = .noBorder
+        scrollView.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.4)
+
+        return scrollView
+    }
+
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        guard let textView = scrollView.documentView as? NSTextView else { return }
+        textView.string = text
+    }
+}
 
 struct OutputView: View {
     let output: String
@@ -20,15 +54,8 @@ struct OutputView: View {
 
             Divider()
 
-            ScrollView {
-                Text(output.isEmpty ? (isRunning ? "Running..." : "Press Run to execute...") : output)
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundColor(output.isEmpty ? .secondary : .primary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
-                    .textSelection(.enabled)
-            }
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.4))
+            OutputTextView(text: output.isEmpty ? (isRunning ? "Running..." : "Press Run to execute...") : output)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .bottomTrailing) {
                 if isRunning {
                     ProgressView()
