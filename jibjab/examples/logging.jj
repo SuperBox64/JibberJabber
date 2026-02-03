@@ -1,0 +1,11 @@
+@@ Logging Example
+@@ Demonstrates log vs print
+@@
+~>snag{name}::val("JibberJabber")
+~>snag{count}::val(#42)
+
+~>frob{7a3}::emit("This goes to stdout")
+~>spew{b4d}::emit("This goes to the log")
+
+~>spew{b4d}::emit(name)
+~>spew{b4d}::emit(count)
