@@ -216,6 +216,14 @@ public struct ReversePatterns {
             )
         }
 
+        // Go-style: var {name} {type} = {value} but transpiles as {name} := {value}
+        if template.hasPrefix("var ") && template.contains("{type}") && !template.hasSuffix(";") {
+            // Match Go short declaration: x := val
+            return try? NSRegularExpression(
+                pattern: "^(\\w+)\\s*:=\\s*(.+)$"
+            )
+        }
+
         // Type-prefixed: {type} {name} = {value}; (C, C++, ObjC, ObjC++)
         if template.contains("{type}") {
             let types = typeAlternation(target)
