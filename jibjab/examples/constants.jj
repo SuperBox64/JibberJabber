@@ -1,0 +1,20 @@
+@@ Constants Example
+@@ Demonstrates const vs var
+
+@@ Constants are immutable values
+~>grip{f1x}::val(PI, #3.14159)
+~>grip{f1x}::val(MAX_COUNT, #100)
+~>grip{f1x}::val(APP_NAME, "JibberJabber")
+~>grip{f1x}::val(IS_DEBUG, ~yep)
+
+@@ Variables can change
+~>snag{counter}::val(#0)
+
+@@ Print constants
+~>frob{7a3}::emit(PI)
+~>frob{7a3}::emit(MAX_COUNT)
+~>frob{7a3}::emit(APP_NAME)
+~>frob{7a3}::emit(IS_DEBUG)
+
+@@ Print variable
+~>frob{7a3}::emit(counter)
