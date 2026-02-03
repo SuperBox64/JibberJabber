@@ -108,9 +108,9 @@ struct JJEngine {
     private static func runBinary(_ path: String) -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
-        let pipe = Pipe()
+        let outPipe = Pipe()
         let errPipe = Pipe()
-        process.standardOutput = pipe
+        process.standardOutput = outPipe
         process.standardError = errPipe
         do {
             processLock.lock()
@@ -127,18 +127,18 @@ struct JJEngine {
         var errData = Data()
         let errQueue = DispatchQueue(label: "stderr-reader")
         errQueue.async { errData = errPipe.fileHandleForReading.readDataToEndOfFile() }
-        let outData = pipe.fileHandleForReading.readDataToEndOfFile()
+        let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
         errQueue.sync {} // wait for stderr read to finish
         process.waitUntilExit()
         processLock.lock()
         runningProcess = nil
         processLock.unlock()
-        let out = String(data: outData, encoding: .utf8) ?? ""
-        let err = String(data: errData, encoding: .utf8) ?? ""
         if process.terminationReason == .uncaughtSignal {
             return "Stopped"
         }
-        return out + (err.isEmpty ? "" : "\nstderr: \(err)")
+        let out = String(data: outData, encoding: .utf8) ?? ""
+        let err = String(data: errData, encoding: .utf8) ?? ""
+        return (out + err).trimmingCharacters(in: .newlines)
     }
 
     private static func runProcess(_ args: [String]) -> (Bool, String) {
