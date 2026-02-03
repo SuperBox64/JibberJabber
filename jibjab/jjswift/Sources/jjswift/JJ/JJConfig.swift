@@ -17,6 +17,7 @@ public struct JJCoreConfig: Codable {
     public struct Keywords: Codable {
         public let print: String
         public let log: String
+        public let const: String
         public let input: String
         public let yeet: String
         public let kaboom: String
@@ -110,6 +111,9 @@ public struct TargetConfig: Codable {
     public let `var`: String
     public let varInfer: String?
     public let varAuto: String?
+    private let _const: String?
+    private let _constInfer: String?
+    private let _constAuto: String?
     public let forRange: String
     private let _forIn: String?
     public let `while`: String
@@ -226,6 +230,9 @@ public struct TargetConfig: Codable {
 
     enum CodingKeys: String, CodingKey {
         case name, ext, header, `var`, varInfer, varAuto, forRange, `while`, `if`, `else`, `func`, `return`, call, indent, main, compile, run, types
+        case _const = "const"
+        case _constInfer = "constInfer"
+        case _constAuto = "constAuto"
         case _throw = "throw"
         case _print = "print"
         case _printInt = "printInt"
@@ -369,6 +376,9 @@ public struct TargetConfig: Codable {
         `var` = try container.decode(String.self, forKey: .var)
         varInfer = try container.decodeIfPresent(String.self, forKey: .varInfer)
         varAuto = try container.decodeIfPresent(String.self, forKey: .varAuto)
+        _const = try container.decodeIfPresent(String.self, forKey: ._const)
+        _constInfer = try container.decodeIfPresent(String.self, forKey: ._constInfer)
+        _constAuto = try container.decodeIfPresent(String.self, forKey: ._constAuto)
         forRange = try container.decode(String.self, forKey: .forRange)
         _forIn = try container.decodeIfPresent(String.self, forKey: ._forIn)
         `while` = try container.decode(String.self, forKey: .while)
@@ -537,6 +547,9 @@ public struct TargetConfig: Codable {
     public var enumStyle: String { _enumStyle ?? "template" }
     public var collectionStyle: String { _collectionStyle ?? "expand" }
     public var varShort: String? { _varShort }
+    public var const: String { _const ?? `var` }
+    public var constInfer: String? { _constInfer }
+    public var constAuto: String? { _constAuto }
     public var expandBoolAsInt: Bool { _expandBoolAsInt ?? false }
     public var expandStringType: String { _expandStringType ?? stringType }
     public var comment: String { _comment ?? "//" }
@@ -699,6 +712,9 @@ public struct JJEmit {
     public static func log(_ expr: String) -> String {
         "\(JJ.keywords.log)\(JJ.structure.action)\(JJ.syntax.emit)(\(expr))"
     }
+    public static func const(_ name: String, _ val: String) -> String {
+        "\(JJ.keywords.const)\(JJ.structure.action)\(JJ.syntax.val)(\(name), \(val))"
+    }
     public static func snag(_ name: String, _ val: String) -> String {
         "\(JJ.keywords.snag){\(name)}\(JJ.structure.action)\(JJ.syntax.val)(\(val))"
     }
@@ -737,7 +753,7 @@ public struct JJPatterns {
 
     public static var keyword: String {
         let kw = JJ.keywords
-        return [kw.print, kw.log, kw.input, kw.snag, kw.invoke, kw.yeet, kw.kaboom, kw.enum].map { keyword in
+        return [kw.print, kw.log, kw.const, kw.input, kw.snag, kw.invoke, kw.yeet, kw.kaboom, kw.enum].map { keyword in
             if let braceIdx = keyword.firstIndex(of: "{") {
                 return esc(String(keyword[..<braceIdx])) + "\\{[a-zA-Z0-9]*\\}"
             }

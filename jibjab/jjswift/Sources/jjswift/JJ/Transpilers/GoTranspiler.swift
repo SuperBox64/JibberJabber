@@ -103,6 +103,18 @@ public class GoTranspiler: CFamilyTranspiler {
             .replacingOccurrences(of: "{value}", with: expr(node.value))
     }
 
+    override func constDeclToString(_ node: ConstDecl) -> String {
+        let inferredType = inferType(node.value)
+        if inferredType == "Bool" { boolVars.insert(node.name) }
+        else if inferredType == "Int" { intVars.insert(node.name) }
+        else if inferredType == "Double" { doubleVars.insert(node.name) }
+        else if inferredType == "String" { stringVars.insert(node.name) }
+        let tmpl = T.constInfer ?? T.const
+        return ind() + tmpl
+            .replacingOccurrences(of: "{name}", with: node.name)
+            .replacingOccurrences(of: "{value}", with: expr(node.value))
+    }
+
     override func varArrayToString(_ node: VarDecl, _ arr: ArrayLiteral) -> String {
         if let firstElem = arr.elements.first {
             if let nestedArr = firstElem as? ArrayLiteral {

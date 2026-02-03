@@ -20,6 +20,8 @@
   "logBool": "os_log(\"%{public}@\", \"\\({expr})\")",
   "var": "var {name}: {type} = {value}",
   "varInfer": "var {name} = {value}",
+  "const": "let {name}: {type} = {value}",
+  "constInfer": "let {name} = {value}",
   "forRange": "for {var} in {start}..<{end} {",
   "forIn": "for {var} in {collection} {",
   "while": "while {condition} {",

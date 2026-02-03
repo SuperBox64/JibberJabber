@@ -28,6 +28,10 @@ public class JavaScriptTranspiler: Transpiling {
             return ind() + T.var
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
+        } else if let constDecl = node as? ConstDecl {
+            return ind() + T.const
+                .replacingOccurrences(of: "{name}", with: constDecl.name)
+                .replacingOccurrences(of: "{value}", with: expr(constDecl.value))
         } else if let loopStmt = node as? LoopStmt {
             var header: String
             if let start = loopStmt.start, let end = loopStmt.end {

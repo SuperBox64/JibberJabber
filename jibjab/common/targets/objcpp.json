@@ -38,6 +38,8 @@
   "logfInterp": "NSLog(@\"{fmt}\"{args});",
   "var": "{type} {name} = {value};",
   "varAuto": "auto {name} = {value};",
+  "const": "const {type} {name} = {value};",
+  "constAuto": "const auto {name} = {value};",
   "forRange": "for (int {var} = {start}; {var} < {end}; {var}++) {",
   "while": "while ({condition}) {",
   "if": "if ({condition}) {",

@@ -34,6 +34,7 @@
   "logBool": "NSLog(@\"%@\", {expr} ? @\"true\" : @\"false\");",
   "logfInterp": "NSLog(@\"{fmt}\"{args});",
   "var": "{type} {name} = {value};",
+  "const": "const {type} {name} = {value};",
   "forRange": "for (NSInteger {var} = {start}; {var} < {end}; {var}++) {",
   "while": "while ({condition}) {",
   "if": "if ({condition}) {",

@@ -106,6 +106,14 @@ public class SwiftTranspiler: Transpiling {
             return ind() + template
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
+        } else if let constDecl = node as? ConstDecl {
+            if inferType(constDecl.value) == "Double" {
+                doubleVars.insert(constDecl.name)
+            }
+            let template = T.constInfer ?? T.const
+            return ind() + template
+                .replacingOccurrences(of: "{name}", with: constDecl.name)
+                .replacingOccurrences(of: "{value}", with: expr(constDecl.value))
         } else if let loopStmt = node as? LoopStmt {
             var header: String
             if let start = loopStmt.start, let end = loopStmt.end {

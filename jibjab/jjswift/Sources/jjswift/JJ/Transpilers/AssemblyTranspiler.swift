@@ -245,6 +245,9 @@ public class AssemblyTranspiler: Transpiling {
             genPrint(PrintStmt(expr: logStmt.expr))
         } else if let varDecl = node as? VarDecl {
             genVarDecl(varDecl)
+        } else if let constDecl = node as? ConstDecl {
+            // In assembly, constants are stored the same as variables
+            genVarDecl(VarDecl(name: constDecl.name, value: constDecl.value))
         } else if let loopStmt = node as? LoopStmt {
             genLoop(loopStmt)
         } else if let ifStmt = node as? IfStmt {

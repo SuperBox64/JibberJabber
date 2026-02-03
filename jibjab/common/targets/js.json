@@ -13,6 +13,7 @@
   "log": "console.log({expr});",
   "logBool": "console.log({expr});",
   "var": "let {name} = {value};",
+  "const": "const {name} = {value};",
   "forRange": "for (let {var} = {start}; {var} < {end}; {var}++) {",
   "forIn": "for (const {var} of {collection}) {",
   "while": "while ({condition}) {",

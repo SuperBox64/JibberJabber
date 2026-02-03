@@ -20,6 +20,7 @@
   "logInt": "// log: {expr}",
   "logStr": "// log: {expr}",
   "var": "mov {name}, {value}",
+  "const": "mov {name}, {value}",
   "forRange": "mov {var}, {start}\n{label}_loop:\ncmp {var}, {end}\nb.ge {label}_end",
   "forEnd": "add {var}, {var}, #1\nb {label}_loop\n{label}_end:",
   "while": "{label}_loop:\ncmp {condition}\nb.eq {label}_end",

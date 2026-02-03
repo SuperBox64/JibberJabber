@@ -25,6 +25,8 @@
   "logBool": "log.Println({expr})",
   "logDouble": "log.Println({expr})",
   "var": "var {name} {type} = {value}",
+  "const": "const {name} {type} = {value}",
+  "constInfer": "const {name} = {value}",
   "forRange": "for {var} := {start}; {var} < {end}; {var}++ {",
   "while": "for {condition} {",
   "if": "if {condition} {",

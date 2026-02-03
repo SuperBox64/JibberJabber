@@ -24,6 +24,11 @@ public struct VarDecl: ASTNode {
     public let value: ASTNode
 }
 
+public struct ConstDecl: ASTNode {
+    public let name: String
+    public let value: ASTNode
+}
+
 public struct VarRef: ASTNode {
     public let name: String
 }

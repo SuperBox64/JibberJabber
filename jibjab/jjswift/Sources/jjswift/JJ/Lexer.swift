@@ -109,6 +109,10 @@ public class Lexer {
             addToken(.log)
             return
         }
+        if match(JJ.keywords.const) != nil {
+            addToken(.const)
+            return
+        }
         if match(JJ.keywords.input) != nil {
             addToken(.input)
             return
@@ -509,8 +513,8 @@ public class Lexer {
     /// Extract keyword names from jj.json keywords (e.g. "frob" from "~>frob{7a3}", "snag" from "~>snag")
     static func extractKeywordNames() -> [String] {
         let keywords = [
-            JJ.keywords.print, JJ.keywords.input,
-            JJ.keywords.yeet, JJ.keywords.kaboom,
+            JJ.keywords.print, JJ.keywords.log, JJ.keywords.const,
+            JJ.keywords.input, JJ.keywords.yeet, JJ.keywords.kaboom,
             JJ.keywords.snag, JJ.keywords.invoke, JJ.keywords.enum
         ]
         return keywords.compactMap { kw -> String? in

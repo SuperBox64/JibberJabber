@@ -34,6 +34,8 @@ public class Interpreter {
             print(stringify(value))
         } else if let varDecl = node as? VarDecl {
             locals[locals.count - 1][varDecl.name] = try evaluate(varDecl.value)
+        } else if let constDecl = node as? ConstDecl {
+            locals[locals.count - 1][constDecl.name] = try evaluate(constDecl.value)
         } else if let loopStmt = node as? LoopStmt {
             if let startNode = loopStmt.start, let endNode = loopStmt.end {
                 let start = toInt(try evaluate(startNode))

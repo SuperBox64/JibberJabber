@@ -243,6 +243,8 @@ public class CFamilyTranspiler: Transpiling {
             return logStmtToString(logStmt)
         } else if let varDecl = node as? VarDecl {
             return varDeclToString(varDecl)
+        } else if let constDecl = node as? ConstDecl {
+            return constDeclToString(constDecl)
         } else if let loopStmt = node as? LoopStmt {
             return loopToString(loopStmt)
         } else if let ifStmt = node as? IfStmt {
@@ -485,6 +487,23 @@ public class CFamilyTranspiler: Transpiling {
         return ind() + T.printfInterp
             .replacingOccurrences(of: "{fmt}", with: fmtStr)
             .replacingOccurrences(of: "{args}", with: ", \(args)")
+    }
+
+    func constDeclToString(_ node: ConstDecl) -> String {
+        // Constants are simpler - no arrays/dicts/tuples, just simple values
+        let inferredType = inferType(node.value)
+        if inferredType == "Bool" { boolVars.insert(node.name) }
+        else if inferredType == "Int" { intVars.insert(node.name) }
+        else if inferredType == "Double" { doubleVars.insert(node.name) }
+        else if inferredType == "String" { stringVars.insert(node.name) }
+        let varType = getTargetType(inferredType)
+        // For C-family strings that are already const char*, don't double-const
+        // Use var template instead to avoid "const const char*"
+        let template = varType.hasPrefix("const ") ? T.var : T.const
+        return ind() + template
+            .replacingOccurrences(of: "{type}", with: varType)
+            .replacingOccurrences(of: "{name}", with: node.name)
+            .replacingOccurrences(of: "{value}", with: expr(node.value))
     }
 
     func varDeclToString(_ node: VarDecl) -> String {

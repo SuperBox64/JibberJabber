@@ -8,6 +8,7 @@
   "log": "log {expr}",
   "logBool": "log {expr}",
   "var": "set {name} to {value}",
+  "const": "property {name} : {value}",
   "forRange": "repeat with {var} from {start} to ({end} - 1)",
   "forIn": "repeat with {var} in {collection}",
   "while": "repeat while {condition}",

@@ -63,7 +63,8 @@ public class ObjCppTranspiler: ObjCTranspiler {
                 return ind() + coutLine(expr(e))
             }
             if stringVars.contains(varRef.name) {
-                return ind() + coutLine(selectorExpr(expr(e), "str"))
+                // stringVars are const char* — no selector needed
+                return ind() + coutLine(expr(e))
             }
             if boolVars.contains(varRef.name) {
                 return ind() + coutLine("(\(varRef.name) ? \"true\" : \"false\")")

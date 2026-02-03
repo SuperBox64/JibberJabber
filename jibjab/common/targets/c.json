@@ -22,6 +22,7 @@
   "logBool": "fprintf(stderr, \"%s\\n\", {expr} ? \"true\" : \"false\");",
   "logfInterp": "fprintf(stderr, \"{fmt}\\n\"{args});",
   "var": "{type} {name} = {value};",
+  "const": "const {type} {name} = {value};",
   "forRange": "for (int {var} = {start}; {var} < {end}; {var}++) {",
   "while": "while ({condition}) {",
   "if": "if ({condition}) {",

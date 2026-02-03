@@ -91,6 +91,8 @@ public class Parser {
             return try parsePrint()
         case .log:
             return try parseLog()
+        case .const:
+            return try parseConstDecl()
         case .snag:
             return try parseVarDecl()
         case .loop:
@@ -133,6 +135,19 @@ public class Parser {
         let expr = try parseExpression()
         _ = try expect(.rparen)
         return LogStmt(expr: expr)
+    }
+
+    private func parseConstDecl() throws -> ConstDecl {
+        _ = advance() // CONST (~>grip{f1x})
+        _ = try expect(.action)
+        _ = try expect(.val)
+        _ = try expect(.lparen)
+        let nameToken = try expect(.identifier)
+        let name = (nameToken.value as? String) ?? ""
+        _ = try expect(.comma)
+        let value = try parseExpression()
+        _ = try expect(.rparen)
+        return ConstDecl(name: name, value: value)
     }
 
     private func parseVarDecl() throws -> VarDecl {

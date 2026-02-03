@@ -4,6 +4,7 @@
     "print": "~>frob{7a3}",
     "log": "~>spew{b4d}",
     "input": "~>slurp{9f2}",
+    "const": "~>grip{f1x}",
     "yeet": "~>yeet",
     "kaboom": "~>kaboom",
     "snag": "~>snag",
@@ -59,7 +60,8 @@
   "validHashes": {
     "frob": "7a3",
     "slurp": "9f2",
-    "spew": "b4d"
+    "spew": "b4d",
+    "grip": "f1x"
   },
   "tokenSymbols": {
     "action": "::",
