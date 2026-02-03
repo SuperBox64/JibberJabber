@@ -217,7 +217,9 @@ public struct ReversePatterns {
         }
 
         // Go-style: var {name} {type} = {value} but transpiles as {name} := {value}
-        if template.hasPrefix("var ") && template.contains("{type}") && !template.hasSuffix(";") {
+        // Go template has space between name and type: "var {name} {type}"
+        // Swift template has colon: "var {name}: {type}"
+        if template.hasPrefix("var ") && template.contains(" {type}") && !template.contains(": {type}") {
             // Match Go short declaration: x := val
             return try? NSRegularExpression(
                 pattern: "^(\\w+)\\s*:=\\s*(.+)$"
