@@ -108,10 +108,9 @@ struct JJEngine {
     private static func runBinary(_ path: String) -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
-        let outPipe = Pipe()
-        let errPipe = Pipe()
-        process.standardOutput = outPipe
-        process.standardError = errPipe
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe  // merge stderr into stdout
         do {
             processLock.lock()
             runningProcess = process
@@ -123,12 +122,7 @@ struct JJEngine {
             processLock.unlock()
             return "Run error: \(error)"
         }
-        // Read both pipes concurrently to avoid deadlock when output exceeds pipe buffer
-        var errData = Data()
-        let errQueue = DispatchQueue(label: "stderr-reader")
-        errQueue.async { errData = errPipe.fileHandleForReading.readDataToEndOfFile() }
-        let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
-        errQueue.sync {} // wait for stderr read to finish
+        let outData = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
         processLock.lock()
         runningProcess = nil
@@ -136,9 +130,7 @@ struct JJEngine {
         if process.terminationReason == .uncaughtSignal {
             return "Stopped"
         }
-        let out = String(data: outData, encoding: .utf8) ?? ""
-        let err = String(data: errData, encoding: .utf8) ?? ""
-        return (out + err).trimmingCharacters(in: .newlines)
+        return (String(data: outData, encoding: .utf8) ?? "").trimmingCharacters(in: .newlines)
     }
 
     private static func runProcess(_ args: [String]) -> (Bool, String) {
