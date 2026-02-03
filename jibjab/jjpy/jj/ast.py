@@ -23,6 +23,11 @@ class PrintStmt(ASTNode):
 
 
 @dataclass
+class LogStmt(ASTNode):
+    expr: ASTNode
+
+
+@dataclass
 class InputExpr(ASTNode):
     prompt: ASTNode
 

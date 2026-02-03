@@ -14,6 +14,8 @@
   "header": "// Transpiled from JibJab\nimport Foundation\n\nstruct JJError: Error { let message: String }\n",
   "print": "print({expr})",
   "printBool": "print({expr})",
+  "log": "NSLog(\"%@\", \"\\({expr})\")",
+  "logBool": "NSLog(\"%@\", \"\\({expr})\")",
   "var": "var {name}: {type} = {value}",
   "varInfer": "var {name} = {value}",
   "forRange": "for {var} in {start}..<{end} {",

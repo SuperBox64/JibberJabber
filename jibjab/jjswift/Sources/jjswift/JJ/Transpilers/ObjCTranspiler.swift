@@ -331,6 +331,46 @@ public class ObjCTranspiler: CFamilyTranspiler {
             .replacingOccurrences(of: "{args}", with: ", \(args)")
     }
 
+    // MARK: - Log statement (NSLog)
+
+    override func logStmtToString(_ node: LogStmt) -> String {
+        let e = node.expr
+        if let interp = e as? StringInterpolation {
+            var fmt = ""
+            var args: [String] = []
+            for part in interp.parts {
+                switch part {
+                case .literal(let text): fmt += escapeString(text)
+                case .variable(let name):
+                    fmt += interpFormatSpecifier(name)
+                    args.append(interpVarExpr(name))
+                }
+            }
+            let argStr = args.isEmpty ? "" : ", " + args.joined(separator: ", ")
+            return ind() + T.logfInterp
+                .replacingOccurrences(of: "{fmt}", with: fmt)
+                .replacingOccurrences(of: "{args}", with: argStr)
+        }
+        if let lit = e as? Literal, lit.value is String {
+            return ind() + T.logStr.replacingOccurrences(of: "{expr}", with: "@\(expr(e))")
+        }
+        if let varRef = e as? VarRef {
+            if stringVars.contains(varRef.name) {
+                return ind() + T.logStr.replacingOccurrences(of: "{expr}", with: expr(e))
+            }
+            if doubleVars.contains(varRef.name) {
+                return ind() + T.logFloat.replacingOccurrences(of: "{expr}", with: expr(e))
+            }
+            if boolVars.contains(varRef.name) {
+                return ind() + T.logBool.replacingOccurrences(of: "{expr}", with: expr(e))
+            }
+            if intVars.contains(varRef.name) {
+                return ind() + T.logInt.replacingOccurrences(of: "{expr}", with: expr(e))
+            }
+        }
+        return super.logStmtToString(node)
+    }
+
     // MARK: - ObjC helpers
 
     /// Box a string expression (e.g. @"hello")

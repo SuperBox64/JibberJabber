@@ -129,6 +129,7 @@ public class PythonReverseTranspiler: ReverseTranspiling {
     private static let throwRegex = ReversePatterns.throwPattern(pyTarget)
     private static let commentRegex = ReversePatterns.commentPattern(pyTarget)
 
+    private static let logRegexPy = ReversePatterns.logPattern(pyTarget)
     private static let printBoolRegex = ReversePatterns.pythonPrintBoolPattern(pyTarget)
     private static let fstringBoolRegex = ReversePatterns.pythonFStringBoolPattern(pyTarget)
 
@@ -249,6 +250,9 @@ public class PythonReverseTranspiler: ReverseTranspiling {
             } else if let m = Self.throwRegex?.firstMatch(in: trimmed, range: range) {
                 let val = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(jjIndent(indentLevel))\(JJEmit.kaboom(reverseFuncCalls(val, target: target)))")
+            } else if let m = Self.logRegexPy?.firstMatch(in: trimmed, range: range) {
+                let expr = reverseExpr(nsLine.substring(with: m.range(at: 1)))
+                result.append("\(jjIndent(indentLevel))\(JJEmit.log(reverseFuncCalls(expr, target: target)))")
             } else if let m = Self.printRegex?.firstMatch(in: trimmed, range: range) {
                 let expr = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(jjIndent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, target: target)))")
@@ -341,6 +345,7 @@ open class BraceReverseTranspiler: ReverseTranspiling {
         public var hasMainWrapper: Bool
         public var mainPattern: String
         public var printPattern: NSRegularExpression?
+        public var logPattern: NSRegularExpression?
         public var varPattern: NSRegularExpression?
         public var forPattern: NSRegularExpression?
         public var ifPattern: NSRegularExpression?
@@ -365,6 +370,7 @@ open class BraceReverseTranspiler: ReverseTranspiling {
             self.hasMainWrapper = target.main != nil
             self.mainPattern = ReversePatterns.mainSignature(target) ?? ""
             self.printPattern = ReversePatterns.printPattern(target)
+            self.logPattern = ReversePatterns.logPattern(target)
             self.varPattern = ReversePatterns.varPattern(target)
             self.forPattern = ReversePatterns.forPattern(target)
             self.ifPattern = ReversePatterns.ifPattern(target)
@@ -582,6 +588,18 @@ open class BraceReverseTranspiler: ReverseTranspiling {
                 val = reverseExpr(val)
                 result.append("\(jjIndent(indentLevel))\(JJEmit.kaboom(reverseFuncCalls(val, target: config.target)))")
                 continue
+            }
+
+            // Log (must be before Print to avoid false matches)
+            if let m = config.logPattern?.firstMatch(in: trimmed, range: range) {
+                let captureRange1 = m.range(at: 1)
+                if captureRange1.location != NSNotFound {
+                    var captured = nsLine.substring(with: captureRange1)
+                    if captured.hasSuffix(";") { captured = String(captured.dropLast()) }
+                    let expr = reverseExpr(captured)
+                    result.append("\(jjIndent(indentLevel))\(JJEmit.log(reverseFuncCalls(expr, target: config.target)))")
+                    continue
+                }
             }
 
             // Print

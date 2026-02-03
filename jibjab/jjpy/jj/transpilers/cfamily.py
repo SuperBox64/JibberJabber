@@ -6,7 +6,7 @@ Subclasses override specific methods for target-specific behavior.
 
 from ..lexer import load_target_config
 from ..ast import (
-    ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
+    ASTNode, Program, PrintStmt, LogStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
     EnumDef, StringInterpolation
@@ -123,6 +123,8 @@ class CFamilyTranspiler:
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
             return self._print_stmt(node)
+        elif isinstance(node, LogStmt):
+            return self._log_stmt(node)
         elif isinstance(node, VarDecl):
             return self._var_decl(node)
         elif isinstance(node, LoopStmt):
@@ -238,6 +240,36 @@ class CFamilyTranspiler:
         if self.is_float_expr(expr_node):
             return self.ind() + self.T['printFloat'].replace('{expr}', self.expr(expr_node))
         return self.ind() + self.T['printInt'].replace('{expr}', self.expr(expr_node))
+
+    def _log_stmt(self, node: LogStmt) -> str:
+        """Log statement. Override for different log mechanisms."""
+        expr_node = node.expr
+        if isinstance(expr_node, StringInterpolation):
+            fmt = ''
+            args = []
+            for kind, text in expr_node.parts:
+                if kind == 'literal':
+                    fmt += text
+                else:
+                    fmt += self._interp_format_specifier(text)
+                    args.append(self._interp_var_expr(text))
+            arg_str = '' if not args else ', ' + ', '.join(args)
+            tmpl = self.T.get('logfInterp', '')
+            if tmpl:
+                return self.ind() + tmpl.replace('{fmt}', fmt).replace('{args}', arg_str)
+            return self.ind() + self.T.get('logInt', '').replace('{expr}', self.expr(expr_node))
+        if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
+            return self.ind() + self.T.get('logStr', '').replace('{expr}', self.expr(expr_node))
+        if isinstance(expr_node, VarRef):
+            if expr_node.name in self.double_vars:
+                return self.ind() + self.T.get('logFloat', '').replace('{expr}', self.expr(expr_node))
+            if expr_node.name in self.string_vars:
+                return self.ind() + self.T.get('logStr', '').replace('{expr}', self.expr(expr_node))
+            if expr_node.name in self.bool_vars:
+                return self.ind() + self.T.get('logBool', self.T.get('logInt', '')).replace('{expr}', self.expr(expr_node))
+        if self.is_float_expr(expr_node):
+            return self.ind() + self.T.get('logFloat', '').replace('{expr}', self.expr(expr_node))
+        return self.ind() + self.T.get('logInt', '').replace('{expr}', self.expr(expr_node))
 
     def _print_enum_type(self, name: str) -> str:
         """Print an enum type name. Override per target."""

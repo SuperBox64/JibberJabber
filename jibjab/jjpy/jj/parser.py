@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from .lexer import Lexer, Token, TokenType, JJ
 from .ast import (
-    ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
+    ASTNode, Program, PrintStmt, LogStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, EnumDef, ArrayLiteral, DictLiteral, TupleLiteral,
     IndexAccess, StringInterpolation
@@ -88,6 +88,8 @@ class Parser:
     def parse_statement(self) -> Optional[ASTNode]:
         if self.peek().type == TokenType.PRINT:
             return self.parse_print()
+        if self.peek().type == TokenType.LOG:
+            return self.parse_log()
         if self.peek().type == TokenType.SNAG:
             return self.parse_var_decl()
         if self.peek().type == TokenType.LOOP:
@@ -114,6 +116,15 @@ class Parser:
         expr = self.parse_expression()
         self.expect(TokenType.RPAREN)
         return PrintStmt(expr)
+
+    def parse_log(self) -> LogStmt:
+        self.advance()  # LOG
+        self.expect(TokenType.ACTION)
+        self.expect(TokenType.EMIT)
+        self.expect(TokenType.LPAREN)
+        expr = self.parse_expression()
+        self.expect(TokenType.RPAREN)
+        return LogStmt(expr)
 
     def parse_var_decl(self) -> VarDecl:
         self.advance()  # SNAG

@@ -148,6 +148,33 @@ public class CppTranspiler: CFamilyTranspiler {
         return ind() + coutExprStr + T.coutEndl
     }
 
+    // MARK: - Log (cerr) override for interpolation
+
+    override func logStmtToString(_ node: LogStmt) -> String {
+        let e = node.expr
+        // Handle string interpolation with cerr
+        if let interp = e as? StringInterpolation {
+            var parts: [String] = []
+            for part in interp.parts {
+                switch part {
+                case .literal(let text): parts.append("\"\(escapeString(text))\"")
+                case .variable(let name):
+                    if let enumName = enumVarTypes[name] {
+                        parts.append("\(enumName)_names[static_cast<int>(\(name))]")
+                    } else if boolVars.contains(name) {
+                        let (trueStr, falseStr) = boolDisplayStrings
+                        parts.append("(\(name) ? \"\(trueStr)\" : \"\(falseStr)\")")
+                    } else {
+                        parts.append(name)
+                    }
+                }
+            }
+            let cerrExprStr = T.cerrExpr.replacingOccurrences(of: "{expr}", with: parts.joined(separator: T.cerrSep))
+            return ind() + cerrExprStr + T.cerrEndl
+        }
+        return super.logStmtToString(node)
+    }
+
     // MARK: - Cout helpers
 
     /// cout with expression and endl

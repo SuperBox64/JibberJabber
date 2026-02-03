@@ -41,6 +41,8 @@ public class AppleScriptTranspiler: Transpiling {
                 return lines.joined(separator: "\n")
             }
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
+        } else if let logStmt = node as? LogStmt {
+            return ind() + T.log.replacingOccurrences(of: "{expr}", with: expr(logStmt.expr))
         } else if let varDecl = node as? VarDecl {
             if varDecl.value is DictLiteral {
                 dictVars.insert(varDecl.name)

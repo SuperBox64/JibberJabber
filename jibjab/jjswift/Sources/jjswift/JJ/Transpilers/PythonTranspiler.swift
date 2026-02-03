@@ -26,6 +26,11 @@ public class PythonTranspiler: Transpiling {
                 return ind() + T.printBool.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
             }
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
+        } else if let logStmt = node as? LogStmt {
+            if let varRef = logStmt.expr as? VarRef, boolVars.contains(varRef.name) {
+                return ind() + T.logBool.replacingOccurrences(of: "{expr}", with: expr(logStmt.expr))
+            }
+            return ind() + T.log.replacingOccurrences(of: "{expr}", with: expr(logStmt.expr))
         } else if let varDecl = node as? VarDecl {
             if let lit = varDecl.value as? Literal, lit.value is Bool {
                 boolVars.insert(varDecl.name)

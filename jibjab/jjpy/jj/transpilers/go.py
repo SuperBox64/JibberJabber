@@ -8,7 +8,7 @@ Tuples: stored as numbered variables (_0, _1, _2)
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, PrintStmt, FuncDef, EnumDef, Program, StringInterpolation,
+    IndexAccess, PrintStmt, LogStmt, FuncDef, EnumDef, Program, StringInterpolation,
     TryStmt
 )
 from .cfamily import CFamilyTranspiler, infer_type

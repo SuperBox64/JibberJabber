@@ -17,6 +17,8 @@
   "header": "// Transpiled from JibJab\n.global _main\n.align 4\n",
   "printInt": "mov x0, {expr}\nbl _print_int",
   "printStr": "adrp x0, {expr}@PAGE\nadd x0, x0, {expr}@PAGEOFF\nbl _puts",
+  "logInt": "// log: {expr}",
+  "logStr": "// log: {expr}",
   "var": "mov {name}, {value}",
   "forRange": "mov {var}, {start}\n{label}_loop:\ncmp {var}, {end}\nb.ge {label}_end",
   "forEnd": "add {var}, {var}, #1\nb {label}_loop\n{label}_end:",

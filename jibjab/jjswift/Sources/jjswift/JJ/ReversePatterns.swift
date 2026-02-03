@@ -131,6 +131,58 @@ public struct ReversePatterns {
         )
     }
 
+    // MARK: - Log Pattern
+
+    /// Generates a regex to match log statements from the target's log templates.
+    /// Captures the expression being logged.
+    public static func logPattern(_ target: TargetConfig) -> NSRegularExpression? {
+        let template = target.logInt
+        if template.isEmpty { return nil }
+
+        // NSLog-style: NSLog(@"%ld", (long)expr); or NSLog(@"%@", expr);
+        if template.contains("NSLog") {
+            return try? NSRegularExpression(
+                pattern: #"^NSLog\(@"%[a-z@]*"(?:\\n)?,\s*(?:\(long\))?(.+)\);$"#
+            )
+        }
+
+        // fprintf(stderr, ...)-style: fprintf(stderr, "%d\n", expr);
+        if template.contains("fprintf(stderr") {
+            return try? NSRegularExpression(
+                pattern: #"^fprintf\(stderr,\s*"%[a-z]*\\n",\s*(?:\(long\))?(.+)\);$"#
+            )
+        }
+
+        // cerr-style: std::cerr << expr << std::endl;
+        if template.contains("std::cerr") {
+            return try? NSRegularExpression(
+                pattern: "^std::cerr\\s*<<\\s*(.+?)\\s*<<\\s*std::endl;$"
+            )
+        }
+
+        // log.Println-style (Go)
+        if template.contains("log.Println") {
+            return try? NSRegularExpression(pattern: "^log\\.Println\\((.+)\\)$")
+        }
+
+        // console.warn-style (JavaScript)
+        if template.contains("console.warn") {
+            return try? NSRegularExpression(pattern: "^console\\.warn\\((.+)\\);$")
+        }
+
+        // logging.warning-style (Python)
+        if template.contains("logging.warning") || template.contains("logging.info") {
+            return try? NSRegularExpression(pattern: "^(?:import logging; )?logging\\.(?:warning|info)\\((.+)\\)$")
+        }
+
+        // Comment-only log (ASM): // log: expr
+        if template.hasPrefix("// log:") {
+            return try? NSRegularExpression(pattern: "^// log:\\s*(.+)$")
+        }
+
+        return nil
+    }
+
     // MARK: - Variable Pattern
 
     /// Generates a regex to match variable declarations from the target's var template.
@@ -465,8 +517,9 @@ public struct ReversePatterns {
     public static func knownFunctions(_ target: TargetConfig) -> Set<String> {
         var funcs = Set<String>()
 
-        // Extract function names from print templates
-        for template in [target.print, target.printInt, target.printStr, target.printBool] {
+        // Extract function names from print and log templates
+        for template in [target.print, target.printInt, target.printStr, target.printBool,
+                         target.log, target.logInt, target.logStr] {
             if let dotIdx = template.firstIndex(of: ".") {
                 let prefix = String(template[..<dotIdx])
                 if !prefix.contains("{") { funcs.insert(prefix) }

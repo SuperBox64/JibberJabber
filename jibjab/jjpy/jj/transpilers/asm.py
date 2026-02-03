@@ -5,7 +5,7 @@ Uses emit values from common/jj.json
 
 from ..lexer import JJ, load_target_config
 from ..ast import (
-    ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
+    ASTNode, Program, PrintStmt, LogStmt, VarDecl, VarRef, Literal,
     BinaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall, ReturnStmt, ThrowStmt,
     EnumDef, ArrayLiteral, IndexAccess, TupleLiteral, DictLiteral,
     UnaryOp, StringInterpolation
@@ -208,6 +208,8 @@ class AssemblyTranspiler:
     def gen_stmt(self, node: ASTNode):
         if isinstance(node, PrintStmt):
             self.gen_print(node)
+        elif isinstance(node, LogStmt):
+            self.asm_lines.append('    // log statement (not supported in assembly)')
         elif isinstance(node, VarDecl):
             self.gen_var_decl(node)
         elif isinstance(node, LoopStmt):

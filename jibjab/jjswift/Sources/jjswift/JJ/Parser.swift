@@ -89,6 +89,8 @@ public class Parser {
         switch peek().type {
         case .print:
             return try parsePrint()
+        case .log:
+            return try parseLog()
         case .snag:
             return try parseVarDecl()
         case .loop:
@@ -121,6 +123,16 @@ public class Parser {
         let expr = try parseExpression()
         _ = try expect(.rparen)
         return PrintStmt(expr: expr)
+    }
+
+    private func parseLog() throws -> LogStmt {
+        _ = advance() // LOG
+        _ = try expect(.action)
+        _ = try expect(.emit)
+        _ = try expect(.lparen)
+        let expr = try parseExpression()
+        _ = try expect(.rparen)
+        return LogStmt(expr: expr)
     }
 
     private func parseVarDecl() throws -> VarDecl {

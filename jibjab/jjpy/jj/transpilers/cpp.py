@@ -10,7 +10,7 @@ Tuples: stored as numbered variables (_0, _1, _2) with cout for printing
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, PrintStmt, EnumDef
+    IndexAccess, PrintStmt, LogStmt, EnumDef, StringInterpolation
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -160,6 +160,30 @@ class CppTranspiler(CFamilyTranspiler):
 
     def _cout_inline(self, e: str) -> str:
         return self.T.get('coutInline', 'std::cout << {expr};').replace('{expr}', e)
+
+    def _cerr_line(self, e: str) -> str:
+        return self.T.get('cerrNewline', 'std::cerr << {expr} << std::endl;').replace('{expr}', e)
+
+    def _log_stmt(self, node: LogStmt) -> str:
+        expr_node = node.expr
+        if isinstance(expr_node, StringInterpolation):
+            parts = []
+            for kind, text in expr_node.parts:
+                if kind == 'literal':
+                    parts.append(f'"{text}"')
+                else:
+                    if text in self.enum_var_types:
+                        enum_name = self.enum_var_types[text]
+                        parts.append(f'{enum_name}_names[static_cast<int>({text})]')
+                    elif text in self.bool_vars:
+                        parts.append(f'({text} ? "true" : "false")')
+                    else:
+                        parts.append(text)
+            sep = self.T.get('cerrSep', ' << ')
+            cerr_expr = self.T.get('cerrExpr', 'std::cerr << {expr}').replace('{expr}', sep.join(parts))
+            endl = self.T.get('cerrEndl', ' << std::endl;')
+            return self.ind() + cerr_expr + endl
+        return super()._log_stmt(node)
 
     def _print_stmt(self, node: PrintStmt) -> str:
         expr_node = node.expr

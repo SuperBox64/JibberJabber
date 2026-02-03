@@ -9,7 +9,7 @@ Enums: NS_ENUM (typedef)
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, EnumDef, PrintStmt, FuncDef, StringInterpolation
+    IndexAccess, EnumDef, PrintStmt, LogStmt, FuncDef, StringInterpolation
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -83,6 +83,38 @@ class ObjCTranspiler(CFamilyTranspiler):
             'bool': self.T.get('printBool', self.T.get('printInt', '')),
         }
         return m.get(typ, self.T.get('printInt', ''))
+
+    # MARK: - Log statement (NSLog)
+
+    def _log_stmt(self, node: LogStmt) -> str:
+        expr_node = node.expr
+        tmpl = self.T.get('logfInterp', 'NSLog(@"{fmt}"{args});')
+        if isinstance(expr_node, StringInterpolation):
+            fmt = ''
+            args = []
+            for kind, text in expr_node.parts:
+                if kind == 'literal':
+                    fmt += text
+                else:
+                    fmt += self._interp_format_specifier(text)
+                    args.append(self._interp_var_expr(text))
+            arg_str = '' if not args else ', ' + ', '.join(args)
+            return self.ind() + tmpl.replace('{fmt}', fmt).replace('{args}', arg_str)
+        if isinstance(expr_node, Literal) and isinstance(expr_node.value, str):
+            return self.ind() + self.T.get('logStr', 'NSLog(@"%@", {expr});').replace('{expr}', f'@{self.expr(expr_node)}')
+        if isinstance(expr_node, VarRef):
+            if expr_node.name in self.enum_var_types:
+                enum_name = self.enum_var_types[expr_node.name]
+                return self.ind() + self.T.get('logStr', 'NSLog(@"%@", {expr});').replace('{expr}', f'{enum_name}_names[{expr_node.name}]')
+            if expr_node.name in self.double_vars:
+                return self.ind() + self.T.get('logFloat', self.T.get('logDouble', 'NSLog(@"%f", {expr});')).replace('{expr}', self.expr(expr_node))
+            if expr_node.name in self.string_vars:
+                return self.ind() + self.T.get('logStr', 'NSLog(@"%@", {expr});').replace('{expr}', self.expr(expr_node))
+            if expr_node.name in self.bool_vars:
+                return self.ind() + self.T.get('logBool', 'NSLog(@"%@", {expr} ? @"true" : @"false");').replace('{expr}', self.expr(expr_node))
+            if expr_node.name in self.int_vars:
+                return self.ind() + self.T.get('logInt', 'NSLog(@"%ld", (long){expr});').replace('{expr}', self.expr(expr_node))
+        return super()._log_stmt(node)
 
     # MARK: - Print statement
 

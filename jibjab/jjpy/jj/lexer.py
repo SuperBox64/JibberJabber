@@ -14,6 +14,7 @@ from enum import Enum, auto
 class TokenType(Enum):
     # Keywords
     PRINT = auto()
+    LOG = auto()
     INPUT = auto()
     LOOP = auto()
     WHEN = auto()
@@ -248,6 +249,9 @@ class Lexer:
         # Keywords
         if self.match(JJ['keywords']['print']):
             self.add_token(TokenType.PRINT)
+            return
+        if self.match(JJ['keywords']['log']):
+            self.add_token(TokenType.LOG)
             return
         if self.match(JJ['keywords']['input']):
             self.add_token(TokenType.INPUT)

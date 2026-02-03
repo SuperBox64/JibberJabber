@@ -5,7 +5,7 @@ Uses shared config from common/jj.json
 
 from ..lexer import JJ, load_target_config
 from ..ast import (
-    ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
+    ASTNode, Program, PrintStmt, LogStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
     EnumDef, StringInterpolation
@@ -75,6 +75,8 @@ class AppleScriptTranspiler:
                 ]
                 return '\n'.join(lines)
             return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
+        elif isinstance(node, LogStmt):
+            return self.ind() + T['log'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
             if isinstance(node.value, Literal) and isinstance(node.value.value, bool):
                 self.bool_vars.add(node.name)

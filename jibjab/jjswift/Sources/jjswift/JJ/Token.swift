@@ -3,6 +3,7 @@
 public enum TokenType {
     // Keywords
     case print      // ~>frob{7a3}
+    case log        // ~>spew{b4d}
     case input      // ~>slurp{9f2}
     case loop       // <~loop{...}>>
     case when       // <~when{...}>>

@@ -16,6 +16,7 @@ public struct JJCoreConfig: Codable {
 
     public struct Keywords: Codable {
         public let print: String
+        public let log: String
         public let input: String
         public let yeet: String
         public let kaboom: String
@@ -94,6 +95,18 @@ public struct TargetConfig: Codable {
     private let _printFloat: String?
     private let _printDouble: String?
     private let _printBool: String?
+    private let _log: String?
+    private let _logInt: String?
+    private let _logStr: String?
+    private let _logFloat: String?
+    private let _logDouble: String?
+    private let _logBool: String?
+    private let _logfInterp: String?
+    private let _cerrExpr: String?
+    private let _cerrEndl: String?
+    private let _cerrSep: String?
+    private let _cerrNewline: String?
+    private let _cerrInline: String?
     public let `var`: String
     public let varInfer: String?
     public let varAuto: String?
@@ -218,6 +231,18 @@ public struct TargetConfig: Codable {
         case _printFloat = "printFloat"
         case _printDouble = "printDouble"
         case _printBool = "printBool"
+        case _log = "log"
+        case _logInt = "logInt"
+        case _logStr = "logStr"
+        case _logFloat = "logFloat"
+        case _logDouble = "logDouble"
+        case _logBool = "logBool"
+        case _logfInterp = "logfInterp"
+        case _cerrExpr = "cerrExpr"
+        case _cerrEndl = "cerrEndl"
+        case _cerrSep = "cerrSep"
+        case _cerrNewline = "cerrNewline"
+        case _cerrInline = "cerrInline"
         case _forIn = "forIn"
         case _funcDecl = "funcDecl"
         case _blockEnd = "blockEnd"
@@ -325,6 +350,18 @@ public struct TargetConfig: Codable {
         _printFloat = try container.decodeIfPresent(String.self, forKey: ._printFloat)
         _printDouble = try container.decodeIfPresent(String.self, forKey: ._printDouble)
         _printBool = try container.decodeIfPresent(String.self, forKey: ._printBool)
+        _log = try container.decodeIfPresent(String.self, forKey: ._log)
+        _logInt = try container.decodeIfPresent(String.self, forKey: ._logInt)
+        _logStr = try container.decodeIfPresent(String.self, forKey: ._logStr)
+        _logFloat = try container.decodeIfPresent(String.self, forKey: ._logFloat)
+        _logDouble = try container.decodeIfPresent(String.self, forKey: ._logDouble)
+        _logBool = try container.decodeIfPresent(String.self, forKey: ._logBool)
+        _logfInterp = try container.decodeIfPresent(String.self, forKey: ._logfInterp)
+        _cerrExpr = try container.decodeIfPresent(String.self, forKey: ._cerrExpr)
+        _cerrEndl = try container.decodeIfPresent(String.self, forKey: ._cerrEndl)
+        _cerrSep = try container.decodeIfPresent(String.self, forKey: ._cerrSep)
+        _cerrNewline = try container.decodeIfPresent(String.self, forKey: ._cerrNewline)
+        _cerrInline = try container.decodeIfPresent(String.self, forKey: ._cerrInline)
         `var` = try container.decode(String.self, forKey: .var)
         varInfer = try container.decodeIfPresent(String.self, forKey: .varInfer)
         varAuto = try container.decodeIfPresent(String.self, forKey: .varAuto)
@@ -457,6 +494,18 @@ public struct TargetConfig: Codable {
     public var printFloat: String { _printFloat ?? _printInt ?? "" }
     public var printDouble: String { _printDouble ?? _printInt ?? "" }
     public var printBool: String { _printBool ?? _print ?? printInt }
+    public var log: String { _log ?? _logInt ?? "" }
+    public var logInt: String { _logInt ?? _log ?? "" }
+    public var logStr: String { _logStr ?? _log ?? "" }
+    public var logFloat: String { _logFloat ?? _logInt ?? "" }
+    public var logDouble: String { _logDouble ?? _logInt ?? "" }
+    public var logBool: String { _logBool ?? _log ?? logInt }
+    public var logfInterp: String { _logfInterp ?? "" }
+    public var cerrExpr: String { _cerrExpr ?? "" }
+    public var cerrEndl: String { _cerrEndl ?? "" }
+    public var cerrSep: String { _cerrSep ?? "" }
+    public var cerrNewline: String { _cerrNewline ?? "" }
+    public var cerrInline: String { _cerrInline ?? "" }
     public var forIn: String { _forIn ?? forRange }
     public var funcDecl: String { _funcDecl ?? `func` }
     public var blockEnd: String { _blockEnd ?? "" }
@@ -638,6 +687,9 @@ public func escapeString(_ s: String) -> String {
 public struct JJEmit {
     public static func print(_ expr: String) -> String {
         "\(JJ.keywords.print)\(JJ.structure.action)\(JJ.syntax.emit)(\(expr))"
+    }
+    public static func log(_ expr: String) -> String {
+        "\(JJ.keywords.log)\(JJ.structure.action)\(JJ.syntax.emit)(\(expr))"
     }
     public static func snag(_ name: String, _ val: String) -> String {
         "\(JJ.keywords.snag){\(name)}\(JJ.structure.action)\(JJ.syntax.val)(\(val))"

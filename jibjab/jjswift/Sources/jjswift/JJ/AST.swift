@@ -11,6 +11,10 @@ public struct PrintStmt: ASTNode {
     public let expr: ASTNode
 }
 
+public struct LogStmt: ASTNode {
+    public let expr: ASTNode
+}
+
 public struct InputExpr: ASTNode {
     public let prompt: ASTNode
 }

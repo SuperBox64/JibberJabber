@@ -5,7 +5,7 @@ Uses shared config from common/jj.json
 
 from ..lexer import JJ, load_target_config
 from ..ast import (
-    ASTNode, Program, PrintStmt, VarDecl, VarRef, Literal,
+    ASTNode, Program, PrintStmt, LogStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
     EnumDef, StringInterpolation
@@ -35,6 +35,8 @@ class JavaScriptTranspiler:
             if isinstance(node.expr, VarRef) and node.expr.name in self.bool_vars:
                 return self.ind() + T.get('printBool', T['print']).replace('{expr}', self.expr(node.expr))
             return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
+        elif isinstance(node, LogStmt):
+            return self.ind() + T['log'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
             if isinstance(node.value, Literal) and isinstance(node.value.value, bool):
                 self.bool_vars.add(node.name)

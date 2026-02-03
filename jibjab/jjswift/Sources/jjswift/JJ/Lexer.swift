@@ -105,6 +105,10 @@ public class Lexer {
             addToken(.print)
             return
         }
+        if match(JJ.keywords.log) != nil {
+            addToken(.log)
+            return
+        }
         if match(JJ.keywords.input) != nil {
             addToken(.input)
             return

@@ -22,6 +22,8 @@ public class JavaScriptTranspiler: Transpiling {
     private func stmtToString(_ node: ASTNode) -> String {
         if let printStmt = node as? PrintStmt {
             return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
+        } else if let logStmt = node as? LogStmt {
+            return ind() + T.log.replacingOccurrences(of: "{expr}", with: expr(logStmt.expr))
         } else if let varDecl = node as? VarDecl {
             return ind() + T.var
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
