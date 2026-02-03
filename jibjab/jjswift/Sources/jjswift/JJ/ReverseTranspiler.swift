@@ -346,6 +346,7 @@ open class BraceReverseTranspiler: ReverseTranspiling {
         public var mainPattern: String
         public var printPattern: NSRegularExpression?
         public var logPattern: NSRegularExpression?
+        public var constPattern: NSRegularExpression?
         public var varPattern: NSRegularExpression?
         public var forPattern: NSRegularExpression?
         public var ifPattern: NSRegularExpression?
@@ -371,6 +372,7 @@ open class BraceReverseTranspiler: ReverseTranspiling {
             self.mainPattern = ReversePatterns.mainSignature(target) ?? ""
             self.printPattern = ReversePatterns.printPattern(target)
             self.logPattern = ReversePatterns.logPattern(target)
+            self.constPattern = ReversePatterns.constPattern(target)
             self.varPattern = ReversePatterns.varPattern(target)
             self.forPattern = ReversePatterns.forPattern(target)
             self.ifPattern = ReversePatterns.ifPattern(target)
@@ -617,6 +619,16 @@ open class BraceReverseTranspiler: ReverseTranspiling {
                 }
                 let expr = reverseExpr(captured)
                 result.append("\(jjIndent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, target: config.target)))")
+                continue
+            }
+
+            // Const declaration (must check before var)
+            if let m = config.constPattern?.firstMatch(in: trimmed, range: range) {
+                let name = nsLine.substring(with: m.range(at: 1))
+                var val = nsLine.substring(with: m.range(at: 2))
+                if val.hasSuffix(";") { val = String(val.dropLast()) }
+                val = reverseExpr(val)
+                result.append("\(jjIndent(indentLevel))\(JJEmit.const(name, reverseFuncCalls(val, target: config.target)))")
                 continue
             }
 
@@ -1194,6 +1206,7 @@ public class AppleScriptReverseTranspiler: ReverseTranspiling {
 
     private static let asTarget = loadTarget("applescript")
     private static let logRegex = ReversePatterns.printPattern(asTarget)
+    private static let constRegex = ReversePatterns.constPattern(asTarget)
     private static let setRegex = ReversePatterns.varPattern(asTarget)
     private static let repeatRegex = ReversePatterns.forPattern(asTarget)
     private static let ifRegex = ReversePatterns.ifPattern(asTarget)
@@ -1286,6 +1299,10 @@ public class AppleScriptReverseTranspiler: ReverseTranspiling {
             } else if let m = Self.logRegex?.firstMatch(in: trimmed, range: range) {
                 let expr = reverseExpr(nsLine.substring(with: m.range(at: 1)))
                 result.append("\(jjIndent(indentLevel))\(JJEmit.print(reverseFuncCalls(expr, target: target)))")
+            } else if let m = Self.constRegex?.firstMatch(in: trimmed, range: range) {
+                let name = nsLine.substring(with: m.range(at: 1))
+                let val = reverseExpr(nsLine.substring(with: m.range(at: 2)))
+                result.append("\(jjIndent(indentLevel))\(JJEmit.const(name, reverseFuncCalls(val, target: target)))")
             } else if let m = Self.setRegex?.firstMatch(in: trimmed, range: range) {
                 let name = nsLine.substring(with: m.range(at: 1))
                 let val = reverseExpr(nsLine.substring(with: m.range(at: 2)))

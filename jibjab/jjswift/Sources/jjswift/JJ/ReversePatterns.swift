@@ -195,6 +195,52 @@ public struct ReversePatterns {
         return nil
     }
 
+    // MARK: - Const Pattern
+
+    /// Generates a regex to match const declarations from the target's const template.
+    /// Capture group 1 = name, capture group 2 = value.
+    public static func constPattern(_ target: TargetConfig) -> NSRegularExpression? {
+        let template = target.const
+
+        // Python-style: same as var (no const keyword)
+        if template == "{name} = {value}" {
+            return nil // No separate const pattern for Python
+        }
+
+        // AppleScript: property {name} : {value}
+        if template.hasPrefix("property ") {
+            return try? NSRegularExpression(
+                pattern: "^property\\s+(\\w+)\\s*:\\s*(.+)$"
+            )
+        }
+
+        // Swift: let {name} = {value} or let {name}: {type} = {value}
+        if template.hasPrefix("let ") {
+            let types = typeAlternation(target)
+            return try? NSRegularExpression(
+                pattern: "^let\\s+(\\w+)(?:\\s*:\\s*\(types))?\\s*=\\s*(.+)$"
+            )
+        }
+
+        // JS/Go: const {name} = {value}
+        if template.hasPrefix("const ") && !template.contains("{type}") {
+            return try? NSRegularExpression(
+                pattern: "^const\\s+(\\w+)(?:\\s+\\w+)?\\s*=\\s*(.+)$"
+            )
+        }
+
+        // C-family: const {type} {name} = {value};
+        if template.contains("{type}") && template.contains("const") {
+            let types = typeAlternation(target)
+            let hasSemicolon = template.hasSuffix(";")
+            return try? NSRegularExpression(
+                pattern: "^const\\s+\(types)\\s+(\\w+)\\s*=\\s*(.+?)\(hasSemicolon ? ";" : "")$"
+            )
+        }
+
+        return nil
+    }
+
     // MARK: - Variable Pattern
 
     /// Generates a regex to match variable declarations from the target's var template.

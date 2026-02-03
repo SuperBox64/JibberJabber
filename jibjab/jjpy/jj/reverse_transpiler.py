@@ -13,6 +13,9 @@ from .lexer import JJ, load_target_config
 def _jj_print(expr):
     return f"{JJ['keywords']['print']}::{JJ['syntax']['emit']}({expr})"
 
+def _jj_const(name, val):
+    return f"{JJ['keywords']['const']}::{JJ['syntax']['val']}({name}, {val})"
+
 def _jj_snag(name, val):
     return f"{JJ['keywords']['snag']}{{{name}}}::{JJ['syntax']['val']}({val})"
 
@@ -275,6 +278,36 @@ def _print_pattern(target):
 
 def _dual_print_pattern():
     return re.compile(r'^(?:printf\("%[a-z]*\\n",\s*(?:\(long\))?(.+)\)|std::cout\s*<<\s*(.+?)\s*<<\s*std::endl);$')
+
+
+def _const_pattern(target):
+    """Generates a regex to match const declarations from the target's const template."""
+    template = target.get('const', target.get('var', ''))
+
+    # Python-style: same as var (no const keyword)
+    if template == '{name} = {value}':
+        return None  # No separate const pattern for Python
+
+    # AppleScript: property {name} : {value}
+    if template.startswith('property '):
+        return re.compile(r'^property\s+(\w+)\s*:\s*(.+)$')
+
+    # Swift: let {name} = {value} or let {name}: {type} = {value}
+    if template.startswith('let '):
+        types = _type_alternation(target)
+        return re.compile(f'^let\\s+(\\w+)(?:\\s*:\\s*{types})?\\s*=\\s*(.+)$')
+
+    # JS/Go: const {name} = {value}
+    if template.startswith('const ') and '{type}' not in template:
+        return re.compile(r'^const\s+(\w+)(?:\s+\w+)?\s*=\s*(.+)$')
+
+    # C-family: const {type} {name} = {value};
+    if '{type}' in template and 'const' in template:
+        types = _type_alternation(target)
+        has_semi = template.endswith(';')
+        return re.compile(f'^const\\s+{types}\\s+(\\w+)\\s*=\\s*(.+?){";" if has_semi else ""}$')
+
+    return None
 
 
 def _var_pattern(target):
@@ -701,6 +734,7 @@ class BraceReverseTranspiler:
         self.has_main = target.get('main') is not None
         self.main_pattern = _main_signature(target) or ''
         self.print_re = _print_pattern(target)
+        self.const_re = _const_pattern(target)
         self.var_re = _var_pattern(target)
         self.for_re = _for_pattern(target)
         self.if_re = _if_pattern(target)
@@ -907,6 +941,17 @@ class BraceReverseTranspiler:
                     expr = _reverse_expr(captured)
                     result.append(f'{_jj_indent(indent_level)}{_jj_print(_reverse_func_calls(expr, self.target))}')
                     continue
+
+            # Const (must check before var)
+            m = self.const_re.match(trimmed) if self.const_re else None
+            if m:
+                name = m.group(1)
+                val = m.group(2)
+                if val.endswith(';'):
+                    val = val[:-1]
+                val = _reverse_expr(val)
+                result.append(f'{_jj_indent(indent_level)}{_jj_const(name, _reverse_func_calls(val, self.target))}')
+                continue
 
             # Variable
             m = self.var_re.match(trimmed) if self.var_re else None
@@ -1326,6 +1371,7 @@ class AppleScriptReverseTranspiler:
     def __init__(self):
         self.target = load_target_config('applescript')
         self.log_re = _print_pattern(self.target)
+        self.const_re = _const_pattern(self.target)
         self.set_re = _var_pattern(self.target)
         self.repeat_re = _for_pattern(self.target)
         self.if_re = _if_pattern(self.target)
@@ -1447,6 +1493,14 @@ class AppleScriptReverseTranspiler:
             if m:
                 expr = _reverse_expr(m.group(1))
                 result.append(f'{_jj_indent(indent_level)}{_jj_print(_reverse_func_calls(expr, self.target))}')
+                continue
+
+            # Const (property in AppleScript)
+            m = self.const_re.match(trimmed) if self.const_re else None
+            if m:
+                name = m.group(1)
+                val = _reverse_expr(m.group(2))
+                result.append(f'{_jj_indent(indent_level)}{_jj_const(name, _reverse_func_calls(val, self.target))}')
                 continue
 
             # Variable
