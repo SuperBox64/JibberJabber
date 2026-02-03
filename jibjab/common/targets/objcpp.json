@@ -54,7 +54,7 @@
   "stringType": "std::string",
   "floatMod": "fmod({left}, {right})",
   "enum": "enum class {name} { {cases} };",
-  "collectionStyle": "expand",
+  "collectionStyle": "foundation",
   "expandBoolAsInt": true,
   "expandStringType": "const char*",
   "compile": ["clang++", "-framework", "Foundation", "{src}", "-o", "{out}"],

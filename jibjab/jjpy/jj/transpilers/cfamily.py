@@ -46,7 +46,18 @@ class CFamilyTranspiler:
         self.string_vars = set()
         self.bool_vars = set()
         self.enum_var_types = {}
+        self.foundation_dicts = set()
+        self.foundation_tuples = set()
         self.T = load_target_config(self.target_name)
+
+    def _is_foundation_collection_access(self, node) -> bool:
+        """Check if an IndexAccess is rooted in a Foundation collection."""
+        if isinstance(node, IndexAccess):
+            if isinstance(node.array, VarRef):
+                return node.array.name in self.foundation_dicts or node.array.name in self.foundation_tuples
+            if isinstance(node.array, IndexAccess):
+                return self._is_foundation_collection_access(node.array)
+        return False
 
     def get_target_type(self, jj_type: str) -> str:
         if jj_type == 'String':

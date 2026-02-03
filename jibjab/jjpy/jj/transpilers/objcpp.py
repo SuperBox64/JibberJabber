@@ -91,6 +91,8 @@ class ObjCppTranspiler(ObjCTranspiler):
             if expr_node.name in self.dict_vars:
                 if expr_node.name in self.dict_fields and not self.dict_fields[expr_node.name]:
                     return self.ind() + self._cout_line('"{}"')
+                if expr_node.name in self.foundation_dicts:
+                    return self.ind() + self._cout_line(f'[[{expr_node.name} description] UTF8String]')
                 return self.ind() + self._cout_line(f'"{expr_node.name}"')
             if expr_node.name in self.tuple_vars:
                 return self._print_whole_tuple(expr_node.name)
@@ -124,11 +126,12 @@ class ObjCppTranspiler(ObjCTranspiler):
                     if meta.get('isNested'):
                         elem_expr = self._selector_expr(f'{inner.array.name}[{self.expr(inner.index)}][{self.expr(expr_node.index)}]', meta['innerElemType'])
                         return self.ind() + self._cout_line(elem_expr)
-            # Dict or tuple access (only apply selector for str - NSString* fields)
+            # Dict or tuple access — foundation collections need selector for ALL types
             resolved = self._resolve_access(expr_node)
             if resolved:
                 c_var, typ = resolved
-                print_expr = self._selector_expr(c_var, typ) if typ == 'str' else c_var
+                needs_selector = typ == 'str' or self._is_foundation_collection_access(expr_node)
+                print_expr = self._selector_expr(c_var, typ) if needs_selector else c_var
                 return self.ind() + self._cout_line(print_expr)
             return self.ind() + self._cout_line(self.expr(expr_node))
         if self.is_float_expr(expr_node):
@@ -170,6 +173,10 @@ class ObjCppTranspiler(ObjCTranspiler):
     def _print_whole_tuple(self, name):
         if name not in self.tuple_fields or not self.tuple_fields[name]:
             return self.ind() + self._cout_line('"()"')
+        # Foundation mode: print NSArray description
+        if name in self.foundation_tuples:
+            return self.ind() + self._cout_line(f'[[{name} description] UTF8String]')
+        # Expand mode: cout with individual fields
         fields = self.tuple_fields[name]
         sep = self.T.get('coutSep', ' << ')
         endl = self.T.get('coutEndl', ' << std::endl;')

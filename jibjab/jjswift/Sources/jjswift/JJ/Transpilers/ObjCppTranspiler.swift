@@ -51,6 +51,9 @@ public class ObjCppTranspiler: ObjCTranspiler {
                 if let fields = dictFields[varRef.name], fields.isEmpty {
                     return ind() + coutLine("\"{}\"")
                 }
+                if foundationDicts.contains(varRef.name) {
+                    return ind() + coutLine("[[\(varRef.name) description] UTF8String]")
+                }
                 return ind() + coutLine("\"\(varRef.name)\"")
             }
             if tupleVars.contains(varRef.name) {
@@ -91,10 +94,11 @@ public class ObjCppTranspiler: ObjCTranspiler {
                 let elemExpr = selectorExpr("\(varRef.name)[\(expr(innerIdx.index))][\(expr(idx.index))]", meta.innerElemType)
                 return ind() + coutLine(elemExpr)
             }
-            // Dict or tuple access (only apply selector for str - NSString* fields)
+            // Dict or tuple access — foundation collections need selector for ALL types
             if let resolved = resolveAccess(idx) {
                 let (cVar, typ) = resolved
-                let printExpr = typ == "str" ? selectorExpr(cVar, typ) : cVar
+                let needsSelector = typ == "str" || isFoundationCollectionAccess(idx)
+                let printExpr = needsSelector ? selectorExpr(cVar, typ) : cVar
                 return ind() + coutLine(printExpr)
             }
             return ind() + coutLine(expr(e))
@@ -143,10 +147,14 @@ public class ObjCppTranspiler: ObjCTranspiler {
         guard let fields = tupleFields[name], !fields.isEmpty else {
             return ind() + coutLine("\"()\"")
         }
+        // Foundation mode: print NSArray description
+        if foundationTuples.contains(name) {
+            return ind() + coutLine("[[\(name) description] UTF8String]")
+        }
+        // Expand mode: cout with individual fields
         var parts: [String] = []
         for (i, (cppVar, typ)) in fields.enumerated() {
             if i == 0 { parts.append("\"(\"") }
-            // Only apply selector for str type (NSString* fields)
             parts.append(typ == "str" ? selectorExpr(cppVar, typ) : cppVar)
             if i < fields.count - 1 { parts.append("\", \"") }
         }

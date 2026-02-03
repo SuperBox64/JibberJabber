@@ -21,6 +21,8 @@ public class CFamilyTranspiler: Transpiling {
     var boolVars = Set<String>()
     var dictFields: [String: [String: (String, String)]] = [:]
     var tupleFields: [String: [(String, String)]] = [:]
+    var foundationDicts = Set<String>()
+    var foundationTuples = Set<String>()
 
     struct ArrayMeta {
         let elemType: String      // "int", "str", "double"
@@ -204,15 +206,19 @@ public class CFamilyTranspiler: Transpiling {
     func emitMain(_ lines: inout [String], _ program: Program) {
         let mainStmts = program.statements.filter { !($0 is FuncDef) }
         guard !mainStmts.isEmpty, let mainTmpl = T.main else { return }
-        // Determine indent level from {body} position in template
-        let tmplLines = mainTmpl.replacingOccurrences(of: "\\n", with: "\n").components(separatedBy: "\n")
-        let bodyIndent = tmplLines.first(where: { $0.contains("{body}") })?.prefix(while: { $0 == " " }).count ?? 4
-        indentLevel = bodyIndent / (T.indent.count > 0 ? T.indent.count : 4)
+        let tmpl = mainTmpl.replacingOccurrences(of: "\\n", with: "\n")
+        // Count nesting depth: { minus } before {body} in template
+        if let bodyRange = tmpl.range(of: "{body}") {
+            let beforeBody = String(tmpl[tmpl.startIndex..<bodyRange.lowerBound])
+            let opens = beforeBody.filter { $0 == "{" }.count
+            let closes = beforeBody.filter { $0 == "}" }.count
+            indentLevel = max(1, opens - closes)
+        } else {
+            indentLevel = 1
+        }
         let bodyLines = mainStmts.map { stmtToString($0) }
         let body = bodyLines.joined(separator: "\n") + "\n"
-        let expanded = mainTmpl
-            .replacingOccurrences(of: "\\n", with: "\n")
-            .replacingOccurrences(of: "{body}", with: body)
+        let expanded = tmpl.replacingOccurrences(of: "{body}", with: body)
         lines.append(expanded)
     }
 
@@ -662,6 +668,17 @@ public class CFamilyTranspiler: Transpiling {
             }
         }
         return nil
+    }
+
+    /// Check if an IndexAccess is rooted in a Foundation collection (NSDictionary/NSArray)
+    func isFoundationCollectionAccess(_ node: IndexAccess) -> Bool {
+        if let varRef = node.array as? VarRef {
+            return foundationDicts.contains(varRef.name) || foundationTuples.contains(varRef.name)
+        }
+        if let inner = node.array as? IndexAccess {
+            return isFoundationCollectionAccess(inner)
+        }
+        return false
     }
 
     func expr(_ node: ASTNode) -> String {

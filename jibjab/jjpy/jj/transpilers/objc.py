@@ -122,6 +122,8 @@ class ObjCTranspiler(CFamilyTranspiler):
             if expr_node.name in self.dict_vars:
                 if expr_node.name in self.dict_fields and not self.dict_fields[expr_node.name]:
                     return self.ind() + self.T['printStr'].replace('{expr}', '"{}"')
+                if expr_node.name in self.foundation_dicts:
+                    return self.ind() + self.T['printStr'].replace('{expr}', f'[[{expr_node.name} description] UTF8String]')
                 return self.ind() + self.T['printStr'].replace('{expr}', f'"{expr_node.name}"')
             if expr_node.name in self.tuple_vars:
                 return self._print_whole_tuple(expr_node.name)
@@ -146,11 +148,12 @@ class ObjCTranspiler(CFamilyTranspiler):
                     if meta.get('isNested'):
                         elem_expr = self._selector_expr(f'{inner.array.name}[{self.expr(inner.index)}][{self.expr(expr_node.index)}]', meta['innerElemType'])
                         return self.ind() + self._print_template_for_type(meta['innerElemType']).replace('{expr}', elem_expr)
-            # Dict or tuple access
+            # Dict or tuple access — foundation collections need selector for ALL types
             resolved = self._resolve_access(expr_node)
             if resolved:
                 c_var, typ = resolved
-                print_expr = self._selector_expr(c_var, typ) if typ == 'str' else c_var
+                needs_selector = typ == 'str' or self._is_foundation_collection_access(expr_node)
+                print_expr = self._selector_expr(c_var, typ) if needs_selector else c_var
                 return self.ind() + self._print_template_for_type(typ).replace('{expr}', print_expr)
             return self.ind() + self.T['printInt'].replace('{expr}', self.expr(expr_node))
         if self.is_float_expr(expr_node):
@@ -194,6 +197,10 @@ class ObjCTranspiler(CFamilyTranspiler):
     def _print_whole_tuple(self, name):
         if name not in self.tuple_fields or not self.tuple_fields[name]:
             return self.ind() + self.T['printStr'].replace('{expr}', '"()"')
+        # Foundation mode: print NSArray description
+        if name in self.foundation_tuples:
+            return self.ind() + self.T['printStr'].replace('{expr}', f'[[{name} description] UTF8String]')
+        # Expand mode: printf with format specifiers
         fields = self.tuple_fields[name]
         fmt_parts = []
         arg_parts = []
@@ -219,8 +226,31 @@ class ObjCTranspiler(CFamilyTranspiler):
         lines = []
         self.dict_fields[node.name] = {}
         if not node.value.pairs:
-            lines.append(self.ind() + f'// empty dict {node.name}')
+            if self.T.get('collectionStyle') == 'foundation':
+                self.foundation_dicts.add(node.name)
+                return self.ind() + f'NSDictionary *{node.name} = @{{}};'
+            lines.append(self.ind() + f'{self.T.get("comment", "//")} empty dict {node.name}')
             return '\n'.join(lines)
+        # Foundation mode: NSDictionary literal
+        if self.T.get('collectionStyle') == 'foundation':
+            self.foundation_dicts.add(node.name)
+            for k, v in node.value.pairs:
+                if isinstance(k, Literal) and isinstance(k.value, str):
+                    key = k.value
+                    access = f'{node.name}[@"{key}"]'
+                    if isinstance(v, Literal):
+                        if isinstance(v.value, str):
+                            self.dict_fields[node.name][key] = (access, 'str')
+                        elif isinstance(v.value, bool):
+                            self.dict_fields[node.name][key] = (access, 'int')
+                        elif isinstance(v.value, int):
+                            self.dict_fields[node.name][key] = (access, 'int')
+                        elif isinstance(v.value, float):
+                            self.dict_fields[node.name][key] = (access, 'double')
+                    elif isinstance(v, ArrayLiteral):
+                        self.dict_fields[node.name][key] = (access, 'array')
+            return self.ind() + f'NSDictionary *{node.name} = {self._expr_dict(node.value)};'
+        # Expand mode: individual variables with NSString */NSInteger/BOOL
         for k, v in node.value.pairs:
             if isinstance(k, Literal) and isinstance(k.value, str):
                 key = k.value
@@ -259,8 +289,29 @@ class ObjCTranspiler(CFamilyTranspiler):
         lines = []
         self.tuple_fields[node.name] = []
         if not node.value.elements:
-            lines.append(self.ind() + f'// empty tuple {node.name}')
+            if self.T.get('collectionStyle') == 'foundation':
+                self.foundation_tuples.add(node.name)
+                return self.ind() + f'NSArray *{node.name} = @[];'
+            lines.append(self.ind() + f'{self.T.get("comment", "//")} empty tuple {node.name}')
             return '\n'.join(lines)
+        # Foundation mode: NSArray literal
+        if self.T.get('collectionStyle') == 'foundation':
+            self.foundation_tuples.add(node.name)
+            for i, e in enumerate(node.value.elements):
+                access = f'{node.name}[{i}]'
+                if isinstance(e, Literal):
+                    if isinstance(e.value, str):
+                        self.tuple_fields[node.name].append((access, 'str'))
+                    elif isinstance(e.value, bool):
+                        self.tuple_fields[node.name].append((access, 'int'))
+                    elif isinstance(e.value, int):
+                        self.tuple_fields[node.name].append((access, 'int'))
+                    elif isinstance(e.value, float):
+                        self.tuple_fields[node.name].append((access, 'double'))
+                else:
+                    self.tuple_fields[node.name].append((access, 'int'))
+            return self.ind() + f'NSArray *{node.name} = {self._expr_tuple(node.value)};'
+        # Expand mode: individual variables
         for i, e in enumerate(node.value.elements):
             var_name = f'{node.name}_{i}'
             if isinstance(e, Literal):
