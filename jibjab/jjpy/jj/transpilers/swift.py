@@ -39,9 +39,32 @@ class SwiftTranspiler:
 
     def transpile(self, program: Program) -> str:
         lines = [T['header'].rstrip()]
+        if self._needs_error_struct(program.statements) and T.get('errorStruct'):
+            lines.append('')
+            lines.append(T['errorStruct'])
         for stmt in program.statements:
             lines.append(self.stmt(stmt))
         return '\n'.join(lines)
+
+    def _needs_error_struct(self, stmts) -> bool:
+        for s in stmts:
+            if isinstance(s, ThrowStmt) or isinstance(s, TryStmt):
+                return True
+            if isinstance(s, IfStmt):
+                if self._needs_error_struct(s.then_body):
+                    return True
+                if s.else_body and self._needs_error_struct(s.else_body):
+                    return True
+            if isinstance(s, LoopStmt) and self._needs_error_struct(s.body):
+                return True
+            if isinstance(s, FuncDef) and self._needs_error_struct(s.body):
+                return True
+            if isinstance(s, TryStmt):
+                if self._needs_error_struct(s.try_body):
+                    return True
+                if s.oops_body and self._needs_error_struct(s.oops_body):
+                    return True
+        return False
 
     def ind(self) -> str:
         return T['indent'] * self.indent

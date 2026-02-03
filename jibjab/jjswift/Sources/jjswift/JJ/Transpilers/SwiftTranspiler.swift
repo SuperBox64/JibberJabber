@@ -28,10 +28,31 @@ public class SwiftTranspiler: Transpiling {
 
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
+        if needsErrorStruct(program.statements), let errStruct = T.errorStruct {
+            lines.append("")
+            lines.append(errStruct)
+        }
         for s in program.statements {
             lines.append(stmtToString(s))
         }
         return lines.joined(separator: "\n")
+    }
+
+    private func needsErrorStruct(_ stmts: [ASTNode]) -> Bool {
+        for s in stmts {
+            if s is ThrowStmt || s is TryStmt { return true }
+            if let ifStmt = s as? IfStmt {
+                if needsErrorStruct(ifStmt.thenBody) { return true }
+                if let elseBody = ifStmt.elseBody, needsErrorStruct(elseBody) { return true }
+            }
+            if let loop = s as? LoopStmt, needsErrorStruct(loop.body) { return true }
+            if let fn = s as? FuncDef, needsErrorStruct(fn.body) { return true }
+            if let tryStmt = s as? TryStmt {
+                if needsErrorStruct(tryStmt.tryBody) { return true }
+                if let oops = tryStmt.oopsBody, needsErrorStruct(oops) { return true }
+            }
+        }
+        return false
     }
 
     private func ind() -> String {

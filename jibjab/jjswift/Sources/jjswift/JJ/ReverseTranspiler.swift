@@ -936,7 +936,14 @@ public class JavaScriptReverseTranspiler: BraceReverseTranspiler {
 public class SwiftReverseTranspiler: BraceReverseTranspiler {
     public init() {
         let target = loadTarget("swift")
-        super.init(config: Config(from: target))
+        var config = Config(from: target)
+        // Strip import and errorStruct even when conditionally emitted
+        if let errStruct = target.errorStruct {
+            config.headerPatterns.append(errStruct)
+        }
+        config.headerPatterns.append("import Foundation")
+        config.headerPatterns.append("import ")
+        super.init(config: config)
     }
 }
 
