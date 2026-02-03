@@ -177,6 +177,11 @@ public struct ReversePatterns {
             return try? NSRegularExpression(pattern: "^console\\.warn\\((.+)\\);$")
         }
 
+        // console.log-style (JavaScript log when print uses print())
+        if template.contains("console.log") {
+            return try? NSRegularExpression(pattern: "^console\\.log\\((.+)\\);$")
+        }
+
         // logging.warning-style (Python)
         if template.contains("logging.warning") || template.contains("logging.info") {
             return try? NSRegularExpression(pattern: "^(?:import logging; )?logging\\.(?:warning|info)\\((.+)\\)$")
