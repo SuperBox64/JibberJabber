@@ -43,6 +43,7 @@ public class AssemblyTranspiler: Transpiling {
     private var labelCounter = 0
     private var variables: [String: Int] = [:]
     private var floatVars: Set<String> = []  // Track which variables are floats
+    private var stringVars: Set<String> = []  // Track which variables are strings
     private var stackOffset = 0
     private var functions: [String: FuncDef] = [:]
     private var currentFunc: String? = nil
@@ -741,6 +742,15 @@ public class AssemblyTranspiler: Transpiling {
                 asmLines.append("    add x0, x0, \(FS)\(PO)")
                 asmLines.append("    bl \(PS)")
             }
+        } else if let varRef = node.expr as? VarRef, stringVars.contains(varRef.name) {
+            // String variable from literal assignment
+            if let offset = variables[varRef.name] {
+                asmLines.append("    ldur x0, [x29, #-\(offset + 16)]")
+                asmLines.append("    str x0, [sp]")
+                asmLines.append("    adrp x0, \(FS)\(PD)")
+                asmLines.append("    add x0, x0, \(FS)\(PO)")
+                asmLines.append("    bl \(PS)")
+            }
         } else if isFloatExpr(node.expr) {
             // Float expression — print with %g
             genFloatExpr(node.expr)
@@ -886,6 +896,18 @@ public class AssemblyTranspiler: Transpiling {
             let info = ArrayInfo(baseOffset: baseOffset, count: arr.elements.count, isString: isString)
             arrays[node.name] = info
             variables[node.name] = baseOffset
+        } else if let lit = node.value as? Literal, let str = lit.value as? String {
+            // String literal — store as pointer to string data
+            let strLabel = addString(str)
+            asmLines.append("    adrp x0, \(strLabel)\(PD)")
+            asmLines.append("    add x0, x0, \(strLabel)\(PO)")
+            if variables[node.name] == nil {
+                variables[node.name] = stackOffset
+                stackOffset += 8
+            }
+            guard let offset = variables[node.name] else { return }
+            asmLines.append("    stur x0, [x29, #-\(offset + 16)]")
+            stringVars.insert(node.name)
         } else {
             // Scalar variable — check if float
             let isFloat = isFloatExpr(node.value)
