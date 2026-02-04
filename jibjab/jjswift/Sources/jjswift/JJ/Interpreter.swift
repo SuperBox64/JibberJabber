@@ -243,6 +243,7 @@ public class Interpreter {
         } else if let inputExpr = node as? InputExpr {
             let prompt = stringify(try evaluate(inputExpr.prompt))
             Swift.print(prompt, terminator: "")
+            fflush(stdout)  // Ensure prompt is displayed before reading input
             return readLine() ?? ""
         } else if let randomExpr = node as? RandomExpr {
             let minVal = toInt(try evaluate(randomExpr.min))
