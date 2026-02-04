@@ -83,12 +83,6 @@ struct ContentView: View {
                     waitingForInput: waitingForInput,
                     inputPrompt: inputPrompt,
                     onInputSubmit: { input in
-                        // Append prompt and answer to output
-                        let currentOutput = runOutputs[selectedTab] ?? ""
-                        let promptLine = inputPrompt.isEmpty ? "Input" : inputPrompt
-                        let newLine = "\(promptLine): \(input)"
-                        runOutputs[selectedTab] = currentOutput.isEmpty ? newLine : currentOutput + "\n" + newLine
-
                         inputContinuation?.resume(returning: input)
                         inputContinuation = nil
                         waitingForInput = false

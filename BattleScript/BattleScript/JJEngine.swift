@@ -100,6 +100,16 @@ struct JJEngine {
 
                     // Block this background thread until input arrives
                     semaphore.wait()
+
+                    // Echo the prompt and answer to output
+                    let answer = result ?? ""
+                    let echoLine = "\(prompt) \(answer)"
+                    outputLines.append(echoLine)
+                    let output = outputLines.joined(separator: "\n")
+                    DispatchQueue.main.async {
+                        outputCallback(output)
+                    }
+
                     return result
                 }
 
