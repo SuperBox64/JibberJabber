@@ -15,7 +15,7 @@
   "coutInline": "std::cout << {expr};",
   "enumAccess": "static_cast<int>({name}::{key})",
   "stringInclude": "#include <string>",
-  "header": "// Transpiled from JibJab\n#include <iostream>\n#include <cstdint>\n#include <cmath>\n#include <string>\nstatic int _input(const char* p) { std::cout << \"__JJPROMPT__:\" << p << std::endl; std::string s; std::getline(std::cin, s); std::cout << p << s << std::endl; try { return std::stoi(s); } catch (...) { return 0; } }\n",
+  "header": "// Transpiled from JibJab\n#include <iostream>\n#include <cstdint>\n#include <cmath>\n#include <string>\nstatic std::string _jj_buf;\nstatic std::string _input(const char* p) { std::cout << \"__JJPROMPT__:\" << p << std::endl; std::getline(std::cin, _jj_buf); std::cout << p << _jj_buf << std::endl; return _jj_buf; }\n",
   "printInt": "std::cout << {expr} << std::endl;",
   "printStr": "std::cout << {expr} << std::endl;",
   "printFloat": "std::cout << {expr} << std::endl;",

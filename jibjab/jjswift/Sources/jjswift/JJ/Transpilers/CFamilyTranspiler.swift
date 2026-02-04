@@ -539,14 +539,12 @@ public class CFamilyTranspiler: Transpiling {
 
     func constDeclToString(_ node: ConstDecl) -> String {
         // Constants are simpler - no arrays/dicts/tuples, just simple values
-        // InputExpr uses stringType directly (for ObjC: NSString*, not const char*)
+        // InputExpr returns string (buffer pointer)
         if node.value is InputExpr {
             stringVars.insert(node.name)
             inputStringVars.insert(node.name)
-            let varType = T.stringType
-            let template = varType.hasPrefix("const ") ? T.var : T.const
-            return ind() + template
-                .replacingOccurrences(of: "{type}", with: varType)
+            return ind() + T.const
+                .replacingOccurrences(of: "{type}", with: T.stringType)
                 .replacingOccurrences(of: "{name}", with: node.name)
                 .replacingOccurrences(of: "{value}", with: expr(node.value))
         }
@@ -593,7 +591,7 @@ public class CFamilyTranspiler: Transpiling {
            enums.contains(varRef.name) {
             enumVarTypes[node.name] = varRef.name
         }
-        // InputExpr uses stringType directly (for ObjC: NSString*, not const char*)
+        // InputExpr returns string (buffer pointer)
         if node.value is InputExpr {
             stringVars.insert(node.name)
             inputStringVars.insert(node.name)

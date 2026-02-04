@@ -11,7 +11,7 @@
   "varDict": "var {name}: [String: Any] = {value}",
   "dictEmpty": "[:]",
   "paramFormat": "_ {name}: {type}",
-  "header": "// Transpiled from JibJab\nimport Foundation\nfunc _input(_ p: String) -> Int { print(\"__JJPROMPT__:\\(p)\"); let s = readLine() ?? \"\"; print(\"\\(p)\\(s)\"); return Int(s) ?? 0 }\n",
+  "header": "// Transpiled from JibJab\nimport Foundation\nfunc _input(_ p: String) -> String { print(\"__JJPROMPT__:\\(p)\"); let s = readLine() ?? \"\"; print(\"\\(p)\\(s)\"); return s }\n",
   "logImport": "import os.log",
   "errorStruct": "struct JJError: Error { let message: String }",
   "print": "print({expr})",

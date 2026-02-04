@@ -13,7 +13,7 @@
   "importItem": "\"{name}\"",
   "enumAccess": "{name}_{key}",
   "enumConst": "const (\n{cases}\n)",
-  "header": "// Transpiled from JibJab\npackage main\n\nimport (\n    \"fmt\"\n    \"strconv\"\n    \"bufio\"\n    \"os\"\n)\n\nvar _reader = bufio.NewReader(os.Stdin)\nfunc _input(p string) int { fmt.Printf(\"__JJPROMPT__:%s\\n\", p); s, _ := _reader.ReadString('\\n'); s = s[:len(s)-1]; fmt.Printf(\"%s%s\\n\", p, s); n, _ := strconv.Atoi(s); return n }\n",
+  "header": "// Transpiled from JibJab\npackage main\n\nimport (\n    \"fmt\"\n    \"bufio\"\n    \"os\"\n)\n\nvar _reader = bufio.NewReader(os.Stdin)\nfunc _input(p string) string { fmt.Printf(\"__JJPROMPT__:%s\\n\", p); s, _ := _reader.ReadString('\\n'); s = s[:len(s)-1]; fmt.Printf(\"%s%s\\n\", p, s); return s }\n",
   "logImport": "log",
   "printInt": "fmt.Println({expr})",
   "printStr": "fmt.Println({expr})",
