@@ -353,6 +353,11 @@ public class Interpreter {
         if let l = left as? Double, let r = right as? Double { return l == r }
         if let l = left as? String, let r = right as? String { return l == r }
         if let l = left as? Bool, let r = right as? Bool { return l == r }
+        // Coerce string to number for comparison
+        if let l = left as? String, let r = right as? Int, let li = Int(l) { return li == r }
+        if let l = left as? Int, let r = right as? String, let ri = Int(r) { return l == ri }
+        if let l = left as? String, let r = right as? Double, let ld = Double(l) { return ld == r }
+        if let l = left as? Double, let r = right as? String, let rd = Double(r) { return l == rd }
         return false
     }
 }
