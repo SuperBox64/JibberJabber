@@ -27,15 +27,23 @@ struct JJEngine {
     }
 
     static func interpret(_ program: Program) -> String {
-        let pipe = Pipe()
-        let original = dup(STDOUT_FILENO)
-        dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
         let interpreter = Interpreter()
+        var outputLines: [String] = []
 
-        // Use AppleScript dialogs for input in BattleScript
+        // Collect output in real-time
+        interpreter.outputHandler = { text in
+            outputLines.append(text)
+        }
+
+        // Use AppleScript dialogs for input, showing recent output
         interpreter.inputProvider = { prompt in
+            // Show last few lines of output with the prompt
+            let recentOutput = outputLines.suffix(5).joined(separator: "\n")
+            let dialogText = recentOutput.isEmpty ? prompt : recentOutput + "\n\n" + prompt
+            let escapedText = dialogText.replacingOccurrences(of: "\"", with: "\\\"")
+                                        .replacingOccurrences(of: "\n", with: "\\n")
             let script = """
-                display dialog "\(prompt.replacingOccurrences(of: "\"", with: "\\\""))" default answer "" buttons {"Cancel", "OK"} default button "OK"
+                display dialog "\(escapedText)" default answer "" buttons {"Cancel", "OK"} default button "OK"
                 text returned of result
                 """
             var error: NSDictionary?
@@ -54,12 +62,8 @@ struct JJEngine {
         } catch {
             errorMsg = "Runtime error: \(error)"
         }
-        fflush(stdout)
-        dup2(original, STDOUT_FILENO)
-        close(original)
-        pipe.fileHandleForWriting.closeFile()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: data, encoding: .utf8) ?? ""
+
+        let output = outputLines.joined(separator: "\n")
         if let errorMsg = errorMsg {
             return output.isEmpty ? errorMsg : output + "\n" + errorMsg
         }

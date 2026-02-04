@@ -20,6 +20,10 @@ public class Interpreter {
     /// If nil, uses standard readLine() for terminal input.
     public var inputProvider: ((String) -> String?)?
 
+    /// Custom output handler for GUI environments. Called with each print/log output.
+    /// If nil, uses standard print() for terminal output.
+    public var outputHandler: ((String) -> Void)?
+
     public init() {}
 
     public func run(_ program: Program) throws {
@@ -32,10 +36,20 @@ public class Interpreter {
     private func execute(_ node: ASTNode) throws -> Any? {
         if let printStmt = node as? PrintStmt {
             let value = try evaluate(printStmt.expr)
-            print(stringify(value))
+            let text = stringify(value)
+            if let handler = outputHandler {
+                handler(text)
+            } else {
+                print(text)
+            }
         } else if let logStmt = node as? LogStmt {
             let value = try evaluate(logStmt.expr)
-            print(stringify(value))
+            let text = stringify(value)
+            if let handler = outputHandler {
+                handler(text)
+            } else {
+                print(text)
+            }
         } else if let varDecl = node as? VarDecl {
             locals[locals.count - 1][varDecl.name] = try evaluate(varDecl.value)
         } else if let constDecl = node as? ConstDecl {
