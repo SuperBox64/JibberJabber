@@ -364,13 +364,7 @@ struct JJEngine {
 
                     // Write input to process stdin if we got input
                     if let input = userInput {
-                        // Echo the input to output (append to current line)
-                        buffer.append((input + "\n").data(using: .utf8) ?? Data())
-                        if let text = String(data: buffer, encoding: .utf8) {
-                            DispatchQueue.main.async {
-                                outputCallback(text)
-                            }
-                        }
+                        // Don't echo here - the _input helpers echo "prompt + answer"
                         // Send to process
                         let inputData = (input + "\n").data(using: .utf8) ?? Data()
                         try? inputHandle.write(contentsOf: inputData)
