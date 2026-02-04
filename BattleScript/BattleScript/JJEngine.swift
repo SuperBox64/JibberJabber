@@ -36,7 +36,7 @@ struct JJEngine {
             outputCallback?(outputLines.joined(separator: "\n"))
         }
 
-        // Use AppleScript dialogs for input
+        // Use AppleScript dialogs for input (fallback)
         interpreter.inputProvider = { prompt in
             let escapedPrompt = prompt.replacingOccurrences(of: "\"", with: "\\\"")
             let script = """
@@ -51,6 +51,56 @@ struct JJEngine {
                 }
             }
             return nil  // User cancelled or error
+        }
+
+        var errorMsg: String?
+        do {
+            try interpreter.run(program)
+        } catch {
+            errorMsg = "Runtime error: \(error)"
+        }
+
+        let output = outputLines.joined(separator: "\n")
+        if let errorMsg = errorMsg {
+            return output.isEmpty ? errorMsg : output + "\n" + errorMsg
+        }
+        return output
+    }
+
+    /// Async version of interpret that supports UI-based input
+    static func interpretAsync(
+        _ program: Program,
+        outputCallback: @escaping (String) -> Void,
+        inputCallback: @escaping (String) async -> String?
+    ) async -> String {
+        let interpreter = Interpreter()
+        var outputLines: [String] = []
+
+        // Collect output and send to callback in real-time
+        interpreter.outputHandler = { text in
+            outputLines.append(text)
+            DispatchQueue.main.async {
+                outputCallback(outputLines.joined(separator: "\n"))
+            }
+        }
+
+        // Bridge async input to sync inputProvider using semaphore
+        let inputSemaphore = DispatchSemaphore(value: 0)
+        // Use a class to safely share state across threads
+        final class InputBox: @unchecked Sendable { var value: String? = nil }
+        let inputBox = InputBox()
+
+        interpreter.inputProvider = { prompt in
+            // Signal main thread to show input UI
+            DispatchQueue.main.async {
+                Task {
+                    inputBox.value = await inputCallback(prompt)
+                    inputSemaphore.signal()
+                }
+            }
+            // Wait for input
+            inputSemaphore.wait()
+            return inputBox.value
         }
 
         var errorMsg: String?

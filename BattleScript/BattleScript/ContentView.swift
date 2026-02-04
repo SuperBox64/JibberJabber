@@ -14,6 +14,9 @@ struct ContentView: View {
     @State private var runWork: DispatchWorkItem?
     @State private var showDependencyCheck = true
     @State private var dependencyStatus: DependencyStatus?
+    @State private var waitingForInput = false
+    @State private var inputPrompt = ""
+    @State private var inputContinuation: CheckedContinuation<String?, Never>?
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -73,8 +76,19 @@ struct ContentView: View {
                     onStop: stopRunning
                 )
             } bottom: {
-                // Bottom: output pane
-                OutputView(output: runOutputs[selectedTab] ?? "", isRunning: isRunning)
+                // Bottom: output pane with input support
+                OutputView(
+                    output: runOutputs[selectedTab] ?? "",
+                    isRunning: isRunning,
+                    waitingForInput: waitingForInput,
+                    inputPrompt: inputPrompt,
+                    onInputSubmit: { input in
+                        inputContinuation?.resume(returning: input)
+                        inputContinuation = nil
+                        waitingForInput = false
+                        inputPrompt = ""
+                    }
+                )
             }
         }
         .frame(minWidth: 640, minHeight: 450)
@@ -143,9 +157,7 @@ struct ContentView: View {
 
     private func runCurrentTab() {
         let tab = selectedTab
-        if tab != "jj" {
-            isRunning = true
-        }
+        isRunning = true
         runOutputs[tab] = ""
         let code: String
         if tab == "jj" {
@@ -154,23 +166,44 @@ struct ContentView: View {
             code = transpiledOutputs[tab] ?? ""
         }
 
-        let work = DispatchWorkItem {
-            let result: String
-            if tab == "jj" {
+        // For JJ tab, use async interpreter with UI input
+        if tab == "jj" {
+            Task {
                 do {
                     let program = try JJEngine.parse(code)
-                    result = JJEngine.interpret(program) { output in
-                        // Update output pane in real-time
-                        DispatchQueue.main.async {
+                    let result = await JJEngine.interpretAsync(program,
+                        outputCallback: { output in
                             self.runOutputs[tab] = output
+                        },
+                        inputCallback: { prompt in
+                            // Show input field and wait for user
+                            self.inputPrompt = prompt
+                            self.waitingForInput = true
+                            return await withCheckedContinuation { continuation in
+                                self.inputContinuation = continuation
+                            }
                         }
-                    }
-                    DispatchQueue.main.async {
+                    )
+                    await MainActor.run {
+                        self.runOutputs[tab] = result
+                        self.isRunning = false
                         updateTranspilation()
                     }
                 } catch {
-                    result = "Error: \(error)"
+                    await MainActor.run {
+                        self.runOutputs[tab] = "Error: \(error)"
+                        self.isRunning = false
+                    }
                 }
+            }
+            return
+        }
+
+        let work = DispatchWorkItem {
+            let result: String
+            if false {
+                // JJ handled above
+                result = ""
             } else {
                 if code.isEmpty {
                     result = "No code to run for target: \(tab)"

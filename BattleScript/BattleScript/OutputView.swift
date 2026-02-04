@@ -30,13 +30,25 @@ struct OutputTextView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
+        let wasAtBottom = scrollView.contentView.bounds.origin.y >=
+            (textView.bounds.height - scrollView.contentView.bounds.height - 20)
         textView.string = text
+        // Auto-scroll to bottom if was already at bottom
+        if wasAtBottom {
+            textView.scrollToEndOfDocument(nil)
+        }
     }
 }
 
 struct OutputView: View {
     let output: String
     let isRunning: Bool
+    var waitingForInput: Bool = false
+    var inputPrompt: String = ""
+    var onInputSubmit: ((String) -> Void)? = nil
+
+    @State private var inputText = ""
+    @FocusState private var inputFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -57,11 +69,44 @@ struct OutputView: View {
             OutputTextView(text: output.isEmpty ? (isRunning ? "Running..." : "Press Run to execute...") : output)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .bottomTrailing) {
-                if isRunning {
+                if isRunning && !waitingForInput {
                     ProgressView()
                         .scaleEffect(0.5)
                         .padding(8)
                 }
+            }
+
+            // Input field when waiting for input
+            if waitingForInput {
+                Divider()
+                HStack(spacing: 8) {
+                    Text(inputPrompt.isEmpty ? "Input:" : inputPrompt)
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                    TextField("Type here and press Enter...", text: $inputText)
+                        .textFieldStyle(.plain)
+                        .font(.system(.body, design: .monospaced))
+                        .focused($inputFocused)
+                        .onSubmit {
+                            onInputSubmit?(inputText)
+                            inputText = ""
+                        }
+                    Button("Send") {
+                        onInputSubmit?(inputText)
+                        inputText = ""
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
+                .background(Color(nsColor: .controlBackgroundColor))
+            }
+        }
+        .onChange(of: waitingForInput) { _, waiting in
+            if waiting {
+                inputFocused = true
             }
         }
     }
