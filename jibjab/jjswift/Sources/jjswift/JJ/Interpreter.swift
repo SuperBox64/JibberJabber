@@ -16,6 +16,10 @@ public class Interpreter {
     private var locals: [[String: Any]] = [[:]]
     private var functions: [String: FuncDef] = [:]
 
+    /// Custom input provider for GUI environments. Takes prompt, returns user input.
+    /// If nil, uses standard readLine() for terminal input.
+    public var inputProvider: ((String) -> String?)?
+
     public init() {}
 
     public func run(_ program: Program) throws {
@@ -242,6 +246,10 @@ public class Interpreter {
             }
         } else if let inputExpr = node as? InputExpr {
             let prompt = stringify(try evaluate(inputExpr.prompt))
+            // Use custom input provider if available (for GUI), otherwise use terminal readLine
+            if let provider = inputProvider {
+                return provider(prompt) ?? ""
+            }
             Swift.print(prompt, terminator: "")
             fflush(stdout)  // Ensure prompt is displayed before reading input
             return readLine() ?? ""

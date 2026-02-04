@@ -31,6 +31,23 @@ struct JJEngine {
         let original = dup(STDOUT_FILENO)
         dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
         let interpreter = Interpreter()
+
+        // Use AppleScript dialogs for input in BattleScript
+        interpreter.inputProvider = { prompt in
+            let script = """
+                display dialog "\(prompt.replacingOccurrences(of: "\"", with: "\\\""))" default answer "" buttons {"Cancel", "OK"} default button "OK"
+                text returned of result
+                """
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                let result = scriptObject.executeAndReturnError(&error)
+                if error == nil {
+                    return result.stringValue
+                }
+            }
+            return nil  // User cancelled or error
+        }
+
         var errorMsg: String?
         do {
             try interpreter.run(program)
