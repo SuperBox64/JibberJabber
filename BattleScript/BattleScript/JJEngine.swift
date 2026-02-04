@@ -26,24 +26,21 @@ struct JJEngine {
         return t.transpile(program)
     }
 
-    static func interpret(_ program: Program) -> String {
+    static func interpret(_ program: Program, outputCallback: ((String) -> Void)? = nil) -> String {
         let interpreter = Interpreter()
         var outputLines: [String] = []
 
-        // Collect output in real-time
+        // Collect output and send to callback in real-time
         interpreter.outputHandler = { text in
             outputLines.append(text)
+            outputCallback?(outputLines.joined(separator: "\n"))
         }
 
-        // Use AppleScript dialogs for input, showing recent output
+        // Use AppleScript dialogs for input
         interpreter.inputProvider = { prompt in
-            // Show last few lines of output with the prompt
-            let recentOutput = outputLines.suffix(5).joined(separator: "\n")
-            let dialogText = recentOutput.isEmpty ? prompt : recentOutput + "\n\n" + prompt
-            let escapedText = dialogText.replacingOccurrences(of: "\"", with: "\\\"")
-                                        .replacingOccurrences(of: "\n", with: "\\n")
+            let escapedPrompt = prompt.replacingOccurrences(of: "\"", with: "\\\"")
             let script = """
-                display dialog "\(escapedText)" default answer "" buttons {"Cancel", "OK"} default button "OK"
+                display dialog "\(escapedPrompt)" default answer "" buttons {"Cancel", "OK"} default button "OK"
                 text returned of result
                 """
             var error: NSDictionary?

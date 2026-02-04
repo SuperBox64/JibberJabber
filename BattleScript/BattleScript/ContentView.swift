@@ -30,7 +30,9 @@ struct ContentView: View {
         ("TryOops", "trycatch"),
         ("Logging", "logging"),
         ("Constants", "constants"),
-
+        ("Numbers", "numbers"),
+        ("Guessinggame", "guessinggame"),
+        ("Input", "input"),
     ]
 
     var body: some View {
@@ -157,7 +159,12 @@ struct ContentView: View {
             if tab == "jj" {
                 do {
                     let program = try JJEngine.parse(code)
-                    result = JJEngine.interpret(program)
+                    result = JJEngine.interpret(program) { output in
+                        // Update output pane in real-time
+                        DispatchQueue.main.async {
+                            self.runOutputs[tab] = output
+                        }
+                    }
                     DispatchQueue.main.async {
                         updateTranspilation()
                     }
