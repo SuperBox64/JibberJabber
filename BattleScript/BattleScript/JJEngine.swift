@@ -103,7 +103,7 @@ struct JJEngine {
 
                     // Echo the prompt and answer to output
                     let answer = result ?? ""
-                    let echoLine = "\(prompt) \(answer)"
+                    let echoLine = prompt.hasSuffix(" ") ? "\(prompt)\(answer)" : "\(prompt) \(answer)"
                     outputLines.append(echoLine)
                     let output = outputLines.joined(separator: "\n")
                     DispatchQueue.main.async {
