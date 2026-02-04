@@ -85,8 +85,7 @@ struct ContentView: View {
                     onInputSubmit: { input in
                         inputContinuation?.resume(returning: input)
                         inputContinuation = nil
-                        waitingForInput = false
-                        inputPrompt = ""
+                        // Keep waitingForInput true - it will be set false when process ends
                     }
                 )
             }
@@ -202,6 +201,10 @@ struct ContentView: View {
 
         // Check if code uses input - use async version for interactive programs
         if JJEngine.usesInput(code) {
+            // Show input field immediately for interactive programs
+            self.inputPrompt = "Enter input:"
+            self.waitingForInput = true
+
             Task {
                 let result: String
                 if code.isEmpty {
@@ -214,8 +217,7 @@ struct ContentView: View {
                             self.runOutputs[tab] = output
                         },
                         inputCallback: {
-                            self.inputPrompt = "Input:"
-                            self.waitingForInput = true
+                            // Input field already visible, just wait for user
                             return await withCheckedContinuation { continuation in
                                 self.inputContinuation = continuation
                             }
@@ -225,6 +227,7 @@ struct ContentView: View {
                 await MainActor.run {
                     self.runOutputs[tab] = result
                     self.isRunning = false
+                    self.waitingForInput = false
                 }
             }
             return

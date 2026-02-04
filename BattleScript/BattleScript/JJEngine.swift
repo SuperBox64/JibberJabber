@@ -269,44 +269,66 @@ struct JJEngine {
             return "Run error: \(error)"
         }
 
-        var outputLines: [String] = []
         let outputHandle = stdoutPipe.fileHandleForReading
         let inputHandle = stdinPipe.fileHandleForWriting
 
-        // Read output in background and show input field when needed
+        // Read output and handle input in background
         return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 var buffer = Data()
-                while process.isRunning {
-                    let available = outputHandle.availableData
-                    if available.isEmpty {
-                        // No output - might be waiting for input, give UI a chance
-                        Thread.sleep(forTimeInterval: 0.1)
-                        // Check if still no output after a bit - show input field
-                        let moreData = outputHandle.availableData
-                        if moreData.isEmpty && process.isRunning {
-                            // Likely waiting for input - request it
-                            Task { @MainActor in
-                                if let input = await inputCallback() {
-                                    let inputData = (input + "\n").data(using: .utf8) ?? Data()
-                                    try? inputHandle.write(contentsOf: inputData)
+
+                // Start output reader thread
+                let outputQueue = DispatchQueue(label: "output-reader")
+                outputQueue.async {
+                    while process.isRunning {
+                        let data = outputHandle.availableData
+                        if !data.isEmpty {
+                            buffer.append(data)
+                            if let text = String(data: buffer, encoding: .utf8) {
+                                DispatchQueue.main.async {
+                                    outputCallback(text)
                                 }
                             }
                         } else {
-                            buffer.append(moreData)
-                        }
-                    } else {
-                        buffer.append(available)
-                    }
-
-                    if let text = String(data: buffer, encoding: .utf8) {
-                        let lines = text.components(separatedBy: "\n")
-                        outputLines = lines
-                        DispatchQueue.main.async {
-                            outputCallback(text)
+                            Thread.sleep(forTimeInterval: 0.02)
                         }
                     }
                 }
+
+                // Input loop - wait for user input and send to process
+                while process.isRunning {
+                    let semaphore = DispatchSemaphore(value: 0)
+                    var userInput: String? = nil
+
+                    // Request input on main thread
+                    Task { @MainActor in
+                        userInput = await inputCallback()
+                        semaphore.signal()
+                    }
+
+                    // Wait for user input with timeout, check if process still running
+                    while process.isRunning {
+                        let result = semaphore.wait(timeout: .now() + 0.1)
+                        if result == .success {
+                            break  // Got input
+                        }
+                        // Timeout - check if process is still running and loop
+                    }
+
+                    // If process ended while waiting, break out
+                    if !process.isRunning {
+                        break
+                    }
+
+                    // Write input to process stdin if we got input
+                    if let input = userInput {
+                        let inputData = (input + "\n").data(using: .utf8) ?? Data()
+                        try? inputHandle.write(contentsOf: inputData)
+                    }
+                }
+
+                // Wait for process to finish
+                process.waitUntilExit()
 
                 // Read remaining output
                 let remaining = outputHandle.readDataToEndOfFile()
@@ -349,7 +371,8 @@ struct JJEngine {
                code.contains("readLine()") ||       // Swift
                code.contains("fmt.Scanln") ||       // Go
                code.contains("input(") ||           // Python
-               code.contains("prompt(") ||          // JavaScript
+               code.contains("prompt(") ||          // JavaScript (browser)
+               code.contains("std.in.getline()") || // JavaScript (QuickJS)
                code.contains("display dialog") ||   // AppleScript
                code.contains("~>slurp")             // JJ source
     }

@@ -39,7 +39,7 @@
   "not": "not ",
   "enum": "{name} = { {cases} }",
   "collectionStyle": "native",
-  "run": ["python3", "{src}"],
+  "run": ["python3", "-u", "{src}"],
   "types": {
     "Int": "int",
     "Int8": "int",
