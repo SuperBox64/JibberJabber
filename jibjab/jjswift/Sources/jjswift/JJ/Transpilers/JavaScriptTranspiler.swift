@@ -170,6 +170,13 @@ public class JavaScriptTranspiler: Transpiling {
         } else if let tuple = node as? TupleLiteral {
             let elements = tuple.elements.map { expr($0) }.joined(separator: ", ")
             return "[\(elements)]"
+        } else if let randomExpr = node as? RandomExpr {
+            if let tmpl = T.random {
+                return tmpl
+                    .replacingOccurrences(of: "{min}", with: expr(randomExpr.min))
+                    .replacingOccurrences(of: "{max}", with: expr(randomExpr.max))
+            }
+            return "0"
         }
         return ""
     }

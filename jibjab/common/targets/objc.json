@@ -48,6 +48,7 @@
   "return": "return {value};",
   "throw": "@throw [NSException exceptionWithName:@\"JJError\" reason:@{value} userInfo:nil];",
   "call": "{name}({args})",
+  "random": "arc4random_uniform({max} - {min} + 1) + {min}",
   "blockEnd": "}",
   "indent": "    ",
   "true": "YES",

@@ -6,6 +6,7 @@ public enum TokenType {
     case log        // ~>spew{b4d}
     case const      // ~>grip{f1x}
     case input      // ~>slurp{9f2}
+    case random     // ~>roll{d1c}
     case loop       // <~loop{...}>>
     case when       // <~when{...}>>
     case `else`     // <~else>>
@@ -52,6 +53,7 @@ public enum TokenType {
     case val        // val
     case with       // with
     case cases      // cases
+    case rangeKw    // range (for random)
     case range      // ..
     case colon      // :
     case lparen     // (

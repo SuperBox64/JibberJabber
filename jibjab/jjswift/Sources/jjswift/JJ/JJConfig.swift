@@ -19,6 +19,7 @@ public struct JJCoreConfig: Codable {
         public let log: String
         public let const: String
         public let input: String
+        public let random: String
         public let yeet: String
         public let kaboom: String
         public let snag: String
@@ -73,6 +74,7 @@ public struct JJCoreConfig: Codable {
         public let val: String
         public let with: String
         public let cases: String
+        public let range: String
     }
 
     public struct Literals: Codable {
@@ -223,6 +225,10 @@ public struct TargetConfig: Codable {
     private let _highlightCommentPrefix: String?
     private let _highlightBlockCommentStart: String?
     private let _highlightBlockCommentEnd: String?
+    private let _random: String?
+    private let _randomImport: String?
+    private let _randomInit: String?
+    private let _randomInclude: String?
     public let main: String?
     public let compile: [String]?
     public let run: [String]?
@@ -347,6 +353,10 @@ public struct TargetConfig: Codable {
         case _highlightCommentPrefix = "highlightCommentPrefix"
         case _highlightBlockCommentStart = "highlightBlockCommentStart"
         case _highlightBlockCommentEnd = "highlightBlockCommentEnd"
+        case _random = "random"
+        case _randomImport = "randomImport"
+        case _randomInit = "randomInit"
+        case _randomInclude = "randomInclude"
         // true/false/nil handled specially
     }
 
@@ -489,6 +499,10 @@ public struct TargetConfig: Codable {
         _highlightCommentPrefix = try container.decodeIfPresent(String.self, forKey: ._highlightCommentPrefix)
         _highlightBlockCommentStart = try container.decodeIfPresent(String.self, forKey: ._highlightBlockCommentStart)
         _highlightBlockCommentEnd = try container.decodeIfPresent(String.self, forKey: ._highlightBlockCommentEnd)
+        _random = try container.decodeIfPresent(String.self, forKey: ._random)
+        _randomImport = try container.decodeIfPresent(String.self, forKey: ._randomImport)
+        _randomInit = try container.decodeIfPresent(String.self, forKey: ._randomInit)
+        _randomInclude = try container.decodeIfPresent(String.self, forKey: ._randomInclude)
 
         // Handle true/false/nil with special decoder keys
         let additionalContainer = try decoder.container(keyedBy: AdditionalCodingKeys.self)
@@ -620,6 +634,10 @@ public struct TargetConfig: Codable {
     public var highlightCommentPrefix: String { _highlightCommentPrefix ?? "//" }
     public var highlightBlockCommentStart: String { _highlightBlockCommentStart ?? "/*" }
     public var highlightBlockCommentEnd: String { _highlightBlockCommentEnd ?? "*/" }
+    public var random: String? { _random }
+    public var randomImport: String? { _randomImport }
+    public var randomInit: String? { _randomInit }
+    public var randomInclude: String? { _randomInclude }
 }
 
 /// Environment overrides for JJLib

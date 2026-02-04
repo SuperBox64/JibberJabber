@@ -27,6 +27,8 @@
   "return": "return {value}",
   "throw": "raise Exception({value})",
   "call": "{name}({args})",
+  "random": "random.randint({min}, {max})",
+  "randomImport": "import random",
   "indent": "    ",
   "true": "True",
   "false": "False",

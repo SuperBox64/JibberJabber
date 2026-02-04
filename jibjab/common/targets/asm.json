@@ -32,6 +32,7 @@
   "return": "mov x0, {value}\nret",
   "throw": "mov x0, {value}",
   "call": "bl _{name}",
+  "random": "bl _arc4random\nand x0, x0, #0xFFFF\n// Random: {min}..{max}",
   "blockEnd": "",
   "indent": "    ",
   "true": "#1",

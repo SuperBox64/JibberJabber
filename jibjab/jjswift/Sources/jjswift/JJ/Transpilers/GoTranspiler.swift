@@ -7,6 +7,7 @@
 public class GoTranspiler: CFamilyTranspiler {
     var needsMath = false
     var needsLog = false
+    var needsRandom = false
 
     public override init(target: String = "go") { super.init(target: target) }
 
@@ -34,10 +35,10 @@ public class GoTranspiler: CFamilyTranspiler {
             mainLines.append(expanded)
         }
 
-        // Build header from config, adding math/log imports if needed
+        // Build header from config, adding math/log/random imports if needed
         var header = T.header.replacingOccurrences(of: "\\n", with: "\n")
             .trimmingCharacters(in: .newlines)
-        if needsMath || needsLog {
+        if needsMath || needsLog || needsRandom {
             // Replace single import with multi-import block
             let singleImport = T.importSingle.replacingOccurrences(of: "{name}", with: "fmt")
             var importItems = [T.importItem.replacingOccurrences(of: "{name}", with: "fmt")]
@@ -46,6 +47,9 @@ public class GoTranspiler: CFamilyTranspiler {
             }
             if needsMath {
                 importItems.append(T.importItem.replacingOccurrences(of: "{name}", with: "math"))
+            }
+            if needsRandom, let randPkg = T.randomImport {
+                importItems.append(T.importItem.replacingOccurrences(of: "{name}", with: randPkg))
             }
             let imports = importItems.map { "\(T.indent)\($0)" }.joined(separator: "\n")
             let multiImport = T.importMulti.replacingOccurrences(of: "{imports}", with: imports)
@@ -291,6 +295,15 @@ public class GoTranspiler: CFamilyTranspiler {
                 return fm.replacingOccurrences(of: "{left}", with: expr(binaryOp.left))
                          .replacingOccurrences(of: "{right}", with: expr(binaryOp.right))
             }
+        }
+        if let randomExpr = node as? RandomExpr {
+            needsRandom = true
+            if let tmpl = T.random {
+                return tmpl
+                    .replacingOccurrences(of: "{min}", with: expr(randomExpr.min))
+                    .replacingOccurrences(of: "{max}", with: expr(randomExpr.max))
+            }
+            return "0"
         }
         return super.expr(node)
     }

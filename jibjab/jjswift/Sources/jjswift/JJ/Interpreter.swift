@@ -244,6 +244,10 @@ public class Interpreter {
             let prompt = stringify(try evaluate(inputExpr.prompt))
             Swift.print(prompt, terminator: "")
             return readLine() ?? ""
+        } else if let randomExpr = node as? RandomExpr {
+            let minVal = toInt(try evaluate(randomExpr.min))
+            let maxVal = toInt(try evaluate(randomExpr.max))
+            return Int.random(in: minVal...maxVal)
         } else if let funcCall = node as? FuncCall {
             guard let func_ = functions[funcCall.name] else {
                 throw RuntimeError.error("Undefined function: \(funcCall.name)")

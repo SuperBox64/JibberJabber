@@ -1,0 +1,29 @@
+@@ JibJab Number Guessing Game
+@@ Demonstrates the new random feature: ~>roll{d1c}::range(min, max)
+@@
+
+@@ Generate a secret number between 1 and 100
+~>snag{secret}::val(~>roll{d1c}::range(#1, #100))
+~>snag{guess}::val(#0)
+~>snag{attempts}::val(#0)
+
+~>frob{7a3}::emit("Welcome to the Number Guessing Game!")
+~>frob{7a3}::emit("I'm thinking of a number between 1 and 100.")
+
+<~loop{guess <!=> secret}>>
+  ~>snag{attempts}::val(attempts <+> #1)
+  ~>snag{guess}::val(~>slurp{9f2}::grab("Enter your guess: "))
+
+  <~when{guess <lt> secret}>>
+    ~>frob{7a3}::emit("Too low! Try again.")
+  <~>>
+  <~when{guess <gt> secret}>>
+    ~>frob{7a3}::emit("Too high! Try again.")
+  <~>>
+<~>>
+
+~>frob{7a3}::emit("Congratulations! You guessed it!")
+~>frob{7a3}::emit("The number was:")
+~>frob{7a3}::emit(secret)
+~>frob{7a3}::emit("It took you this many attempts:")
+~>frob{7a3}::emit(attempts)

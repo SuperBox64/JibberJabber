@@ -26,6 +26,7 @@
   "return": "return {value};",
   "throw": "throw {value};",
   "call": "{name}({args})",
+  "random": "Math.floor(Math.random() * ({max} - {min} + 1)) + {min}",
   "blockEnd": "}",
   "indent": "    ",
   "true": "true",

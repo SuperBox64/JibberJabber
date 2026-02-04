@@ -5,6 +5,7 @@
     "log": "~>spew{b4d}",
     "input": "~>slurp{9f2}",
     "const": "~>grip{f1x}",
+    "random": "~>roll{d1c}",
     "yeet": "~>yeet",
     "kaboom": "~>kaboom",
     "snag": "~>snag",
@@ -50,7 +51,8 @@
     "grab": "grab",
     "val": "val",
     "with": "with",
-    "cases": "cases"
+    "cases": "cases",
+    "range": "range"
   },
   "literals": {
     "numberPrefix": "#",
@@ -61,7 +63,8 @@
     "frob": "7a3",
     "slurp": "9f2",
     "spew": "b4d",
-    "grip": "f1x"
+    "grip": "f1x",
+    "roll": "d1c"
   },
   "tokenSymbols": {
     "action": "::",

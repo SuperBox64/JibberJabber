@@ -120,6 +120,12 @@
         "oopsBody": { "type": "[ASTNode]?" },
         "oopsVar": { "type": "String?" }
       }
+    },
+    "RandomExpr": {
+      "fields": {
+        "min": { "type": "ASTNode" },
+        "max": { "type": "ASTNode" }
+      }
     }
   }
 }

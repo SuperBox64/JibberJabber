@@ -239,6 +239,13 @@ public class AppleScriptTranspiler: Transpiling {
             return T.call
                 .replacingOccurrences(of: "{name}", with: safeName(funcCall.name))
                 .replacingOccurrences(of: "{args}", with: args)
+        } else if let randomExpr = node as? RandomExpr {
+            if let tmpl = T.random {
+                return tmpl
+                    .replacingOccurrences(of: "{min}", with: expr(randomExpr.min))
+                    .replacingOccurrences(of: "{max}", with: expr(randomExpr.max))
+            }
+            return "0"
         }
         return ""
     }

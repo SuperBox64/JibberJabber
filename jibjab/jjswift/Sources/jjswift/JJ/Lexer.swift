@@ -117,6 +117,10 @@ public class Lexer {
             addToken(.input)
             return
         }
+        if match(JJ.keywords.random) != nil {
+            addToken(.random)
+            return
+        }
         if match(JJ.keywords.yeet) != nil {
             addToken(.yeet)
             return
@@ -455,6 +459,10 @@ public class Lexer {
         }
         if match(JJ.syntax.cases) != nil {
             addToken(.cases)
+            return
+        }
+        if match(JJ.syntax.range) != nil {
+            addToken(.rangeKw)
             return
         }
 

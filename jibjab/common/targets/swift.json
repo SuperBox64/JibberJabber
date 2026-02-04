@@ -34,6 +34,7 @@
   "throw": "throw JJError(message: {value})",
   "catchVarBind": "let {var} = (error as? JJError)?.message ?? \"\\(error)\"",
   "call": "{name}({args})",
+  "random": "Int.random(in: {min}...{max})",
   "blockEnd": "}",
   "indent": "    ",
   "true": "true",

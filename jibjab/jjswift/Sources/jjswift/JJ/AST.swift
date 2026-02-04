@@ -140,6 +140,11 @@ public struct TryStmt: ASTNode {
     public let oopsVar: String?
 }
 
+public struct RandomExpr: ASTNode {
+    public let min: ASTNode
+    public let max: ASTNode
+}
+
 public struct CommentNode: ASTNode {
     public let text: String
 }

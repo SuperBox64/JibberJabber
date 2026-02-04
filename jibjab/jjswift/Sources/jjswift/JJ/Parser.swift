@@ -490,6 +490,17 @@ public class Parser {
             return InputExpr(prompt: prompt)
         }
 
+        if match(.random) != nil {
+            _ = try expect(.action)
+            _ = try expect(.rangeKw)
+            _ = try expect(.lparen)
+            let minExpr = try parseExpression()
+            _ = try expect(.comma)
+            let maxExpr = try parseExpression()
+            _ = try expect(.rparen)
+            return RandomExpr(min: minExpr, max: maxExpr)
+        }
+
         if match(.invoke) != nil {
             _ = try expect(.lbrace)
             let nameToken = try expect(.identifier)

@@ -7,13 +7,52 @@ public class PythonTranspiler: Transpiling {
     private let T = loadTarget("py")
     private var enums = Set<String>()
     private var boolVars = Set<String>()
+    private var needsRandomImport = false
 
     public func transpile(_ program: Program) -> String {
+        // Check if random is used
+        needsRandomImport = containsRandom(program.statements)
+
         var lines = [T.header.trimmingCharacters(in: .newlines)]
+        if needsRandomImport, let randomImport = T.randomImport {
+            lines.append(randomImport)
+        }
         for s in program.statements {
             lines.append(stmtToString(s))
         }
         return lines.joined(separator: "\n")
+    }
+
+    private func containsRandom(_ nodes: [ASTNode]) -> Bool {
+        for node in nodes {
+            if node is RandomExpr { return true }
+            if let printStmt = node as? PrintStmt, containsRandomExpr(printStmt.expr) { return true }
+            if let logStmt = node as? LogStmt, containsRandomExpr(logStmt.expr) { return true }
+            if let varDecl = node as? VarDecl, containsRandomExpr(varDecl.value) { return true }
+            if let constDecl = node as? ConstDecl, containsRandomExpr(constDecl.value) { return true }
+            if let loopStmt = node as? LoopStmt, containsRandom(loopStmt.body) { return true }
+            if let ifStmt = node as? IfStmt {
+                if containsRandom(ifStmt.thenBody) { return true }
+                if let elseBody = ifStmt.elseBody, containsRandom(elseBody) { return true }
+            }
+            if let funcDef = node as? FuncDef, containsRandom(funcDef.body) { return true }
+            if let tryStmt = node as? TryStmt {
+                if containsRandom(tryStmt.tryBody) { return true }
+                if let oopsBody = tryStmt.oopsBody, containsRandom(oopsBody) { return true }
+            }
+        }
+        return false
+    }
+
+    private func containsRandomExpr(_ node: ASTNode) -> Bool {
+        if node is RandomExpr { return true }
+        if let binary = node as? BinaryOp {
+            return containsRandomExpr(binary.left) || containsRandomExpr(binary.right)
+        }
+        if let unary = node as? UnaryOp {
+            return containsRandomExpr(unary.operand)
+        }
+        return false
     }
 
     private func ind() -> String {
@@ -191,6 +230,13 @@ public class PythonTranspiler: Transpiling {
             return T.call
                 .replacingOccurrences(of: "{name}", with: funcCall.name)
                 .replacingOccurrences(of: "{args}", with: args)
+        } else if let randomExpr = node as? RandomExpr {
+            if let tmpl = T.random {
+                return tmpl
+                    .replacingOccurrences(of: "{min}", with: expr(randomExpr.min))
+                    .replacingOccurrences(of: "{max}", with: expr(randomExpr.max))
+            }
+            return "0"
         }
         return ""
     }

@@ -1,0 +1,21 @@
+@@ JibJab Dice Roller
+@@ Demonstrates the new random feature: ~>roll{d1c}::range(min, max)
+@@
+
+~>frob{7a3}::emit("Rolling the dice...")
+
+@@ Roll a six-sided die 5 times
+<~loop{i:0..5}>>
+  ~>snag{roll}::val(~>roll{d1c}::range(#1, #6))
+  ~>frob{7a3}::emit(roll)
+<~>>
+
+~>frob{7a3}::emit("Rolling two dice and adding them:")
+~>snag{die1}::val(~>roll{d1c}::range(#1, #6))
+~>snag{die2}::val(~>roll{d1c}::range(#1, #6))
+~>snag{total}::val(die1 <+> die2)
+~>frob{7a3}::emit(total)
+
+~>frob{7a3}::emit("Random number between 1 and 100:")
+~>snag{bigRoll}::val(~>roll{d1c}::range(#1, #100))
+~>frob{7a3}::emit(bigRoll)

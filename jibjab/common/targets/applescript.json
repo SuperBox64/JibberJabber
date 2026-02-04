@@ -22,6 +22,7 @@
   "return": "return {value}",
   "throw": "error {value}",
   "call": "{name}({args})",
+  "random": "random number from {min} to {max}",
   "blockEnd": "end",
   "blockEndRepeat": "end repeat",
   "blockEndIf": "end if",

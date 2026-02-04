@@ -42,6 +42,8 @@
   "return": "return {value}",
   "throw": "panic({value})",
   "call": "{name}({args})",
+  "random": "rand.Intn({max}-{min}+1)+{min}",
+  "randomImport": "math/rand",
   "blockEnd": "}",
   "indent": "    ",
   "true": "true",
