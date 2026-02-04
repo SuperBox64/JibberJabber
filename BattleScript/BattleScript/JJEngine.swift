@@ -67,12 +67,11 @@ struct JJEngine {
         return output
     }
 
-    /// Async version of interpret that supports UI-based input
-    static func interpretAsync(
+    /// Run interpreter with real-time output and dialog-based input
+    static func interpretWithDialogs(
         _ program: Program,
-        outputCallback: @escaping (String) -> Void,
-        inputCallback: @escaping (String) async -> String?
-    ) async -> String {
+        outputCallback: @escaping (String) -> Void
+    ) -> String {
         let interpreter = Interpreter()
         var outputLines: [String] = []
 
@@ -84,23 +83,26 @@ struct JJEngine {
             }
         }
 
-        // Bridge async input to sync inputProvider using semaphore
-        let inputSemaphore = DispatchSemaphore(value: 0)
-        // Use a class to safely share state across threads
-        final class InputBox: @unchecked Sendable { var value: String? = nil }
-        let inputBox = InputBox()
-
+        // Use AppleScript dialogs for input (shows current output in dialog)
         interpreter.inputProvider = { prompt in
-            // Signal main thread to show input UI
-            DispatchQueue.main.async {
-                Task {
-                    inputBox.value = await inputCallback(prompt)
-                    inputSemaphore.signal()
+            // Show recent output with prompt
+            let recentOutput = outputLines.suffix(3).joined(separator: "\n")
+            let dialogText = recentOutput.isEmpty ? prompt : recentOutput + "\n\n" + prompt
+            let escapedText = dialogText
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "\"", with: "\\\"")
+            let script = """
+                display dialog "\(escapedText)" default answer "" buttons {"Cancel", "OK"} default button "OK"
+                text returned of result
+                """
+            var error: NSDictionary?
+            if let scriptObject = NSAppleScript(source: script) {
+                let result = scriptObject.executeAndReturnError(&error)
+                if error == nil {
+                    return result.stringValue
                 }
             }
-            // Wait for input
-            inputSemaphore.wait()
-            return inputBox.value
+            return nil
         }
 
         var errorMsg: String?

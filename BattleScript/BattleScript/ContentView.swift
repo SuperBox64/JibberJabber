@@ -166,31 +166,23 @@ struct ContentView: View {
             code = transpiledOutputs[tab] ?? ""
         }
 
-        // For JJ tab, use async interpreter with UI input
+        // For JJ tab, use interpreter with dialogs for input
         if tab == "jj" {
-            Task {
+            DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     let program = try JJEngine.parse(code)
-                    let result = await JJEngine.interpretAsync(program,
-                        outputCallback: { output in
+                    let result = JJEngine.interpretWithDialogs(program) { output in
+                        DispatchQueue.main.async {
                             self.runOutputs[tab] = output
-                        },
-                        inputCallback: { prompt in
-                            // Show input field and wait for user
-                            self.inputPrompt = prompt
-                            self.waitingForInput = true
-                            return await withCheckedContinuation { continuation in
-                                self.inputContinuation = continuation
-                            }
                         }
-                    )
-                    await MainActor.run {
+                    }
+                    DispatchQueue.main.async {
                         self.runOutputs[tab] = result
                         self.isRunning = false
                         updateTranspilation()
                     }
                 } catch {
-                    await MainActor.run {
+                    DispatchQueue.main.async {
                         self.runOutputs[tab] = "Error: \(error)"
                         self.isRunning = false
                     }
