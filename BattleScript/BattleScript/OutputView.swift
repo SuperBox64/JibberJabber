@@ -66,7 +66,7 @@ struct OutputView: View {
 
             Divider()
 
-            OutputTextView(text: output.isEmpty ? (isRunning ? "Running..." : "Press Run to execute...") : output)
+            OutputTextView(text: output.isEmpty ? (waitingForInput ? "Input below >" : (isRunning ? "Running..." : "Press Run to execute...")) : output)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay(alignment: .bottomTrailing) {
                 if isRunning && !waitingForInput {
