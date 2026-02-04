@@ -8,7 +8,7 @@
   "interpVarOpen": "{",
   "interpVarClose": "}",
   "enumAccess": "{name}[{key}]",
-  "header": "#!/usr/bin/env python3\n# Transpiled from JibJab\ndef _input(p):\n    s=input(p)\n    try: return int(s)\n    except: return s\n",
+  "header": "#!/usr/bin/env python3\n# Transpiled from JibJab\nimport sys\ndef _input(p):\n    print(f'__JJPROMPT__:{p}', flush=True)\n    s=input()\n    print(f'{p}{s}', flush=True)\n    try: return int(s)\n    except: return s\n",
   "print": "print({expr})",
   "printBool": "print(str({expr}).lower())",
   "log": "import logging; logging.warning({expr})",

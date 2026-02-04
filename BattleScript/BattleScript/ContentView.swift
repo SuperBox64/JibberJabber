@@ -204,10 +204,7 @@ struct ContentView: View {
 
         // Check if code uses input - use async version for interactive programs
         if JJEngine.usesInput(code) {
-            // Show input field immediately for interactive programs
-            self.inputPrompts[tab] = "Enter input:"
-            self.waitingForInputTabs.insert(tab)
-
+            // Don't show input field yet - wait for prompt from program
             Task {
                 let result: String
                 if code.isEmpty {
@@ -219,8 +216,13 @@ struct ContentView: View {
                         outputCallback: { output in
                             self.runOutputs[tab] = output
                         },
+                        promptCallback: { prompt in
+                            // Program is requesting input with this prompt
+                            self.inputPrompts[tab] = prompt
+                            self.waitingForInputTabs.insert(tab)
+                        },
                         inputCallback: {
-                            // Input field already visible, just wait for user
+                            // Wait for user input
                             return await withCheckedContinuation { continuation in
                                 self.inputContinuations[tab] = continuation
                             }

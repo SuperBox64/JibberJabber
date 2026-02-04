@@ -180,6 +180,7 @@ struct JJEngine {
         _ code: String,
         target: String,
         outputCallback: @escaping (String) -> Void,
+        promptCallback: @escaping (String) -> Void = { _ in },
         inputCallback: @escaping () async -> String?
     ) async -> String {
         let cfg = loadTarget(target)
@@ -194,9 +195,20 @@ struct JJEngine {
             return "Error writing source: \(error)"
         }
 
-        // Special handling for ASM
+        // Special handling for ASM - compile then run with stdin support
         if target == "asm" {
-            return compileAndRunAsm(srcFile, outFile, interactive: false)
+            let objFile = srcFile.replacingOccurrences(of: ".s", with: ".o")
+            let (asOk, asErr) = runProcess(["/usr/bin/as", "-o", objFile, srcFile])
+            if !asOk { return "Assembly error:\n\(asErr)" }
+
+            let (sdkOk, sdkOut) = runProcess(["/usr/bin/xcrun", "-sdk", "macosx", "--show-sdk-path"])
+            if !sdkOk { return "SDK error:\n\(sdkOut)" }
+            let sdkPath = sdkOut.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let (ldOk, ldErr) = runProcess(["/usr/bin/ld", "-o", outFile, objFile, "-lSystem", "-syslibroot", sdkPath, "-e", "_main", "-arch", "arm64"])
+            if !ldOk { return "Link error:\n\(ldErr)" }
+
+            return await runBinaryWithInput(outFile, outputCallback: outputCallback, promptCallback: promptCallback, inputCallback: inputCallback)
         }
 
         // Compile if needed
@@ -216,11 +228,11 @@ struct JJEngine {
                     return output
                 }
             }
-            return await runBinaryWithInput(outFile, outputCallback: outputCallback, inputCallback: inputCallback)
+            return await runBinaryWithInput(outFile, outputCallback: outputCallback, promptCallback: promptCallback, inputCallback: inputCallback)
         } else if let runCmd = cfg.run {
             // Interpreted language - run with stdin support
             let cmd = runCmd.map { $0.replacingOccurrences(of: "{src}", with: srcFile) }
-            return await runCommandWithInput(cmd, outputCallback: outputCallback, inputCallback: inputCallback)
+            return await runCommandWithInput(cmd, outputCallback: outputCallback, promptCallback: promptCallback, inputCallback: inputCallback)
         }
         return "No compiler or runner for target: \(target)"
     }
@@ -229,15 +241,17 @@ struct JJEngine {
     private static func runBinaryWithInput(
         _ path: String,
         outputCallback: @escaping (String) -> Void,
+        promptCallback: @escaping (String) -> Void = { _ in },
         inputCallback: @escaping () async -> String?
     ) async -> String {
-        return await runCommandWithInput([path], outputCallback: outputCallback, inputCallback: inputCallback)
+        return await runCommandWithInput([path], outputCallback: outputCallback, promptCallback: promptCallback, inputCallback: inputCallback)
     }
 
     /// Run a command with stdin/stdout piped for interactive input
     private static func runCommandWithInput(
         _ args: [String],
         outputCallback: @escaping (String) -> Void,
+        promptCallback: @escaping (String) -> Void = { _ in },
         inputCallback: @escaping () async -> String?
     ) async -> String {
         let process = Process()
@@ -283,13 +297,36 @@ struct JJEngine {
                 var buffer = Data()
 
                 // Start output reader thread
+                let promptMarker = "__JJPROMPT__:"
+                var currentPrompt = ""
                 let outputQueue = DispatchQueue(label: "output-reader")
                 outputQueue.async {
                     while process.isRunning {
                         let data = outputHandle.availableData
                         if !data.isEmpty {
                             buffer.append(data)
-                            if let text = String(data: buffer, encoding: .utf8) {
+                            if var text = String(data: buffer, encoding: .utf8) {
+                                // Check for prompt marker and extract it
+                                while let markerRange = text.range(of: promptMarker) {
+                                    // Find end of line after marker
+                                    let afterMarker = text[markerRange.upperBound...]
+                                    if let newlineRange = afterMarker.range(of: "\n") {
+                                        currentPrompt = String(afterMarker[..<newlineRange.lowerBound])
+                                        // Remove the marker line from text and buffer
+                                        let fullMarkerLine = promptMarker + currentPrompt + "\n"
+                                        text = text.replacingOccurrences(of: fullMarkerLine, with: "")
+                                        if let markerData = fullMarkerLine.data(using: .utf8) {
+                                            if let range = buffer.range(of: markerData) {
+                                                buffer.removeSubrange(range)
+                                            }
+                                        }
+                                        DispatchQueue.main.async {
+                                            promptCallback(currentPrompt)
+                                        }
+                                    } else {
+                                        break // Incomplete marker line, wait for more data
+                                    }
+                                }
                                 DispatchQueue.main.async {
                                     outputCallback(text)
                                 }
@@ -378,6 +415,9 @@ struct JJEngine {
 
     /// Check if code uses input (for determining if we need interactive mode)
     static func usesInput(_ code: String) -> Bool {
+        // AppleScript uses its own dialogs, not stdin - skip input field
+        if code.hasPrefix("--") { return false }
+
         // Check for common input patterns across languages
         return code.contains("fgets(") ||           // C
                code.contains("std::getline(") ||    // C++
@@ -386,7 +426,7 @@ struct JJEngine {
                code.contains("input(") ||           // Python
                code.contains("prompt(") ||          // JavaScript (browser)
                code.contains("std.in.getline()") || // JavaScript (QuickJS)
-               code.contains("display dialog") ||   // AppleScript
+               code.contains("movz x16, #0x0003") || // ASM read syscall
                code.contains("~>slurp")             // JJ source
     }
 

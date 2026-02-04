@@ -55,6 +55,8 @@ public class AssemblyTranspiler: Transpiling {
     private var dicts: [String: DictInfo] = [:]       // Track dictionary variables
     private var catchLabelStack: [String] = []        // Stack of catch labels for throw/kaboom
     private var stringPtrVars = Set<String>()         // Variables that hold string pointers (x0-sized)
+    private var inputBufferOffset: Int = 0             // Stack offset for input buffer
+    private var needsInputBuffer = false               // Track if we need input buffer
 
     public func transpile(_ program: Program) -> String {
         asmLines = []
@@ -347,9 +349,10 @@ public class AssemblyTranspiler: Transpiling {
                 case .variable(let name):
                     if floatVars.contains(name) {
                         fmt += "%g"
-                    } else if let offset = variables[name], enumVarLabels[name] != nil {
-                        _ = offset // enum var is a string pointer
+                    } else if enumVarLabels[name] != nil {
                         fmt += "%s"
+                    } else if stringPtrVars.contains(name) || stringVars.contains(name) {
+                        fmt += "%s"  // Input variables and string vars are string pointers
                     } else {
                         fmt += "%d"
                     }
@@ -371,6 +374,10 @@ public class AssemblyTranspiler: Transpiling {
                         if floatVars.contains(name) {
                             asmLines.append("    ldur d\(i), [x29, #-\(offset + 16)]")
                             asmLines.append("    str d\(i), [sp, #\(i * 8)]")
+                        } else if stringPtrVars.contains(name) || stringVars.contains(name) || enumVarLabels[name] != nil {
+                            // String pointers need 64-bit load
+                            asmLines.append("    ldur x0, [x29, #-\(offset + 16)]")
+                            asmLines.append("    str x0, [sp, #\(i * 8)]")
                         } else {
                             asmLines.append("    ldur w0, [x29, #-\(offset + 16)]")
                             asmLines.append("    sxtw x0, w0")
@@ -812,6 +819,20 @@ public class AssemblyTranspiler: Transpiling {
     }
 
     private func genVarDecl(_ node: VarDecl) {
+        // Handle input expression: returns string pointer
+        if node.value is InputExpr {
+            genExpr(node.value)  // Result is string pointer in x0
+            if variables[node.name] == nil {
+                variables[node.name] = stackOffset
+                stackOffset += 8
+            }
+            guard let offset = variables[node.name] else { return }
+            asmLines.append("    stur x0, [x29, #-\(offset + 16)]")
+            // Mark as string pointer for printing
+            stringPtrVars.insert(node.name)
+            return
+        }
+
         // Handle enum variable assignment: store as string pointer
         if let enumAccess = isEnumAccess(node.value) {
             if let caseLabels = enumCaseLabels[enumAccess.enumName],
@@ -1337,7 +1358,70 @@ public class AssemblyTranspiler: Transpiling {
                 }
                 asmLines.append("    bl _\(funcCall.name)")
             }
+        } else if let inputExpr = node as? InputExpr {
+            genInputExpr(inputExpr)
         }
+    }
+
+    /// Generate input expression - prints prompt marker, reads from stdin, echoes prompt+answer
+    /// Returns string pointer in x0, stores buffer on stack (not deallocated)
+    private func genInputExpr(_ node: InputExpr) {
+        var promptStr = ""
+        if let lit = node.prompt as? Literal, let str = lit.value as? String {
+            promptStr = str
+        }
+
+        // Print the __JJPROMPT__:prompt marker for UI to extract
+        let markerLabel = addStringRaw("__JJPROMPT__:" + promptStr)
+        asmLines.append("    adrp x0, \(markerLabel)\(PD)")
+        asmLines.append("    add x0, x0, \(markerLabel)\(PO)")
+        asmLines.append("    bl \(PS)")
+
+        // Allocate buffer in our stack frame for input (64 bytes)
+        // Don't deallocate - we need the string to persist
+        let bufferOffset = stackOffset + 16  // Actual offset from x29
+        stackOffset += 64
+
+        // Calculate buffer address: x29 - bufferOffset
+        asmLines.append("    sub x1, x29, #\(bufferOffset)")
+
+        // Call read(0, buffer, 63) - read from stdin
+        // macOS ARM64: read syscall is 0x2000003
+        asmLines.append("    mov x0, #0")           // stdin fd
+        asmLines.append("    mov x2, #63")          // count
+        asmLines.append("    movz x16, #0x0003")    // read syscall low bits
+        asmLines.append("    movk x16, #0x0200, lsl #16")  // read syscall high bits (0x2000003)
+        asmLines.append("    svc #0x80")
+
+        // Save bytes read count
+        asmLines.append("    mov x19, x0")
+
+        // Null-terminate the string (replace newline with null)
+        asmLines.append("    sub x1, x29, #\(bufferOffset)")
+        asmLines.append("    cbz x19, _input_empty\(labelCounter)")  // if no bytes read
+        asmLines.append("    sub x19, x19, #1")       // x19 = bytes read - 1
+        asmLines.append("    strb wzr, [x1, x19]")   // null terminate (remove newline)
+        asmLines.append("_input_empty\(labelCounter):")
+
+        // Echo "prompt + answer\n" using printf
+        // Format: "%s%s\n" with prompt and buffer
+        let promptOnlyLabel = addString(promptStr)
+        let echoFmtLabel = addStringRaw("%s%s")
+        asmLines.append("    sub x1, x29, #\(bufferOffset)")  // buffer address
+        asmLines.append("    str x1, [sp, #8]")               // second arg: answer
+        asmLines.append("    adrp x1, \(promptOnlyLabel)\(PD)")
+        asmLines.append("    add x1, x1, \(promptOnlyLabel)\(PO)")
+        asmLines.append("    str x1, [sp]")                   // first arg: prompt
+        asmLines.append("    adrp x0, \(echoFmtLabel)\(PD)")
+        asmLines.append("    add x0, x0, \(echoFmtLabel)\(PO)")
+        asmLines.append("    bl \(PS)")
+
+        // Return pointer to buffer in x0
+        asmLines.append("    sub x0, x29, #\(bufferOffset)")
+
+        // Mark that this input result is a string pointer
+        needsInputBuffer = true
+        labelCounter += 1
     }
 
     // MARK: - Float Support
