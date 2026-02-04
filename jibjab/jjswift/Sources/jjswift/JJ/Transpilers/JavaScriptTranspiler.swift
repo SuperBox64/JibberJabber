@@ -6,6 +6,7 @@ public class JavaScriptTranspiler: Transpiling {
     private var indentLevel = 0
     private let T = loadTarget("js")
     private var enums = Set<String>()
+    private var declaredVars = Set<String>()
 
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
@@ -25,6 +26,11 @@ public class JavaScriptTranspiler: Transpiling {
         } else if let logStmt = node as? LogStmt {
             return ind() + T.log.replacingOccurrences(of: "{expr}", with: expr(logStmt.expr))
         } else if let varDecl = node as? VarDecl {
+            // If already declared, use assignment instead of let
+            if declaredVars.contains(varDecl.name) {
+                return ind() + "\(varDecl.name) = \(expr(varDecl.value));"
+            }
+            declaredVars.insert(varDecl.name)
             return ind() + T.var
                 .replacingOccurrences(of: "{name}", with: varDecl.name)
                 .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
