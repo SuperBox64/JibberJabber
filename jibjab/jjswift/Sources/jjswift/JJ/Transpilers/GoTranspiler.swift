@@ -305,6 +305,12 @@ public class GoTranspiler: CFamilyTranspiler {
             }
             return "0"
         }
+        if let inputExpr = node as? InputExpr {
+            if let tmpl = T.input {
+                return tmpl.replacingOccurrences(of: "{prompt}", with: expr(inputExpr.prompt))
+            }
+            return "\"\""
+        }
         return super.expr(node)
     }
 }

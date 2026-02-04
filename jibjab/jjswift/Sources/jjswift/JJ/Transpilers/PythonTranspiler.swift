@@ -224,6 +224,9 @@ public class PythonTranspiler: Transpiling {
             let op = unaryOp.op == "!" ? T.not : unaryOp.op
             return "(\(op)\(expr(unaryOp.operand)))"
         } else if let inputExpr = node as? InputExpr {
+            if let tmpl = T.input {
+                return tmpl.replacingOccurrences(of: "{prompt}", with: expr(inputExpr.prompt))
+            }
             return "input(\(expr(inputExpr.prompt)))"
         } else if let funcCall = node as? FuncCall {
             let args = funcCall.args.map { expr($0) }.joined(separator: ", ")

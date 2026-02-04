@@ -23,6 +23,7 @@
   "throw": "error {value}",
   "call": "{name}({args})",
   "random": "random number from {min} to {max}",
+  "input": "text returned of (display dialog {prompt} default answer \"\")",
   "blockEnd": "end",
   "blockEndRepeat": "end repeat",
   "blockEndIf": "end if",

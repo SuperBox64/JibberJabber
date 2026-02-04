@@ -54,6 +54,7 @@
   "throw": "@throw [NSException exceptionWithName:@\"JJError\" reason:@{value} userInfo:nil];",
   "call": "{name}({args})",
   "random": "arc4random_uniform({max} - {min} + 1) + {min}",
+  "input": "([&]() { std::cout << {prompt}; std::string _s; std::getline(std::cin, _s); return _s; }())",
   "blockEnd": "}",
   "indent": "    ",
   "true": "true",

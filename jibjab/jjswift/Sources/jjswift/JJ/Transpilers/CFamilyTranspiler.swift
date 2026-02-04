@@ -23,6 +23,8 @@ public class CFamilyTranspiler: Transpiling {
     var tupleFields: [String: [(String, String)]] = [:]
     var foundationDicts = Set<String>()
     var foundationTuples = Set<String>()
+    var needsInputBuffer = false
+    var inputStringVars = Set<String>()  // Variables assigned from InputExpr (NSString* in ObjC)
 
     struct ArrayMeta {
         let elemType: String      // "int", "str", "double"
@@ -46,8 +48,40 @@ public class CFamilyTranspiler: Transpiling {
         } else if let arr = node as? ArrayLiteral {
             if let first = arr.elements.first { return inferType(first) }
             return "Int"
+        } else if node is InputExpr {
+            return "String"
         }
         return "Int"
+    }
+
+    private func containsInput(_ nodes: [ASTNode]) -> Bool {
+        for node in nodes {
+            if containsInputExpr(node) { return true }
+            if let loopStmt = node as? LoopStmt, containsInput(loopStmt.body) { return true }
+            if let ifStmt = node as? IfStmt {
+                if containsInput(ifStmt.thenBody) { return true }
+                if let elseBody = ifStmt.elseBody, containsInput(elseBody) { return true }
+            }
+            if let funcDef = node as? FuncDef, containsInput(funcDef.body) { return true }
+            if let tryStmt = node as? TryStmt {
+                if containsInput(tryStmt.tryBody) { return true }
+                if let oopsBody = tryStmt.oopsBody, containsInput(oopsBody) { return true }
+            }
+        }
+        return false
+    }
+
+    private func containsInputExpr(_ node: ASTNode) -> Bool {
+        if node is InputExpr { return true }
+        if let varDecl = node as? VarDecl { return containsInputExpr(varDecl.value) }
+        if let constDecl = node as? ConstDecl { return containsInputExpr(constDecl.value) }
+        if let printStmt = node as? PrintStmt { return containsInputExpr(printStmt.expr) }
+        if let logStmt = node as? LogStmt { return containsInputExpr(logStmt.expr) }
+        if let binary = node as? BinaryOp {
+            return containsInputExpr(binary.left) || containsInputExpr(binary.right)
+        }
+        if let unary = node as? UnaryOp { return containsInputExpr(unary.operand) }
+        return false
     }
 
     func getTargetType(_ jjType: String) -> String {
@@ -190,6 +224,9 @@ public class CFamilyTranspiler: Transpiling {
     }
 
     public func transpile(_ program: Program) -> String {
+        // Check if input is used anywhere in the program
+        needsInputBuffer = containsInput(program.statements)
+
         var lines = [T.header.trimmingCharacters(in: .newlines), ""]
 
         let funcs = program.statements.compactMap { $0 as? FuncDef }
@@ -226,7 +263,12 @@ public class CFamilyTranspiler: Transpiling {
         } else {
             indentLevel = 1
         }
-        let bodyLines = mainStmts.map { stmtToString($0) }
+        // Build body with optional input buffer declaration
+        var bodyLines: [String] = []
+        if needsInputBuffer, let inputBuffer = T.inputBuffer {
+            bodyLines.append(ind() + inputBuffer)
+        }
+        bodyLines.append(contentsOf: mainStmts.map { stmtToString($0) })
         let body = bodyLines.joined(separator: "\n") + "\n"
         let expanded = tmpl.replacingOccurrences(of: "{body}", with: body)
         lines.append(expanded)
@@ -339,6 +381,12 @@ public class CFamilyTranspiler: Transpiling {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             if stringVars.contains(varRef.name) {
+                // For ObjC input vars (NSString*), convert to C string using selector
+                if inputStringVars.contains(varRef.name), let selector = T.strSelector, let access = T.selectorAccess {
+                    let cStr = access.replacingOccurrences(of: "{expr}", with: varRef.name)
+                                     .replacingOccurrences(of: "{selector}", with: selector)
+                    return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: cStr)
+                }
                 return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             if boolVars.contains(varRef.name) {
@@ -491,6 +539,17 @@ public class CFamilyTranspiler: Transpiling {
 
     func constDeclToString(_ node: ConstDecl) -> String {
         // Constants are simpler - no arrays/dicts/tuples, just simple values
+        // InputExpr uses stringType directly (for ObjC: NSString*, not const char*)
+        if node.value is InputExpr {
+            stringVars.insert(node.name)
+            inputStringVars.insert(node.name)
+            let varType = T.stringType
+            let template = varType.hasPrefix("const ") ? T.var : T.const
+            return ind() + template
+                .replacingOccurrences(of: "{type}", with: varType)
+                .replacingOccurrences(of: "{name}", with: node.name)
+                .replacingOccurrences(of: "{value}", with: expr(node.value))
+        }
         let inferredType = inferType(node.value)
         if inferredType == "Bool" { boolVars.insert(node.name) }
         else if inferredType == "Int" { intVars.insert(node.name) }
@@ -533,6 +592,15 @@ public class CFamilyTranspiler: Transpiling {
            let varRef = idx.array as? VarRef,
            enums.contains(varRef.name) {
             enumVarTypes[node.name] = varRef.name
+        }
+        // InputExpr uses stringType directly (for ObjC: NSString*, not const char*)
+        if node.value is InputExpr {
+            stringVars.insert(node.name)
+            inputStringVars.insert(node.name)
+            return ind() + T.var
+                .replacingOccurrences(of: "{type}", with: T.stringType)
+                .replacingOccurrences(of: "{name}", with: node.name)
+                .replacingOccurrences(of: "{value}", with: expr(node.value))
         }
         let inferredType = inferType(node.value)
         if inferredType == "Bool" { boolVars.insert(node.name) }
@@ -832,6 +900,11 @@ public class CFamilyTranspiler: Transpiling {
                     .replacingOccurrences(of: "{max}", with: expr(randomExpr.max))
             }
             return "0"
+        } else if let inputExpr = node as? InputExpr {
+            if let tmpl = T.input {
+                return tmpl.replacingOccurrences(of: "{prompt}", with: expr(inputExpr.prompt))
+            }
+            return "\"\""
         }
         return ""
     }

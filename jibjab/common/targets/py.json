@@ -29,6 +29,7 @@
   "call": "{name}({args})",
   "random": "random.randint({min}, {max})",
   "randomImport": "import random",
+  "input": "input({prompt})",
   "indent": "    ",
   "true": "True",
   "false": "False",

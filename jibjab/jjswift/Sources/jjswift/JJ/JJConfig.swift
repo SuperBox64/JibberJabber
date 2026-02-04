@@ -229,6 +229,8 @@ public struct TargetConfig: Codable {
     private let _randomImport: String?
     private let _randomInit: String?
     private let _randomInclude: String?
+    private let _input: String?
+    private let _inputBuffer: String?
     public let main: String?
     public let compile: [String]?
     public let run: [String]?
@@ -357,6 +359,8 @@ public struct TargetConfig: Codable {
         case _randomImport = "randomImport"
         case _randomInit = "randomInit"
         case _randomInclude = "randomInclude"
+        case _input = "input"
+        case _inputBuffer = "inputBuffer"
         // true/false/nil handled specially
     }
 
@@ -503,6 +507,8 @@ public struct TargetConfig: Codable {
         _randomImport = try container.decodeIfPresent(String.self, forKey: ._randomImport)
         _randomInit = try container.decodeIfPresent(String.self, forKey: ._randomInit)
         _randomInclude = try container.decodeIfPresent(String.self, forKey: ._randomInclude)
+        _input = try container.decodeIfPresent(String.self, forKey: ._input)
+        _inputBuffer = try container.decodeIfPresent(String.self, forKey: ._inputBuffer)
 
         // Handle true/false/nil with special decoder keys
         let additionalContainer = try decoder.container(keyedBy: AdditionalCodingKeys.self)
@@ -638,6 +644,8 @@ public struct TargetConfig: Codable {
     public var randomImport: String? { _randomImport }
     public var randomInit: String? { _randomInit }
     public var randomInclude: String? { _randomInclude }
+    public var input: String? { _input }
+    public var inputBuffer: String? { _inputBuffer }
 }
 
 /// Environment overrides for JJLib

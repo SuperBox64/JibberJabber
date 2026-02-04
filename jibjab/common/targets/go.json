@@ -44,6 +44,7 @@
   "call": "{name}({args})",
   "random": "rand.Intn({max}-{min}+1)+{min}",
   "randomImport": "math/rand",
+  "input": "func() string { fmt.Print({prompt}); var s string; fmt.Scanln(&s); return s }()",
   "blockEnd": "}",
   "indent": "    ",
   "true": "true",

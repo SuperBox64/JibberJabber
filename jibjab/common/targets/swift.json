@@ -35,6 +35,7 @@
   "catchVarBind": "let {var} = (error as? JJError)?.message ?? \"\\(error)\"",
   "call": "{name}({args})",
   "random": "Int.random(in: {min}...{max})",
+  "input": "({ print({prompt}, terminator: \"\"); return readLine() ?? \"\" }())",
   "blockEnd": "}",
   "indent": "    ",
   "true": "true",

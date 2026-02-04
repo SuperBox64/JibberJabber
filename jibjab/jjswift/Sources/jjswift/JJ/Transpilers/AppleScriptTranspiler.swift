@@ -246,6 +246,11 @@ public class AppleScriptTranspiler: Transpiling {
                     .replacingOccurrences(of: "{max}", with: expr(randomExpr.max))
             }
             return "0"
+        } else if let inputExpr = node as? InputExpr {
+            if let tmpl = T.input {
+                return tmpl.replacingOccurrences(of: "{prompt}", with: expr(inputExpr.prompt))
+            }
+            return "\"\""
         }
         return ""
     }

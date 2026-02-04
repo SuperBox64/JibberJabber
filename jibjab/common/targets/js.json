@@ -27,6 +27,7 @@
   "throw": "throw {value};",
   "call": "{name}({args})",
   "random": "Math.floor(Math.random() * ({max} - {min} + 1)) + {min}",
+  "input": "prompt({prompt})",
   "blockEnd": "}",
   "indent": "    ",
   "true": "true",

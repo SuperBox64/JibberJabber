@@ -52,7 +52,11 @@ public class ObjCTranspiler: CFamilyTranspiler {
                 return ind() + T.printFloat.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             if stringVars.contains(varRef.name) {
-                // stringVars are const char* — no selector needed
+                // Input vars are NSString* - need UTF8String selector for printf
+                if inputStringVars.contains(varRef.name) {
+                    return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: selectorExpr(varRef.name, "str"))
+                }
+                // Other stringVars are const char* — no selector needed
                 return ind() + T.printStr.replacingOccurrences(of: "{expr}", with: expr(e))
             }
             if boolVars.contains(varRef.name) {
@@ -357,7 +361,11 @@ public class ObjCTranspiler: CFamilyTranspiler {
         }
         if let varRef = e as? VarRef {
             if stringVars.contains(varRef.name) {
-                // const char* needs @() boxing for NSLog %@
+                // Input vars are NSString* - can be used directly with %@
+                if inputStringVars.contains(varRef.name) {
+                    return ind() + T.logStr.replacingOccurrences(of: "{expr}", with: expr(e))
+                }
+                // Other stringVars are const char* - need @() boxing for NSLog %@
                 return ind() + T.logStr.replacingOccurrences(of: "{expr}", with: "@(\(expr(e)))")
             }
             if doubleVars.contains(varRef.name) {

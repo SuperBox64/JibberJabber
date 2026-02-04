@@ -51,6 +51,7 @@
   "random": "(rand() % ({max} - {min} + 1)) + {min}",
   "randomInit": "srand(static_cast<unsigned>(time(nullptr)));",
   "randomInclude": "#include <ctime>\n#include <cstdlib>",
+  "input": "([&]() { std::cout << {prompt}; std::string _s; std::getline(std::cin, _s); return _s; }())",
   "blockEnd": "}",
   "indent": "    ",
   "true": "true",
