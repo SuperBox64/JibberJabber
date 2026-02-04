@@ -73,6 +73,7 @@ struct JJEngine {
         let ext = cfg.ext
         let srcFile = "/tmp/\(basename)\(ext)"
         let outFile = "/tmp/\(basename)_out"
+        let interactive = usesInput(code)
 
         do {
             try code.write(toFile: srcFile, atomically: true, encoding: .utf8)
@@ -81,7 +82,7 @@ struct JJEngine {
         }
 
         if target == "asm" {
-            return compileAndRunAsm(srcFile, outFile)
+            return compileAndRunAsm(srcFile, outFile, interactive: interactive)
         }
 
         if let compileCmd = cfg.compile {
@@ -99,8 +100,13 @@ struct JJEngine {
                     return output
                 }
             }
-            return runBinary(outFile)
+            return runBinary(outFile, interactive: interactive)
         } else if let runCmd = cfg.run {
+            // Interpreted languages (Python, JS) - run in Terminal if interactive
+            if interactive {
+                let cmd = runCmd.map { $0.replacingOccurrences(of: "{src}", with: srcFile) }
+                return runInTerminal(cmd.joined(separator: " "))
+            }
             let cmd = runCmd.map { $0.replacingOccurrences(of: "{src}", with: srcFile) }
             let (_, output) = runProcess(cmd)
             return output
@@ -108,7 +114,7 @@ struct JJEngine {
         return "No compiler or runner for target: \(target)"
     }
 
-    private static func compileAndRunAsm(_ srcFile: String, _ outFile: String) -> String {
+    private static func compileAndRunAsm(_ srcFile: String, _ outFile: String, interactive: Bool = false) -> String {
         let objFile = srcFile.replacingOccurrences(of: ".s", with: ".o")
         let (asOk, asErr) = runProcess(["/usr/bin/as", "-o", objFile, srcFile])
         if !asOk { return "Assembly error:\n\(asErr)" }
@@ -120,10 +126,42 @@ struct JJEngine {
         let (ldOk, ldErr) = runProcess(["/usr/bin/ld", "-o", outFile, objFile, "-lSystem", "-syslibroot", sdkPath, "-e", "_main", "-arch", "arm64"])
         if !ldOk { return "Link error:\n\(ldErr)" }
 
-        return runBinary(outFile)
+        return runBinary(outFile, interactive: interactive)
     }
 
-    private static func runBinary(_ path: String) -> String {
+    /// Check if code uses input (for determining if we need interactive mode)
+    static func usesInput(_ code: String) -> Bool {
+        // Check for common input patterns across languages
+        return code.contains("fgets(") ||           // C
+               code.contains("std::getline(") ||    // C++
+               code.contains("readLine()") ||       // Swift
+               code.contains("fmt.Scanln") ||       // Go
+               code.contains("input(") ||           // Python
+               code.contains("prompt(") ||          // JavaScript
+               code.contains("display dialog") ||   // AppleScript
+               code.contains("~>slurp")             // JJ source
+    }
+
+    /// Run binary in Terminal.app for interactive programs
+    static func runInTerminal(_ path: String) -> String {
+        let script = """
+            tell application "Terminal"
+                activate
+                do script "\(path); echo ''; echo 'Press Enter to close...'; read"
+            end tell
+            """
+        var error: NSDictionary?
+        if let scriptObject = NSAppleScript(source: script) {
+            scriptObject.executeAndReturnError(&error)
+        }
+        return "Running in Terminal...\n(Interactive programs run in Terminal for stdin support)"
+    }
+
+    private static func runBinary(_ path: String, interactive: Bool = false) -> String {
+        if interactive {
+            return runInTerminal(path)
+        }
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
         // Ensure NSLog/os_log output reaches stderr even when not in a terminal
