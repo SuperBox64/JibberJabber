@@ -123,7 +123,6 @@ struct JJEngine {
         let ext = cfg.ext
         let srcFile = "/tmp/\(basename)\(ext)"
         let outFile = "/tmp/\(basename)_out"
-        let interactive = usesInput(code)
 
         do {
             try code.write(toFile: srcFile, atomically: true, encoding: .utf8)
@@ -132,7 +131,7 @@ struct JJEngine {
         }
 
         if target == "asm" {
-            return compileAndRunAsm(srcFile, outFile, interactive: interactive)
+            return compileAndRunAsm(srcFile, outFile, interactive: false)
         }
 
         if let compileCmd = cfg.compile {
@@ -150,18 +149,164 @@ struct JJEngine {
                     return output
                 }
             }
-            return runBinary(outFile, interactive: interactive)
+            return runBinary(outFile, interactive: false)
         } else if let runCmd = cfg.run {
-            // Interpreted languages (Python, JS) - run in Terminal if interactive
-            if interactive {
-                let cmd = runCmd.map { $0.replacingOccurrences(of: "{src}", with: srcFile) }
-                return runInTerminal(cmd.joined(separator: " "))
-            }
             let cmd = runCmd.map { $0.replacingOccurrences(of: "{src}", with: srcFile) }
             let (_, output) = runProcess(cmd)
             return output
         }
         return "No compiler or runner for target: \(target)"
+    }
+
+    /// Async version of compileAndRun that supports UI-based input via stdin
+    static func compileAndRunAsync(
+        _ code: String,
+        target: String,
+        outputCallback: @escaping (String) -> Void,
+        inputCallback: @escaping () async -> String?
+    ) async -> String {
+        let cfg = loadTarget(target)
+        let basename = "battlescript_\(target)"
+        let ext = cfg.ext
+        let srcFile = "/tmp/\(basename)\(ext)"
+        let outFile = "/tmp/\(basename)_out"
+
+        do {
+            try code.write(toFile: srcFile, atomically: true, encoding: .utf8)
+        } catch {
+            return "Error writing source: \(error)"
+        }
+
+        // Compile if needed
+        if let compileCmd = cfg.compile {
+            let cmd = compileCmd.map {
+                $0.replacingOccurrences(of: "{src}", with: srcFile)
+                  .replacingOccurrences(of: "{out}", with: outFile)
+            }
+            let (ok, err) = runProcess(cmd)
+            if !ok { return "Compile error:\n\(err)" }
+
+            if target == "applescript" {
+                // AppleScript uses its own dialogs
+                if let runCmd = cfg.run {
+                    let rCmd = runCmd.map { $0.replacingOccurrences(of: "{src}", with: outFile) }
+                    let (_, output) = runProcess(rCmd)
+                    return output
+                }
+            }
+            return await runBinaryWithInput(outFile, outputCallback: outputCallback, inputCallback: inputCallback)
+        } else if let runCmd = cfg.run {
+            // Interpreted language - run with stdin support
+            let cmd = runCmd.map { $0.replacingOccurrences(of: "{src}", with: srcFile) }
+            return await runCommandWithInput(cmd, outputCallback: outputCallback, inputCallback: inputCallback)
+        }
+        return "No compiler or runner for target: \(target)"
+    }
+
+    /// Run a binary with stdin/stdout piped for interactive input
+    private static func runBinaryWithInput(
+        _ path: String,
+        outputCallback: @escaping (String) -> Void,
+        inputCallback: @escaping () async -> String?
+    ) async -> String {
+        return await runCommandWithInput([path], outputCallback: outputCallback, inputCallback: inputCallback)
+    }
+
+    /// Run a command with stdin/stdout piped for interactive input
+    private static func runCommandWithInput(
+        _ args: [String],
+        outputCallback: @escaping (String) -> Void,
+        inputCallback: @escaping () async -> String?
+    ) async -> String {
+        let process = Process()
+        if args[0].hasPrefix("/") {
+            process.executableURL = URL(fileURLWithPath: args[0])
+            process.arguments = Array(args.dropFirst())
+        } else {
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.arguments = args
+        }
+
+        // Set up environment
+        var env = ProcessInfo.processInfo.environment
+        let home = env["HOME"] ?? NSHomeDirectory()
+        let extra = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/local/go/bin", "\(home)/go/bin"].joined(separator: ":")
+        env["PATH"] = extra + ":" + (env["PATH"] ?? "/usr/bin:/bin")
+        process.environment = env
+
+        let stdinPipe = Pipe()
+        let stdoutPipe = Pipe()
+        process.standardInput = stdinPipe
+        process.standardOutput = stdoutPipe
+        process.standardError = stdoutPipe
+
+        do {
+            processLock.lock()
+            runningProcess = process
+            processLock.unlock()
+            try process.run()
+        } catch {
+            processLock.lock()
+            runningProcess = nil
+            processLock.unlock()
+            return "Run error: \(error)"
+        }
+
+        var outputLines: [String] = []
+        let outputHandle = stdoutPipe.fileHandleForReading
+        let inputHandle = stdinPipe.fileHandleForWriting
+
+        // Read output in background and show input field when needed
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                var buffer = Data()
+                while process.isRunning {
+                    let available = outputHandle.availableData
+                    if available.isEmpty {
+                        // No output - might be waiting for input, give UI a chance
+                        Thread.sleep(forTimeInterval: 0.1)
+                        // Check if still no output after a bit - show input field
+                        let moreData = outputHandle.availableData
+                        if moreData.isEmpty && process.isRunning {
+                            // Likely waiting for input - request it
+                            Task { @MainActor in
+                                if let input = await inputCallback() {
+                                    let inputData = (input + "\n").data(using: .utf8) ?? Data()
+                                    try? inputHandle.write(contentsOf: inputData)
+                                }
+                            }
+                        } else {
+                            buffer.append(moreData)
+                        }
+                    } else {
+                        buffer.append(available)
+                    }
+
+                    if let text = String(data: buffer, encoding: .utf8) {
+                        let lines = text.components(separatedBy: "\n")
+                        outputLines = lines
+                        DispatchQueue.main.async {
+                            outputCallback(text)
+                        }
+                    }
+                }
+
+                // Read remaining output
+                let remaining = outputHandle.readDataToEndOfFile()
+                buffer.append(remaining)
+                let finalOutput = String(data: buffer, encoding: .utf8) ?? ""
+
+                processLock.lock()
+                runningProcess = nil
+                processLock.unlock()
+
+                if process.terminationReason == .uncaughtSignal {
+                    continuation.resume(returning: "Stopped")
+                } else {
+                    continuation.resume(returning: finalOutput.trimmingCharacters(in: .newlines))
+                }
+            }
+        }
     }
 
     private static func compileAndRunAsm(_ srcFile: String, _ outFile: String, interactive: Bool = false) -> String {

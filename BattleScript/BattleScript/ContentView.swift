@@ -199,26 +199,51 @@ struct ContentView: View {
             return
         }
 
-        let work = DispatchWorkItem {
-            let result: String
-            if false {
-                // JJ handled above
-                result = ""
-            } else {
+        // Check if code uses input - use async version for interactive programs
+        if JJEngine.usesInput(code) {
+            Task {
+                let result: String
                 if code.isEmpty {
                     result = "No code to run for target: \(tab)"
                 } else if code.hasPrefix("// Parse error") || code.hasPrefix("// Transpilation failed") {
                     result = code.replacingOccurrences(of: "// ", with: "")
                 } else {
-                    result = JJEngine.compileAndRun(code, target: tab)
-                    if userHasEdited, !editMode,
-                       !result.contains("error") && !result.contains("Error") && !result.contains("failed"),
-                       let reverser = ReverseTranspilerFactory.transpiler(for: tab),
-                       let jjCode = reverser.reverseTranspile(code) {
-                        DispatchQueue.main.async {
-                            userHasEdited = false
-                            sourceCode = jjCode
+                    result = await JJEngine.compileAndRunAsync(code, target: tab,
+                        outputCallback: { output in
+                            self.runOutputs[tab] = output
+                        },
+                        inputCallback: {
+                            self.inputPrompt = "Input:"
+                            self.waitingForInput = true
+                            return await withCheckedContinuation { continuation in
+                                self.inputContinuation = continuation
+                            }
                         }
+                    )
+                }
+                await MainActor.run {
+                    self.runOutputs[tab] = result
+                    self.isRunning = false
+                }
+            }
+            return
+        }
+
+        let work = DispatchWorkItem {
+            let result: String
+            if code.isEmpty {
+                result = "No code to run for target: \(tab)"
+            } else if code.hasPrefix("// Parse error") || code.hasPrefix("// Transpilation failed") {
+                result = code.replacingOccurrences(of: "// ", with: "")
+            } else {
+                result = JJEngine.compileAndRun(code, target: tab)
+                if userHasEdited, !editMode,
+                   !result.contains("error") && !result.contains("Error") && !result.contains("failed"),
+                   let reverser = ReverseTranspilerFactory.transpiler(for: tab),
+                   let jjCode = reverser.reverseTranspile(code) {
+                    DispatchQueue.main.async {
+                        userHasEdited = false
+                        sourceCode = jjCode
                     }
                 }
             }
