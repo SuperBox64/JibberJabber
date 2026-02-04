@@ -194,6 +194,11 @@ struct JJEngine {
             return "Error writing source: \(error)"
         }
 
+        // Special handling for ASM
+        if target == "asm" {
+            return compileAndRunAsm(srcFile, outFile, interactive: false)
+        }
+
         // Compile if needed
         if let compileCmd = cfg.compile {
             let cmd = compileCmd.map {
@@ -322,6 +327,14 @@ struct JJEngine {
 
                     // Write input to process stdin if we got input
                     if let input = userInput {
+                        // Echo the input to output (append to current line)
+                        buffer.append((input + "\n").data(using: .utf8) ?? Data())
+                        if let text = String(data: buffer, encoding: .utf8) {
+                            DispatchQueue.main.async {
+                                outputCallback(text)
+                            }
+                        }
+                        // Send to process
                         let inputData = (input + "\n").data(using: .utf8) ?? Data()
                         try? inputHandle.write(contentsOf: inputData)
                     }

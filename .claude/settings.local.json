@@ -454,7 +454,10 @@
       "Bash(for target in c objc objcpp)",
       "Bash(for target in c py js go)",
       "Bash(./jjswift/jjswift:*)",
-      "Bash(gofmt:*)"
+      "Bash(gofmt:*)",
+      "mcp__xcf-server__read_dir",
+      "Bash(./jjswift/jj:*)",
+      "Bash(qjs:*)"
     ]
   }
 }

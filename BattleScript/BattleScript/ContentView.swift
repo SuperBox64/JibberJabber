@@ -7,16 +7,16 @@ struct ContentView: View {
     @State private var selectedTab = "jj"
     @State private var transpiledOutputs: [String: String] = [:]
     @State private var runOutputs: [String: String] = [:]
-    @State private var isRunning = false
+    @State private var runningTabs: Set<String> = []  // Per-tab running state
     @State private var userHasEdited = false
     @AppStorage("editMode") private var editMode = false
     @State private var transpileWork: DispatchWorkItem?
     @State private var runWork: DispatchWorkItem?
     @State private var showDependencyCheck = true
     @State private var dependencyStatus: DependencyStatus?
-    @State private var waitingForInput = false
-    @State private var inputPrompt = ""
-    @State private var inputContinuation: CheckedContinuation<String?, Never>?
+    @State private var waitingForInputTabs: Set<String> = []  // Per-tab input state
+    @State private var inputPrompts: [String: String] = [:]  // Per-tab prompts
+    @State private var inputContinuations: [String: CheckedContinuation<String?, Never>] = [:]  // Per-tab continuations
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -71,7 +71,7 @@ struct ContentView: View {
                     sourceCode: $sourceCode,
                     transpiledOutputs: $transpiledOutputs,
                     userHasEdited: $userHasEdited,
-                    isRunning: isRunning,
+                    isRunning: runningTabs.contains(selectedTab),
                     onRun: runCurrentTab,
                     onStop: stopRunning
                 )
@@ -79,12 +79,12 @@ struct ContentView: View {
                 // Bottom: output pane with input support
                 OutputView(
                     output: runOutputs[selectedTab] ?? "",
-                    isRunning: isRunning,
-                    waitingForInput: waitingForInput,
-                    inputPrompt: inputPrompt,
+                    isRunning: runningTabs.contains(selectedTab),
+                    waitingForInput: waitingForInputTabs.contains(selectedTab),
+                    inputPrompt: inputPrompts[selectedTab] ?? "",
                     onInputSubmit: { input in
-                        inputContinuation?.resume(returning: input)
-                        inputContinuation = nil
+                        inputContinuations[selectedTab]?.resume(returning: input)
+                        inputContinuations[selectedTab] = nil
                         // Keep waitingForInput true - it will be set false when process ends
                     }
                 )
@@ -147,16 +147,19 @@ struct ContentView: View {
     }
 
     private func stopRunning() {
+        let tab = selectedTab
         runWork?.cancel()
         runWork = nil
         JJEngine.stopRunning()
-        isRunning = false
-        runOutputs[selectedTab] = "Stopped"
+        runningTabs.remove(tab)
+        waitingForInputTabs.remove(tab)
+        inputContinuations[tab] = nil
+        runOutputs[tab] = "Stopped"
     }
 
     private func runCurrentTab() {
         let tab = selectedTab
-        isRunning = true
+        runningTabs.insert(tab)
         runOutputs[tab] = ""
         let code: String
         if tab == "jj" {
@@ -175,24 +178,24 @@ struct ContentView: View {
                             self.runOutputs[tab] = output
                         },
                         inputCallback: { prompt in
-                            self.inputPrompt = prompt
-                            self.waitingForInput = true
+                            self.inputPrompts[tab] = prompt
+                            self.waitingForInputTabs.insert(tab)
                             return await withCheckedContinuation { continuation in
-                                self.inputContinuation = continuation
+                                self.inputContinuations[tab] = continuation
                             }
                         }
                     )
                     await MainActor.run {
                         self.runOutputs[tab] = result
-                        self.isRunning = false
-                        self.waitingForInput = false
+                        self.runningTabs.remove(tab)
+                        self.waitingForInputTabs.remove(tab)
                         updateTranspilation()
                     }
                 } catch {
                     await MainActor.run {
                         self.runOutputs[tab] = "Error: \(error)"
-                        self.isRunning = false
-                        self.waitingForInput = false
+                        self.runningTabs.remove(tab)
+                        self.waitingForInputTabs.remove(tab)
                     }
                 }
             }
@@ -202,8 +205,8 @@ struct ContentView: View {
         // Check if code uses input - use async version for interactive programs
         if JJEngine.usesInput(code) {
             // Show input field immediately for interactive programs
-            self.inputPrompt = "Enter input:"
-            self.waitingForInput = true
+            self.inputPrompts[tab] = "Enter input:"
+            self.waitingForInputTabs.insert(tab)
 
             Task {
                 let result: String
@@ -219,15 +222,15 @@ struct ContentView: View {
                         inputCallback: {
                             // Input field already visible, just wait for user
                             return await withCheckedContinuation { continuation in
-                                self.inputContinuation = continuation
+                                self.inputContinuations[tab] = continuation
                             }
                         }
                     )
                 }
                 await MainActor.run {
                     self.runOutputs[tab] = result
-                    self.isRunning = false
-                    self.waitingForInput = false
+                    self.runningTabs.remove(tab)
+                    self.waitingForInputTabs.remove(tab)
                 }
             }
             return
@@ -254,7 +257,7 @@ struct ContentView: View {
             DispatchQueue.main.async {
                 if self.runWork?.isCancelled != true {
                     runOutputs[tab] = result
-                    isRunning = false
+                    runningTabs.remove(tab)
                 }
             }
         }
