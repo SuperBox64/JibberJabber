@@ -340,6 +340,10 @@ public class CFamilyTranspiler: Transpiling {
             let (trueStr, falseStr) = boolDisplayStrings
             return "\(name) ? \"\(trueStr)\" : \"\(falseStr)\""
         }
+        // For C++ std::string, need .c_str() for printf
+        if stringVars.contains(name) && T.stringType == "std::string" {
+            return "\(name).c_str()"
+        }
         return name
     }
 
