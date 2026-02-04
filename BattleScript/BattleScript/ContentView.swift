@@ -1,5 +1,5 @@
 import SwiftUI
-import JJLib
+@preconcurrency import JJLib
 
 struct ContentView: View {
     @State private var sourceCode = ""
@@ -166,25 +166,34 @@ struct ContentView: View {
             code = transpiledOutputs[tab] ?? ""
         }
 
-        // For JJ tab, use interpreter with dialogs for input
+        // For JJ tab, use async interpreter with terminal-style input
         if tab == "jj" {
-            DispatchQueue.global(qos: .userInitiated).async {
+            Task {
                 do {
                     let program = try JJEngine.parse(code)
-                    let result = JJEngine.interpretWithDialogs(program) { output in
-                        DispatchQueue.main.async {
+                    let result = await JJEngine.interpretAsync(program,
+                        outputCallback: { output in
                             self.runOutputs[tab] = output
+                        },
+                        inputCallback: { prompt in
+                            self.inputPrompt = prompt
+                            self.waitingForInput = true
+                            return await withCheckedContinuation { continuation in
+                                self.inputContinuation = continuation
+                            }
                         }
-                    }
-                    DispatchQueue.main.async {
+                    )
+                    await MainActor.run {
                         self.runOutputs[tab] = result
                         self.isRunning = false
+                        self.waitingForInput = false
                         updateTranspilation()
                     }
                 } catch {
-                    DispatchQueue.main.async {
+                    await MainActor.run {
                         self.runOutputs[tab] = "Error: \(error)"
                         self.isRunning = false
+                        self.waitingForInput = false
                     }
                 }
             }

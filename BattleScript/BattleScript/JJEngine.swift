@@ -1,5 +1,5 @@
 import Foundation
-import JJLib
+@preconcurrency import JJLib
 
 struct JJEngine {
     static var runningProcess: Process?
@@ -67,57 +67,62 @@ struct JJEngine {
         return output
     }
 
-    /// Run interpreter with real-time output and dialog-based input
-    static func interpretWithDialogs(
+    /// Async interpreter with terminal-style input using CheckedContinuation
+    static func interpretAsync(
         _ program: Program,
-        outputCallback: @escaping (String) -> Void
-    ) -> String {
-        let interpreter = Interpreter()
-        var outputLines: [String] = []
+        outputCallback: @escaping (String) -> Void,
+        inputCallback: @escaping (String) async -> String?
+    ) async -> String {
+        return await withCheckedContinuation { (continuation: CheckedContinuation<String, Never>) in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let interpreter = Interpreter()
+                var outputLines: [String] = []
 
-        // Collect output and send to callback in real-time
-        interpreter.outputHandler = { text in
-            outputLines.append(text)
-            DispatchQueue.main.async {
-                outputCallback(outputLines.joined(separator: "\n"))
-            }
-        }
-
-        // Use AppleScript dialogs for input (shows current output in dialog)
-        interpreter.inputProvider = { prompt in
-            // Show recent output with prompt
-            let recentOutput = outputLines.suffix(3).joined(separator: "\n")
-            let dialogText = recentOutput.isEmpty ? prompt : recentOutput + "\n\n" + prompt
-            let escapedText = dialogText
-                .replacingOccurrences(of: "\\", with: "\\\\")
-                .replacingOccurrences(of: "\"", with: "\\\"")
-            let script = """
-                display dialog "\(escapedText)" default answer "" buttons {"Cancel", "OK"} default button "OK"
-                text returned of result
-                """
-            var error: NSDictionary?
-            if let scriptObject = NSAppleScript(source: script) {
-                let result = scriptObject.executeAndReturnError(&error)
-                if error == nil {
-                    return result.stringValue
+                // Real-time output
+                interpreter.outputHandler = { text in
+                    outputLines.append(text)
+                    let output = outputLines.joined(separator: "\n")
+                    DispatchQueue.main.async {
+                        outputCallback(output)
+                    }
                 }
+
+                // Async input bridged to sync callback using semaphore
+                interpreter.inputProvider = { prompt in
+                    let semaphore = DispatchSemaphore(value: 0)
+                    var result: String? = nil
+
+                    // Request input on main thread via async
+                    Task { @MainActor in
+                        result = await inputCallback(prompt)
+                        semaphore.signal()
+                    }
+
+                    // Block this background thread until input arrives
+                    semaphore.wait()
+                    return result
+                }
+
+                var errorMsg: String?
+                do {
+                    try interpreter.run(program)
+                } catch {
+                    errorMsg = "Runtime error: \(error)"
+                }
+
+                let output = outputLines.joined(separator: "\n")
+                let finalResult: String
+                if let errorMsg = errorMsg {
+                    finalResult = output.isEmpty ? errorMsg : output + "\n" + errorMsg
+                } else {
+                    finalResult = output
+                }
+
+                continuation.resume(returning: finalResult)
             }
-            return nil
         }
-
-        var errorMsg: String?
-        do {
-            try interpreter.run(program)
-        } catch {
-            errorMsg = "Runtime error: \(error)"
-        }
-
-        let output = outputLines.joined(separator: "\n")
-        if let errorMsg = errorMsg {
-            return output.isEmpty ? errorMsg : output + "\n" + errorMsg
-        }
-        return output
     }
+
 
     static func compileAndRun(_ code: String, target: String) -> String {
         let cfg = loadTarget(target)
