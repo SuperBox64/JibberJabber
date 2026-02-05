@@ -254,6 +254,7 @@ public class CFamilyTranspiler: Transpiling {
 
         var lines = [T.header.trimmingCharacters(in: .newlines)]
         if needsInputBuffer, let inputHelper = T.inputHelper {
+            lines.append("")
             lines.append(inputHelper)
         }
         lines.append("")
