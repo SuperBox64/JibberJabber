@@ -1126,9 +1126,25 @@ public class AssemblyTranspiler: Transpiling {
     }
 
     private func genLoop(_ node: LoopStmt) {
-        guard let start = node.start, let end = node.end else { return }
         let loopStart = newLabel(prefix: "loop")
         let loopEnd = newLabel(prefix: "endloop")
+
+        // Handle while loop with condition
+        if let condition = node.condition {
+            asmLines.append("\(loopStart):")
+            genCondition(condition, falseLabel: loopEnd)
+
+            for stmt in node.body {
+                genStmt(stmt)
+            }
+
+            asmLines.append("    b \(loopStart)")
+            asmLines.append("\(loopEnd):")
+            return
+        }
+
+        // Handle for-range loop
+        guard let start = node.start, let end = node.end else { return }
 
         genExpr(start)
         if variables[node.var] == nil {
@@ -1258,6 +1274,10 @@ public class AssemblyTranspiler: Transpiling {
                 // Enum variable stored as string pointer — load as x0 for comparison
                 asmLines.append("    ldur x0, [x29, #-\(offset + 16)]")
                 asmLines.append("    mov w0, w0")  // truncate to w0 for int comparison context
+            } else if stringPtrVars.contains(varRef.name), let offset = variables[varRef.name] {
+                // Input string variable - convert to integer using atoi for numeric comparisons
+                asmLines.append("    ldur x0, [x29, #-\(offset + 16)]")
+                asmLines.append("    bl _atoi")  // x0 = atoi(string), result in w0
             } else if let offset = variables[varRef.name] {
                 asmLines.append("    ldur w0, [x29, #-\(offset + 16)]")
             } else if enums[varRef.name] != nil {
@@ -1360,7 +1380,25 @@ public class AssemblyTranspiler: Transpiling {
             }
         } else if let inputExpr = node as? InputExpr {
             genInputExpr(inputExpr)
+        } else if let randomExpr = node as? RandomExpr {
+            genRandomExpr(randomExpr)
         }
+    }
+
+    /// Generate random number in range [min, max]
+    /// Uses arc4random_uniform on macOS
+    private func genRandomExpr(_ node: RandomExpr) {
+        // Calculate range: max - min + 1
+        genExpr(node.max)
+        asmLines.append("    mov w20, w0")  // w20 = max
+        genExpr(node.min)
+        asmLines.append("    mov w21, w0")  // w21 = min
+        asmLines.append("    sub w0, w20, w21")  // w0 = max - min
+        asmLines.append("    add w0, w0, #1")     // w0 = max - min + 1 (range)
+        // Call arc4random_uniform(range)
+        asmLines.append("    bl _arc4random_uniform")
+        // Add min to get result in [min, max]
+        asmLines.append("    add w0, w0, w21")
     }
 
     /// Generate input expression - prints prompt marker, reads from stdin, echoes prompt+answer

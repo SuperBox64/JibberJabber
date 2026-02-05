@@ -126,6 +126,9 @@ public class SwiftTranspiler: Transpiling {
             if let lit = varDecl.value as? Literal, lit.value is Int {
                 intVars.insert(varDecl.name)
             }
+            if varDecl.value is RandomExpr {
+                intVars.insert(varDecl.name)
+            }
             let template = T.varInfer ?? T.var
             return ind() + template
                 .replacingOccurrences(of: "{name}", with: varDecl.name)

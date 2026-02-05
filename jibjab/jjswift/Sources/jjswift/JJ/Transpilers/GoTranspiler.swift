@@ -8,6 +8,7 @@ public class GoTranspiler: CFamilyTranspiler {
     var needsMath = false
     var needsLog = false
     var needsRandom = false
+    var declaredVars = Set<String>()  // Track declared variables for := vs =
 
     public override init(target: String = "go") { super.init(target: target) }
 
@@ -87,14 +88,17 @@ public class GoTranspiler: CFamilyTranspiler {
 
     override func varDeclToString(_ node: VarDecl) -> String {
         if let arr = node.value as? ArrayLiteral {
+            declaredVars.insert(node.name)
             return varArrayToString(node, arr)
         }
         if let tuple = node.value as? TupleLiteral {
             tupleVars.insert(node.name)
+            declaredVars.insert(node.name)
             return varTupleToString(node, tuple)
         }
         if node.value is DictLiteral {
             dictVars.insert(node.name)
+            declaredVars.insert(node.name)
             return varDictToString(node)
         }
         // Track enum variable assignments
@@ -107,7 +111,13 @@ public class GoTranspiler: CFamilyTranspiler {
         if inferredType == "Bool" { boolVars.insert(node.name) }
         else if inferredType == "Int" && enumVarTypes[node.name] == nil { intVars.insert(node.name) }
         else if inferredType == "Double" { doubleVars.insert(node.name) }
-        let tmpl = T.varShort ?? T.var
+
+        // Check if this is a reassignment (variable already declared)
+        let isReassignment = declaredVars.contains(node.name)
+        declaredVars.insert(node.name)
+
+        // Use = for reassignment, := for new declaration
+        let tmpl = isReassignment ? "{name} = {value}" : (T.varShort ?? T.var)
         return ind() + tmpl
             .replacingOccurrences(of: "{name}", with: node.name)
             .replacingOccurrences(of: "{value}", with: expr(node.value))

@@ -8,6 +8,8 @@ public class AppleScriptTranspiler: Transpiling {
     private let OP = JJ.operators
     private var enums: [String: [String]] = [:]
     private var dictVars = Set<String>()
+    private var intVars = Set<String>()
+    private var inputStringVars = Set<String>()
 
     private lazy var reserved: Set<String> = Set(T.reservedWords.map { $0.lowercased() })
 
@@ -46,6 +48,16 @@ public class AppleScriptTranspiler: Transpiling {
         } else if let varDecl = node as? VarDecl {
             if varDecl.value is DictLiteral {
                 dictVars.insert(varDecl.name)
+            }
+            if varDecl.value is InputExpr {
+                inputStringVars.insert(varDecl.name)
+                intVars.remove(varDecl.name)  // Input returns string, not int
+            } else if let lit = varDecl.value as? Literal, lit.value is Int {
+                intVars.insert(varDecl.name)
+                inputStringVars.remove(varDecl.name)
+            } else if varDecl.value is RandomExpr {
+                intVars.insert(varDecl.name)
+                inputStringVars.remove(varDecl.name)
             }
             return ind() + T.var
                 .replacingOccurrences(of: "{name}", with: safeName(varDecl.name))
@@ -143,6 +155,25 @@ public class AppleScriptTranspiler: Transpiling {
         return ""
     }
 
+    private func isNumericExpr(_ node: ASTNode) -> Bool {
+        if let lit = node as? Literal { return lit.value is Int || lit.value is Double }
+        if let v = node as? VarRef { return intVars.contains(v.name) }
+        if let b = node as? BinaryOp { return isNumericExpr(b.left) || isNumericExpr(b.right) }
+        if node is RandomExpr { return true }
+        return false
+    }
+
+    private func exprWithNumericConversion(_ node: ASTNode, otherSide: ASTNode) -> String {
+        // Always convert variables to integer when compared with numeric expressions
+        // This is necessary because input() may reassign variables inside loops
+        // AppleScript's "as integer" is safe for numeric strings (returns the int value)
+        // and returns 0 for non-numeric strings
+        if let varRef = node as? VarRef, isNumericExpr(otherSide) {
+            return "(\(safeName(varRef.name)) as integer)"
+        }
+        return expr(node)
+    }
+
     private func expr(_ node: ASTNode) -> String {
         if let interp = node as? StringInterpolation {
             let concat = T.interpConcat ?? " & "
@@ -229,6 +260,14 @@ public class AppleScriptTranspiler: Transpiling {
                 op = T.gte
             } else if op == "%" || op == OP.mod.emit {
                 op = T.mod
+            }
+            // Use numeric conversion for comparisons
+            let isComparison = ["<", ">", "<=", ">=", "==", "!=", T.eq, T.neq, T.lte, T.gte,
+                                OP.lt.emit, OP.gt.emit, OP.lte.emit, OP.gte.emit, OP.eq.emit, OP.neq.emit].contains(binaryOp.op)
+            if isComparison {
+                let leftExpr = exprWithNumericConversion(binaryOp.left, otherSide: binaryOp.right)
+                let rightExpr = exprWithNumericConversion(binaryOp.right, otherSide: binaryOp.left)
+                return "(\(leftExpr) \(op) \(rightExpr))"
             }
             return "(\(expr(binaryOp.left)) \(op) \(expr(binaryOp.right)))"
         } else if let unaryOp = node as? UnaryOp {
