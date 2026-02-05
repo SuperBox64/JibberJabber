@@ -223,6 +223,31 @@ public class CFamilyTranspiler: Transpiling {
         return false
     }
 
+    func isNumericExpr(_ node: ASTNode) -> Bool {
+        if let lit = node as? Literal { return lit.value is Int || lit.value is Double }
+        if let v = node as? VarRef { return intVars.contains(v.name) || doubleVars.contains(v.name) }
+        if let b = node as? BinaryOp { return isNumericExpr(b.left) || isNumericExpr(b.right) }
+        if node is RandomExpr { return true }
+        return false
+    }
+
+    /// Convert input string variable to int when compared to numeric value
+    func exprWithNumericConversion(_ node: ASTNode, otherSide: ASTNode) -> String {
+        if let varRef = node as? VarRef, inputStringVars.contains(varRef.name), isNumericExpr(otherSide) {
+            // Convert string to int for comparison
+            if T.stringType == "std::string" {
+                return "std::stoi(\(varRef.name))"
+            } else if T.stringType == "string" {
+                // Go - but Go doesn't use this transpiler
+                return "atoi(\(varRef.name))"
+            } else {
+                // C-family: atoi for const char*
+                return "atoi(\(varRef.name))"
+            }
+        }
+        return expr(node)
+    }
+
     public func transpile(_ program: Program) -> String {
         // Check if input is used anywhere in the program
         needsInputBuffer = containsInput(program.statements)
@@ -891,7 +916,10 @@ public class CFamilyTranspiler: Transpiling {
                 return fm.replacingOccurrences(of: "{left}", with: expr(binaryOp.left))
                          .replacingOccurrences(of: "{right}", with: expr(binaryOp.right))
             }
-            return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"
+            // Check for input string vs numeric comparison
+            let leftExpr = exprWithNumericConversion(binaryOp.left, otherSide: binaryOp.right)
+            let rightExpr = exprWithNumericConversion(binaryOp.right, otherSide: binaryOp.left)
+            return "(\(leftExpr) \(binaryOp.op) \(rightExpr))"
         } else if let unaryOp = node as? UnaryOp {
             return "(\(unaryOp.op)\(expr(unaryOp.operand)))"
         } else if let funcCall = node as? FuncCall {
