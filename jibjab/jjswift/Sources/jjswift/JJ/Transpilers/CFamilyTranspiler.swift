@@ -335,7 +335,7 @@ public class CFamilyTranspiler: Transpiling {
         } else if let enumDef = node as? EnumDef {
             return enumToString(enumDef)
         } else if let comment = node as? CommentNode {
-            return ind() + T.comment + " " + comment.text
+            return "\n" + ind() + T.comment + " " + comment.text
         }
         return ""
     }

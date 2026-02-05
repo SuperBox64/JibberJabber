@@ -137,7 +137,7 @@ public class JavaScriptTranspiler: Transpiling {
             return ind() + tmpl.replacingOccurrences(of: "{name}", with: enumDef.name)
                                .replacingOccurrences(of: "{cases}", with: cases)
         } else if let comment = node as? CommentNode {
-            return ind() + T.comment + " " + comment.text
+            return "\n" + ind() + T.comment + " " + comment.text
         }
         return ""
     }

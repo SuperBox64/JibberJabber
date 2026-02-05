@@ -188,7 +188,7 @@ public class PythonTranspiler: Transpiling {
             }
             return ind() + "\(enumDef.name) = {\(cases)}"
         } else if let comment = node as? CommentNode {
-            return ind() + T.comment + " " + comment.text
+            return "\n" + ind() + T.comment + " " + comment.text
         }
         return ""
     }
