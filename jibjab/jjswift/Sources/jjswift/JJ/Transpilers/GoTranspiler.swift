@@ -8,12 +8,33 @@ public class GoTranspiler: CFamilyTranspiler {
     var needsMath = false
     var needsLog = false
     var needsRandom = false
+    var needsInputHelper = false
     var declaredVars = Set<String>()  // Track declared variables for := vs =
 
     public override init(target: String = "go") { super.init(target: target) }
 
+    private func detectInput(_ stmts: [ASTNode]) -> Bool {
+        for s in stmts {
+            if let varDecl = s as? VarDecl, varDecl.value is InputExpr { return true }
+            if let ifStmt = s as? IfStmt {
+                if detectInput(ifStmt.thenBody) { return true }
+                if let elseBody = ifStmt.elseBody, detectInput(elseBody) { return true }
+            }
+            if let loop = s as? LoopStmt, detectInput(loop.body) { return true }
+            if let fn = s as? FuncDef, detectInput(fn.body) { return true }
+            if let tryStmt = s as? TryStmt {
+                if detectInput(tryStmt.tryBody) { return true }
+                if let oops = tryStmt.oopsBody, detectInput(oops) { return true }
+            }
+        }
+        return false
+    }
+
     public override func transpile(_ program: Program) -> String {
         var lines: [String] = []
+
+        // Detect if input is used
+        needsInputHelper = detectInput(program.statements)
 
         let funcs = program.statements.compactMap { $0 as? FuncDef }
         let mainStmts = program.statements.filter { !($0 is FuncDef) }
@@ -36,9 +57,15 @@ public class GoTranspiler: CFamilyTranspiler {
             mainLines.append(expanded)
         }
 
-        // Build header from config, adding random import if needed
+        // Build header from config, adding imports conditionally
         var header = T.header.replacingOccurrences(of: "\\n", with: "\n")
             .trimmingCharacters(in: .newlines)
+        // Replace placeholder with input imports or empty
+        if needsInputHelper {
+            header = header.replacingOccurrences(of: "{INPUT_IMPORT}", with: "    \"bufio\"\n    \"os\"\n    \"strconv\"\n")
+        } else {
+            header = header.replacingOccurrences(of: "{INPUT_IMPORT}", with: "")
+        }
         // Replace placeholder with rand import or empty
         if needsRandom {
             header = header.replacingOccurrences(of: "{RAND_IMPORT}", with: "    \"math/rand\"\n")
@@ -46,6 +73,11 @@ public class GoTranspiler: CFamilyTranspiler {
             header = header.replacingOccurrences(of: "{RAND_IMPORT}", with: "")
         }
         lines.append(header)
+
+        // Add input helper if needed
+        if needsInputHelper, let inputHelper = T.inputHelper {
+            lines.append(inputHelper)
+        }
         lines.append("")
 
         // Emit functions

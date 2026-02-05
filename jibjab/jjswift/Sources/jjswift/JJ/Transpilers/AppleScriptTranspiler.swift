@@ -19,10 +19,30 @@ public class AppleScriptTranspiler: Transpiling {
 
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
+        if needsInput(program.statements), let inputHelper = T.inputHelper {
+            lines.append(inputHelper)
+        }
         for s in program.statements {
             lines.append(stmtToString(s))
         }
         return lines.joined(separator: "\n")
+    }
+
+    private func needsInput(_ stmts: [ASTNode]) -> Bool {
+        for s in stmts {
+            if let varDecl = s as? VarDecl, varDecl.value is InputExpr { return true }
+            if let ifStmt = s as? IfStmt {
+                if needsInput(ifStmt.thenBody) { return true }
+                if let elseBody = ifStmt.elseBody, needsInput(elseBody) { return true }
+            }
+            if let loop = s as? LoopStmt, needsInput(loop.body) { return true }
+            if let fn = s as? FuncDef, needsInput(fn.body) { return true }
+            if let tryStmt = s as? TryStmt {
+                if needsInput(tryStmt.tryBody) { return true }
+                if let oops = tryStmt.oopsBody, needsInput(oops) { return true }
+            }
+        }
+        return false
     }
 
     private func ind() -> String {

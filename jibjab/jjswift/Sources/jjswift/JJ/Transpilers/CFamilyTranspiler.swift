@@ -252,7 +252,11 @@ public class CFamilyTranspiler: Transpiling {
         // Check if input is used anywhere in the program
         needsInputBuffer = containsInput(program.statements)
 
-        var lines = [T.header.trimmingCharacters(in: .newlines), ""]
+        var lines = [T.header.trimmingCharacters(in: .newlines)]
+        if needsInputBuffer, let inputHelper = T.inputHelper {
+            lines.append(inputHelper)
+        }
+        lines.append("")
 
         let funcs = program.statements.compactMap { $0 as? FuncDef }
         for f in funcs {

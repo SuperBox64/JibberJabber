@@ -1,7 +1,8 @@
 {
   "name": "AppleScript",
   "ext": ".applescript",
-  "header": "-- Transpiled from JibJab\nset _jj_out to \"\"\non _input(p)\n\tglobal _jj_out\n\tset _jj_out to _jj_out & p\n\tset r to text returned of (display dialog _jj_out default answer \"\")\n\tset _jj_out to _jj_out & r & linefeed\n\treturn r\nend _input\non _toInt(v)\n\ttry\n\t\treturn v as integer\n\ton error\n\t\treturn 0\n\tend try\nend _toInt\n",
+  "header": "-- Transpiled from JibJab\nset _jj_out to \"\"\n",
+  "inputHelper": "on _input(p)\n\tglobal _jj_out\n\tset _jj_out to _jj_out & p\n\tset r to text returned of (display dialog _jj_out default answer \"\")\n\tset _jj_out to _jj_out & r & linefeed\n\treturn r\nend _input\non _toInt(v)\n\ttry\n\t\treturn v as integer\n\ton error\n\t\treturn 0\n\tend try\nend _toInt",
   "comment": "--",
   "print": "set _jj_out to _jj_out & ({expr} as text) & linefeed",
   "printBool": "set _jj_out to _jj_out & ({expr} as text) & linefeed",
