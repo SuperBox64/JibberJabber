@@ -10,6 +10,7 @@ public class AppleScriptTranspiler: Transpiling {
     private var dictVars = Set<String>()
     private var intVars = Set<String>()
     private var inputStringVars = Set<String>()
+    private var inNumericConversionContext = false
 
     private lazy var reserved: Set<String> = Set(T.reservedWords.map { $0.lowercased() })
 
@@ -199,6 +200,10 @@ public class AppleScriptTranspiler: Transpiling {
         if let varRef = node as? VarRef, isNumericExpr(otherSide) {
             return "_toInt(\(safeName(varRef.name)))"
         }
+        // Set flag to prevent expr from doing numeric conversion again (avoid infinite recursion)
+        let wasInContext = inNumericConversionContext
+        inNumericConversionContext = true
+        defer { inNumericConversionContext = wasInContext }
         return expr(node)
     }
 
@@ -289,10 +294,10 @@ public class AppleScriptTranspiler: Transpiling {
             } else if op == "%" || op == OP.mod.emit {
                 op = T.mod
             }
-            // Use numeric conversion for comparisons
+            // Use numeric conversion for comparisons (only at top level to avoid infinite recursion)
             let isComparison = ["<", ">", "<=", ">=", "==", "!=", T.eq, T.neq, T.lte, T.gte,
                                 OP.lt.emit, OP.gt.emit, OP.lte.emit, OP.gte.emit, OP.eq.emit, OP.neq.emit].contains(binaryOp.op)
-            if isComparison {
+            if isComparison && !inNumericConversionContext {
                 let leftExpr = exprWithNumericConversion(binaryOp.left, otherSide: binaryOp.right)
                 let rightExpr = exprWithNumericConversion(binaryOp.right, otherSide: binaryOp.left)
                 return "(\(leftExpr) \(op) \(rightExpr))"
