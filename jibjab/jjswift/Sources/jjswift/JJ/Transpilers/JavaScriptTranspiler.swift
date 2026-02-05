@@ -13,6 +13,7 @@ public class JavaScriptTranspiler: Transpiling {
         if needsInput(program.statements), let inputHelper = T.inputHelper {
             lines.append(inputHelper)
         }
+        lines.append("")  // Blank line after header/imports
         for s in program.statements {
             lines.append(stmtToString(s))
         }

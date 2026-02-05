@@ -56,6 +56,7 @@ public class SwiftTranspiler: Transpiling {
             lines.append("")
             lines.append(errStruct)
         }
+        lines.append("")  // Blank line after header/imports
         for s in program.statements {
             lines.append(stmtToString(s))
         }
