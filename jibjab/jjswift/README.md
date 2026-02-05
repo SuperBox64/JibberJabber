@@ -1,6 +1,6 @@
 # jjswift - Swift Implementation of JibJab
 
-Swift interpreter, native compiler, and transpiler for the JibJab (JJ) programming language.
+Swift interpreter, native compiler, and transpiler for the JibJab (JJ) programming language. Supports interactive input and random number generation across all 10 target languages.
 
 ## Requirements
 

@@ -70,7 +70,9 @@ jibjab/
 │   ├── dictionaries.jj
 │   ├── tuples.jj
 │   ├── arrays.jj
-│   └── comparisons.jj
+│   ├── comparisons.jj
+│   ├── input.jj             # Interactive input demo
+│   └── guessinggame.jj      # Number guessing game (input + random)
 │
 ├── output/                  # Pre-built transpiled code and binaries
 │   ├── jjpy/                # Output from Python implementation (jjpy)
@@ -500,6 +502,8 @@ python3 -m PyInstaller --onefile --distpath . --workpath /tmp/pyinstaller --spec
 |--------|---------|---------|
 | `~>frob{7a3}::emit(expr)` | Print | `~>frob{7a3}::emit("Hello")` |
 | `~>snag{name}::val(expr)` | Variable | `~>snag{x}::val(#10)` |
+| `~>slurp{9f2}::grab(prompt)` | Input | `~>slurp{9f2}::grab("Name: ")` |
+| `~>roll{d1c}::range(min,max)` | Random | `~>roll{d1c}::range(#1,#100)` |
 | `<~loop{var:start..end}>>` | For loop | `<~loop{i:0..10}>>` |
 | `<~when{cond}>>` | If | `<~when{x <gt> #5}>>` |
 | `<~else>>` | Else | `<~else>>` |

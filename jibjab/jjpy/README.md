@@ -1,6 +1,6 @@
 # jjpy - Python Implementation of JibJab
 
-Python interpreter, native compiler, and transpiler for the JibJab (JJ) programming language.
+Python interpreter, native compiler, and transpiler for the JibJab (JJ) programming language. Supports interactive input and random number generation across all 10 target languages.
 
 ## Requirements
 
