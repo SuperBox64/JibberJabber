@@ -15,12 +15,10 @@ An **AI-first programming language** created by [Todd Bruss](https://github.com/
 
 ## What It Does
 
-JibberJabber facilitates seamless interaction between human-written code and AI-generated logic. AI generates high-level JJ logic, and the engine materializes it into production-ready code for a specific tech stack.
-
 - **10-Language Transcoding** - Write once, deploy to Swift, Python, C, C++, Go, JavaScript, and more
-- **Run and Compile** - Beyond simple translation, JJ provides tooling to compile and run generated code in each target
-- **Native ARM64 Compiler** - Generates Mach-O binaries directly, no assembler or linker needed
-- **Agentic Engineering** - AI as a primary execution component, not an external tool
+- **Run and Compile** - Compile and run generated code in each target
+- **Native ARM64 Compiler** - Generates Mach-O binaries directly, no assembler needed
+- **Interactive Input** - Full support for user input and random numbers across all targets
 
 **Targets:** `py` `js` `c` `cpp` `swift` `objc` `objcpp` `go` `asm` `applescript`
 
@@ -63,31 +61,12 @@ See [BattleScript/README.md](BattleScript/README.md) for details.
 
 ---
 
-## CLI Usage
-
-```
-$ jjswift
-JibJab Language v1.0 (Swift)
-Usage:
-  jjswift run <file.jj>                - Run JJ program (interpreter)
-  jjswift compile <file.jj> [output]   - Compile direct to native binary
-  jjswift asm <file.jj> [output]       - Compile via asm transpiler + as/ld
-  jjswift transpile <file.jj> <target> - Transpile to target language
-  jjswift build <file.jj> <target> [output] - Transpile + compile
-  jjswift exec <file.jj> <target>      - Transpile + compile + run
-
-Targets: applescript, asm, c, cpp, go, js, objc, objcpp, py, swift
-```
+## CLI Quick Start
 
 ```bash
-$ jjswift exec examples/hello.jj py
-Hello, JibJab World!
-
-$ jjswift exec examples/hello.jj swift
-Hello, JibJab World!
-
-$ jjswift compile examples/hello.jj hello && ./hello
-Hello, JibJab World!
+jjswift run examples/hello.jj              # Interpret
+jjswift compile examples/hello.jj hello    # Native binary
+jjswift exec examples/hello.jj swift       # Transpile + compile + run
 ```
 
 ---
@@ -115,6 +94,4 @@ See [Language Spec](jibjab/SPEC.md) for the full pipeline diagram.
 
 ---
 
-## About JJ
-
-JJ is an experimental AI-first computer programming language by Todd Bruss with a write once, run anywhere methodology. MIT License.
+MIT License
