@@ -48,6 +48,10 @@ public class SwiftTranspiler: Transpiling {
         if needsLogImport(program.statements), let logImport = T.logImport {
             lines.append(logImport)
         }
+        if needsInput(program.statements), let inputHelper = T.inputHelper {
+            lines.append("")
+            lines.append(inputHelper)
+        }
         if needsErrorStruct(program.statements), let errStruct = T.errorStruct {
             lines.append("")
             lines.append(errStruct)
@@ -83,6 +87,23 @@ public class SwiftTranspiler: Transpiling {
             if let tryStmt = s as? TryStmt {
                 if needsErrorStruct(tryStmt.tryBody) { return true }
                 if let oops = tryStmt.oopsBody, needsErrorStruct(oops) { return true }
+            }
+        }
+        return false
+    }
+
+    private func needsInput(_ stmts: [ASTNode]) -> Bool {
+        for s in stmts {
+            if let varDecl = s as? VarDecl, varDecl.value is InputExpr { return true }
+            if let ifStmt = s as? IfStmt {
+                if needsInput(ifStmt.thenBody) { return true }
+                if let elseBody = ifStmt.elseBody, needsInput(elseBody) { return true }
+            }
+            if let loop = s as? LoopStmt, needsInput(loop.body) { return true }
+            if let fn = s as? FuncDef, needsInput(fn.body) { return true }
+            if let tryStmt = s as? TryStmt {
+                if needsInput(tryStmt.tryBody) { return true }
+                if let oops = tryStmt.oopsBody, needsInput(oops) { return true }
             }
         }
         return false
