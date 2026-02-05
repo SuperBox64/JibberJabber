@@ -277,14 +277,10 @@ struct JJEngine {
         process.standardError = stdoutPipe
 
         do {
-            processLock.lock()
-            runningProcess = process
-            processLock.unlock()
+            processLock.withLock { runningProcess = process }
             try process.run()
         } catch {
-            processLock.lock()
-            runningProcess = nil
-            processLock.unlock()
+            processLock.withLock { runningProcess = nil }
             return "Run error: \(error)"
         }
 
@@ -379,9 +375,7 @@ struct JJEngine {
                 buffer.append(remaining)
                 let finalOutput = String(data: buffer, encoding: .utf8) ?? ""
 
-                processLock.lock()
-                runningProcess = nil
-                processLock.unlock()
+                processLock.withLock { runningProcess = nil }
 
                 if process.terminationReason == .uncaughtSignal {
                     continuation.resume(returning: "Stopped")
@@ -455,21 +449,15 @@ struct JJEngine {
         process.standardOutput = pipe
         process.standardError = pipe  // merge stderr into stdout
         do {
-            processLock.lock()
-            runningProcess = process
-            processLock.unlock()
+            processLock.withLock { runningProcess = process }
             try process.run()
         } catch {
-            processLock.lock()
-            runningProcess = nil
-            processLock.unlock()
+            processLock.withLock { runningProcess = nil }
             return "Run error: \(error)"
         }
         let outData = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
-        processLock.lock()
-        runningProcess = nil
-        processLock.unlock()
+        processLock.withLock { runningProcess = nil }
         if process.terminationReason == .uncaughtSignal {
             return "Stopped"
         }
@@ -505,14 +493,10 @@ struct JJEngine {
         process.standardOutput = pipe
         process.standardError = errPipe
         do {
-            processLock.lock()
-            runningProcess = process
-            processLock.unlock()
+            processLock.withLock { runningProcess = process }
             try process.run()
         } catch {
-            processLock.lock()
-            runningProcess = nil
-            processLock.unlock()
+            processLock.withLock { runningProcess = nil }
             return (false, "Process error: \(error)")
         }
         // Read both pipes concurrently to avoid deadlock when output exceeds pipe buffer
@@ -522,9 +506,7 @@ struct JJEngine {
         let outData = pipe.fileHandleForReading.readDataToEndOfFile()
         errQueue.sync {} // wait for stderr read to finish
         process.waitUntilExit()
-        processLock.lock()
-        runningProcess = nil
-        processLock.unlock()
+        processLock.withLock { runningProcess = nil }
         if process.terminationReason == .uncaughtSignal {
             return (false, "Stopped")
         }
