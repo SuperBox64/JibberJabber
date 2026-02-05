@@ -116,11 +116,18 @@ public class GoTranspiler: CFamilyTranspiler {
         let isReassignment = declaredVars.contains(node.name)
         declaredVars.insert(node.name)
 
+        // Handle input assignment to int variable - need to convert string to int
+        var valueExpr = expr(node.value)
+        if node.value is InputExpr && intVars.contains(node.name) {
+            // Replace _input with _inputInt for int variables
+            valueExpr = valueExpr.replacingOccurrences(of: "_input(", with: "_inputInt(")
+        }
+
         // Use = for reassignment, := for new declaration
         let tmpl = isReassignment ? "{name} = {value}" : (T.varShort ?? T.var)
         return ind() + tmpl
             .replacingOccurrences(of: "{name}", with: node.name)
-            .replacingOccurrences(of: "{value}", with: expr(node.value))
+            .replacingOccurrences(of: "{value}", with: valueExpr)
     }
 
     override func constDeclToString(_ node: ConstDecl) -> String {
