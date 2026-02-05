@@ -166,10 +166,9 @@ public class AppleScriptTranspiler: Transpiling {
     private func exprWithNumericConversion(_ node: ASTNode, otherSide: ASTNode) -> String {
         // Always convert variables to integer when compared with numeric expressions
         // This is necessary because input() may reassign variables inside loops
-        // AppleScript's "as integer" is safe for numeric strings (returns the int value)
-        // and returns 0 for non-numeric strings
+        // Use _toInt helper for safe conversion (returns 0 for non-numeric strings)
         if let varRef = node as? VarRef, isNumericExpr(otherSide) {
-            return "(\(safeName(varRef.name)) as integer)"
+            return "_toInt(\(safeName(varRef.name)))"
         }
         return expr(node)
     }
