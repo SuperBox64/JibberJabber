@@ -14,7 +14,7 @@ A native macOS IDE for the JibJab programming language. Write JJ code and instan
 - **11 Language Tabs** - JJ, Python, JavaScript, C, C++, Swift, Objective-C, Objective-C++, Go, ARM64 Assembly, AppleScript
 - **One-Click Run** - Compile and execute any target language directly from the IDE
 - **Built-in Examples** - Hello World, Variables, FizzBuzz, Fibonacci, Arrays, Comparisons, Dictionaries, Enums, Numbers, Tuples, Input, Guessing Game
-- **Interactive Input** - Programs can prompt for user input via dialog boxes (compiled targets use `__JJPROMPT__` protocol)
+- **Interactive Input** - Programs can prompt for user input via text or dialogs (compiled targets use `__JJPROMPT__` protocol)
 - **Code Editor** - Monospaced editor with smart quote substitution disabled for clean code input
 
 ---
