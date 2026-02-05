@@ -49,7 +49,17 @@ public class GoTranspiler: CFamilyTranspiler {
         var mainLines: [String] = []
         if !mainStmts.isEmpty, let mainTmpl = T.main {
             indentLevel = 1
-            let bodyLines = mainStmts.map { stmtToString($0) }
+            var bodyLines: [String] = []
+            var hadCode = false
+            for s in mainStmts {
+                if s is CommentNode && hadCode {
+                    bodyLines.append("")  // Blank line before comment after code
+                }
+                if !(s is CommentNode) {
+                    hadCode = true
+                }
+                bodyLines.append(stmtToString(s))
+            }
             let body = bodyLines.joined(separator: "\n") + "\n"
             let expanded = mainTmpl
                 .replacingOccurrences(of: "\\n", with: "\n")

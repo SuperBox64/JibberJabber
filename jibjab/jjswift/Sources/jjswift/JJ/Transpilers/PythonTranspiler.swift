@@ -22,7 +22,14 @@ public class PythonTranspiler: Transpiling {
             lines.append(inputHelper)
         }
         lines.append("")  // Blank line after header/imports
+        var hadCode = false
         for s in program.statements {
+            if s is CommentNode && hadCode {
+                lines.append("")  // Blank line before comment after code
+            }
+            if !(s is CommentNode) {
+                hadCode = true
+            }
             lines.append(stmtToString(s))
         }
         return lines.joined(separator: "\n")
@@ -188,7 +195,7 @@ public class PythonTranspiler: Transpiling {
             }
             return ind() + "\(enumDef.name) = {\(cases)}"
         } else if let comment = node as? CommentNode {
-            return "\n" + ind() + T.comment + " " + comment.text
+            return ind() + T.comment + " " + comment.text
         }
         return ""
     }

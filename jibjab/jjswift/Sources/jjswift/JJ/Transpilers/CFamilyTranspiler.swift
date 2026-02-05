@@ -298,7 +298,16 @@ public class CFamilyTranspiler: Transpiling {
         if needsInputBuffer, let inputBuffer = T.inputBuffer {
             bodyLines.append(ind() + inputBuffer)
         }
-        bodyLines.append(contentsOf: mainStmts.map { stmtToString($0) })
+        var hadCode = false
+        for s in mainStmts {
+            if s is CommentNode && hadCode {
+                bodyLines.append("")  // Blank line before comment after code
+            }
+            if !(s is CommentNode) {
+                hadCode = true
+            }
+            bodyLines.append(stmtToString(s))
+        }
         let body = bodyLines.joined(separator: "\n") + "\n"
         let expanded = tmpl.replacingOccurrences(of: "{body}", with: body)
         lines.append(expanded)
@@ -335,7 +344,7 @@ public class CFamilyTranspiler: Transpiling {
         } else if let enumDef = node as? EnumDef {
             return enumToString(enumDef)
         } else if let comment = node as? CommentNode {
-            return "\n" + ind() + T.comment + " " + comment.text
+            return ind() + T.comment + " " + comment.text
         }
         return ""
     }

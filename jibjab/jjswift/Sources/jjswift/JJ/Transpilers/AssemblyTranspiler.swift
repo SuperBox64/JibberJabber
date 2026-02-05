@@ -308,7 +308,6 @@ public class AssemblyTranspiler: Transpiling {
             }
             asmLines.append("\(endLabel):")
         } else if let comment = node as? CommentNode {
-            asmLines.append("")
             asmLines.append(T.comment + " " + comment.text)
         }
     }
