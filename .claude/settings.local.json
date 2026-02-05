@@ -457,7 +457,9 @@
       "Bash(gofmt:*)",
       "mcp__xcf-server__read_dir",
       "Bash(./jjswift/jj:*)",
-      "Bash(qjs:*)"
+      "Bash(qjs:*)",
+      "Bash(do echo \"=== Testing $f \\(Python\\) ===\")",
+      "Bash(do echo \"=== Testing $f \\(Swift\\) ===\")"
     ]
   }
 }
