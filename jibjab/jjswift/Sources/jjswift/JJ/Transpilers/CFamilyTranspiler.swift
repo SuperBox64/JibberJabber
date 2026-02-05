@@ -544,11 +544,13 @@ public class CFamilyTranspiler: Transpiling {
     func constDeclToString(_ node: ConstDecl) -> String {
         // Constants are simpler - no arrays/dicts/tuples, just simple values
         // InputExpr returns string (buffer pointer)
+        // C++ uses std::string, others use const char*
         if node.value is InputExpr {
             stringVars.insert(node.name)
             inputStringVars.insert(node.name)
+            let inputType = T.stringType == "std::string" ? "std::string" : "const char*"
             return ind() + T.const
-                .replacingOccurrences(of: "{type}", with: T.stringType)
+                .replacingOccurrences(of: "{type}", with: inputType)
                 .replacingOccurrences(of: "{name}", with: node.name)
                 .replacingOccurrences(of: "{value}", with: expr(node.value))
         }
@@ -596,11 +598,13 @@ public class CFamilyTranspiler: Transpiling {
             enumVarTypes[node.name] = varRef.name
         }
         // InputExpr returns string (buffer pointer)
+        // C++ uses std::string, others use const char*
         if node.value is InputExpr {
             stringVars.insert(node.name)
             inputStringVars.insert(node.name)
+            let inputType = T.stringType == "std::string" ? "std::string" : "const char*"
             return ind() + T.var
-                .replacingOccurrences(of: "{type}", with: T.stringType)
+                .replacingOccurrences(of: "{type}", with: inputType)
                 .replacingOccurrences(of: "{name}", with: node.name)
                 .replacingOccurrences(of: "{value}", with: expr(node.value))
         }
