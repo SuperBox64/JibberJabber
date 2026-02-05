@@ -36,25 +36,14 @@ public class GoTranspiler: CFamilyTranspiler {
             mainLines.append(expanded)
         }
 
-        // Build header from config, adding math/log/random imports if needed
+        // Build header from config, adding random import if needed
         var header = T.header.replacingOccurrences(of: "\\n", with: "\n")
             .trimmingCharacters(in: .newlines)
-        if needsMath || needsLog || needsRandom {
-            // Replace single import with multi-import block
-            let singleImport = T.importSingle.replacingOccurrences(of: "{name}", with: "fmt")
-            var importItems = [T.importItem.replacingOccurrences(of: "{name}", with: "fmt")]
-            if needsLog, let logPkg = T.logImport {
-                importItems.append(T.importItem.replacingOccurrences(of: "{name}", with: logPkg))
-            }
-            if needsMath {
-                importItems.append(T.importItem.replacingOccurrences(of: "{name}", with: "math"))
-            }
-            if needsRandom, let randPkg = T.randomImport {
-                importItems.append(T.importItem.replacingOccurrences(of: "{name}", with: randPkg))
-            }
-            let imports = importItems.map { "\(T.indent)\($0)" }.joined(separator: "\n")
-            let multiImport = T.importMulti.replacingOccurrences(of: "{imports}", with: imports)
-            header = header.replacingOccurrences(of: singleImport, with: multiImport)
+        // Replace placeholder with rand import or empty
+        if needsRandom {
+            header = header.replacingOccurrences(of: "{RAND_IMPORT}", with: "    \"math/rand\"\n")
+        } else {
+            header = header.replacingOccurrences(of: "{RAND_IMPORT}", with: "")
         }
         lines.append(header)
         lines.append("")

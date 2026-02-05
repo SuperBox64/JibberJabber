@@ -13,7 +13,7 @@
   "importItem": "\"{name}\"",
   "enumAccess": "{name}_{key}",
   "enumConst": "const (\n{cases}\n)",
-  "header": "// Transpiled from JibJab\npackage main\n\nimport (\n    \"fmt\"\n    \"bufio\"\n    \"os\"\n    \"math/rand\"\n    \"strconv\"\n)\n\nvar _scanner = bufio.NewScanner(os.Stdin)\nfunc _input(p string) string { fmt.Println(\"__JJPROMPT__:\" + p); _scanner.Scan(); s := _scanner.Text(); fmt.Println(p + s); return s }\nfunc _inputInt(p string) int { v, _ := strconv.Atoi(_input(p)); return v }\n",
+  "header": "// Transpiled from JibJab\npackage main\n\nimport (\n    \"fmt\"\n    \"bufio\"\n    \"os\"\n    \"strconv\"\n{RAND_IMPORT})\n\nvar _scanner = bufio.NewScanner(os.Stdin)\nfunc _input(p string) string { fmt.Println(\"__JJPROMPT__:\" + p); _scanner.Scan(); s := _scanner.Text(); fmt.Println(p + s); return s }\nfunc _inputInt(p string) int { v, _ := strconv.Atoi(_input(p)); return v }\n",
   "logImport": "log",
   "printInt": "fmt.Println({expr})",
   "printStr": "fmt.Println({expr})",
