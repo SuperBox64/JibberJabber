@@ -18,6 +18,7 @@ public class PythonTranspiler: Transpiling {
             lines.append(randomImport)
         }
         if needsInput(program.statements), let inputHelper = T.inputHelper {
+            lines.append("")
             lines.append(inputHelper)
         }
         lines.append("")  // Blank line after header/imports

@@ -20,6 +20,7 @@ public class AppleScriptTranspiler: Transpiling {
     public func transpile(_ program: Program) -> String {
         var lines = [T.header.trimmingCharacters(in: .newlines)]
         if needsInput(program.statements), let inputHelper = T.inputHelper {
+            lines.append("")
             lines.append(inputHelper)
         }
         lines.append("")  // Blank line after header/imports
