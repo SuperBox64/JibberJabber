@@ -6,6 +6,8 @@ public class SwiftTranspiler: Transpiling {
     private var indentLevel = 0
     private let T = loadTarget("swift")
     private var doubleVars = Set<String>()
+    private var intVars = Set<String>()
+    private var inputStringVars = Set<String>()
     private var enums = Set<String>()
     private var enumCases: [String: [String]] = [:]
     private var dictVars = Set<String>()
@@ -17,6 +19,21 @@ public class SwiftTranspiler: Transpiling {
         if let b = node as? BinaryOp { return isFloatExpr(b.left) || isFloatExpr(b.right) }
         if let u = node as? UnaryOp { return isFloatExpr(u.operand) }
         return false
+    }
+
+    private func isNumericExpr(_ node: ASTNode) -> Bool {
+        if let lit = node as? Literal { return lit.value is Int || lit.value is Double }
+        if let v = node as? VarRef { return intVars.contains(v.name) || doubleVars.contains(v.name) }
+        if let b = node as? BinaryOp { return isNumericExpr(b.left) || isNumericExpr(b.right) }
+        if node is RandomExpr { return true }
+        return false
+    }
+
+    private func exprWithNumericConversion(_ node: ASTNode, otherSide: ASTNode) -> String {
+        if let varRef = node as? VarRef, inputStringVars.contains(varRef.name), isNumericExpr(otherSide) {
+            return "(Int(\(varRef.name)) ?? 0)"
+        }
+        return expr(node)
     }
 
     private func inferType(_ node: ASTNode) -> String {
@@ -101,6 +118,13 @@ public class SwiftTranspiler: Transpiling {
                 return ind() + template
                     .replacingOccurrences(of: "{name}", with: varDecl.name)
                     .replacingOccurrences(of: "{value}", with: expr(varDecl.value))
+            }
+            // Track input variables
+            if varDecl.value is InputExpr {
+                inputStringVars.insert(varDecl.name)
+            }
+            if let lit = varDecl.value as? Literal, lit.value is Int {
+                intVars.insert(varDecl.name)
             }
             let template = T.varInfer ?? T.var
             return ind() + template
@@ -246,7 +270,10 @@ public class SwiftTranspiler: Transpiling {
                 return fm.replacingOccurrences(of: "{left}", with: expr(binaryOp.left))
                          .replacingOccurrences(of: "{right}", with: expr(binaryOp.right))
             }
-            return "(\(expr(binaryOp.left)) \(binaryOp.op) \(expr(binaryOp.right)))"
+            // Check for input string vs numeric comparison
+            let leftExpr = exprWithNumericConversion(binaryOp.left, otherSide: binaryOp.right)
+            let rightExpr = exprWithNumericConversion(binaryOp.right, otherSide: binaryOp.left)
+            return "(\(leftExpr) \(binaryOp.op) \(rightExpr))"
         } else if let unaryOp = node as? UnaryOp {
             return "(\(unaryOp.op)\(expr(unaryOp.operand)))"
         } else if let funcCall = node as? FuncCall {
