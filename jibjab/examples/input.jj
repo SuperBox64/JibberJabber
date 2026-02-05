@@ -3,10 +3,7 @@
 @@
 
 ~>snag{name}::val(~>slurp{9f2}::grab("What is your name? "))
-~>frob{7a3}::emit("Hello,")
-~>frob{7a3}::emit(name)
+~>frob{7a3}::emit("Hello, {name}")
 
 ~>snag{age}::val(~>slurp{9f2}::grab("How old are you? "))
-~>frob{7a3}::emit("You are")
-~>frob{7a3}::emit(age)
-~>frob{7a3}::emit("years old.")
+~>frob{7a3}::emit("You are {age} years old.")
