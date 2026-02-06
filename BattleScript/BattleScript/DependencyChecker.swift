@@ -12,6 +12,7 @@ struct DependencyChecker {
     private static let searchPaths = [
         "/opt/homebrew/bin",
         "/usr/local/bin",
+        "/usr/local/go/bin",
         "/opt/local/bin",
     ]
 
