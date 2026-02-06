@@ -37,7 +37,7 @@ struct ContentView: View {
         ("Constants", "constants"),
         ("Strings", "string_methods"),
         ("Hi Lo Game", "guessinggame"),
-        ("Input", "input"),
+        ("Input", "input")
     ]
 
     var body: some View {
