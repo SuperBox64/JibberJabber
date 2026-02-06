@@ -466,7 +466,15 @@
       "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber log --all --grep=\"Fix\\\\|stack\\\\|recursive\\\\|overflow\" --oneline -20)",
       "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber show cab5d6e --stat)",
       "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber log --pretty=format:\"%h %s\" --name-only -5)",
-      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber log -1 --pretty=format:\"%ai %B\" --all)"
+      "Bash(git -C /Users/toddbruss/Documents/GitHub/JibberJabber log -1 --pretty=format:\"%ai %B\" --all)",
+      "Bash(for:*)",
+      "Bash([ -f \"$f\" ])",
+      "Bash(do if [ -e \"$file\" ])",
+      "Bash(then echo \"✓ $file\")",
+      "Bash(else echo \"✗ $file\")",
+      "Bash(while read:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(test:*)"
     ]
   }
 }
