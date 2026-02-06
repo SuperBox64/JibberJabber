@@ -17,8 +17,8 @@ struct ContentView: View {
     @State private var waitingForInputTabs: Set<String> = []  // Per-tab input state
     @State private var inputPrompts: [String: String] = [:]  // Per-tab prompts
     @State private var inputContinuations: [String: CheckedContinuation<String?, Never>] = [:]  // Per-tab continuations
-    @State private var transpileCache: [String: [String: String]] = [:]  // example -> {target -> output}
-    @State private var dirtySources: [String: String] = [:]  // example -> edited source code
+    @State private var transpileCache: [String: [String: String]] = [:]  // example -> {target -> clean output}
+    @State private var dirtyOutputs: [String: [String: String]] = [:]  // example -> {target -> edited output}
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -107,25 +107,29 @@ struct ContentView: View {
         .onChange(of: sourceCode) { _, _ in
             updateTranspilation()
         }
+        .onChange(of: editMode) { _, newValue in
+            if !newValue && dirtyOutputs[selectedExample] != nil {
+                // Edit mode turned off with dirty outputs — retranspile fresh
+                dirtyOutputs.removeValue(forKey: selectedExample)
+                transpileCache.removeValue(forKey: selectedExample)
+                userHasEdited = false
+                updateTranspilation()
+            }
+        }
     }
 
     private func loadExample(_ name: String) {
         guard !name.isEmpty else { return }
-        // Save dirty state before switching away
+        // Save dirty transpiled outputs before switching away
         if editMode && userHasEdited {
-            dirtySources[selectedExample] = sourceCode
+            dirtyOutputs[selectedExample] = transpiledOutputs
         }
-        // Restore dirty version if edit mode is on
-        if editMode, let dirty = dirtySources[name] {
-            userHasEdited = true
-            sourceCode = dirty
-        } else {
-            userHasEdited = false
-            let basePath = Bundle.main.resourcePath ?? ""
-            let path = basePath + "/examples/\(name).jj"
-            if let content = try? String(contentsOfFile: path, encoding: .utf8) {
-                sourceCode = content
-            }
+        // Always load JJ source fresh
+        userHasEdited = false
+        let basePath = Bundle.main.resourcePath ?? ""
+        let path = basePath + "/examples/\(name).jj"
+        if let content = try? String(contentsOfFile: path, encoding: .utf8) {
+            sourceCode = content
         }
     }
 
@@ -138,11 +142,19 @@ struct ContentView: View {
         // Use cache for unedited examples
         if !userHasEdited, let cached = transpileCache[selectedExample] {
             transpiledOutputs = cached
+            // Overlay dirty outputs in edit mode
+            if editMode, let dirty = dirtyOutputs[selectedExample] {
+                for (target, code) in dirty {
+                    transpiledOutputs[target] = code
+                }
+                userHasEdited = true
+            }
             return
         }
         let code = sourceCode
         let example = selectedExample
-        let edited = userHasEdited
+        let isEditMode = editMode
+        let dirtyForExample = dirtyOutputs[example]
         let work = DispatchWorkItem {
             do {
                 let program = try JJEngine.parse(code)
@@ -151,9 +163,14 @@ struct ContentView: View {
                     outputs[target] = JJEngine.transpile(program, target: target) ?? "// Transpilation failed"
                 }
                 DispatchQueue.main.async {
+                    transpileCache[example] = outputs  // Cache clean outputs
                     transpiledOutputs = outputs
-                    if !edited {
-                        transpileCache[example] = outputs
+                    // Overlay dirty outputs in edit mode
+                    if isEditMode, let dirty = dirtyForExample {
+                        for (target, code) in dirty {
+                            transpiledOutputs[target] = code
+                        }
+                        userHasEdited = true
                     }
                 }
             } catch {
