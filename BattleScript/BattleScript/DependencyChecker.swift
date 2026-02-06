@@ -9,12 +9,16 @@ struct DependencyStatus {
 }
 
 struct DependencyChecker {
-    private static let searchPaths = [
-        "/opt/homebrew/bin",
-        "/usr/local/bin",
-        "/usr/local/go/bin",
-        "/opt/local/bin",
-    ]
+    private static let searchPaths: [String] = {
+        let home = ProcessInfo.processInfo.environment["HOME"] ?? NSHomeDirectory()
+        return [
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/usr/local/go/bin",
+            "\(home)/go/bin",
+            "/opt/local/bin",
+        ]
+    }()
 
     private static func findTool(_ name: String) -> Bool {
         let fm = FileManager.default
