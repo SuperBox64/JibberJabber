@@ -23,6 +23,7 @@ class CppTranspiler(CFamilyTranspiler):
         self.dict_fields = {}   # dict_name -> {key: (cpp_var_name, type)}
         self.tuple_fields = {}  # tuple_name -> [(cpp_var_name, type)]
         self.array_vars = set()
+        self.array_meta = {}    # array_name -> {elemType, count, isNested, innerCount, innerElemType}
 
     def transpile(self, program):
         code = super().transpile(program)
@@ -62,12 +63,25 @@ class CppTranspiler(CFamilyTranspiler):
             first = node.value.elements[0]
             if isinstance(first, ArrayLiteral):
                 inner_type = self.get_target_type(infer_type(first.elements[0])) if first.elements else 'int'
+                inner_elem = 'str' if (first.elements and isinstance(first.elements[0], Literal) and isinstance(first.elements[0].value, str)) else 'int'
+                self.array_meta[node.name] = {
+                    'elemType': 'nested', 'count': len(node.value.elements),
+                    'isNested': True, 'innerCount': len(first.elements), 'innerElemType': inner_elem
+                }
                 elements = ', '.join(self.expr(e) for e in node.value.elements)
                 return self.ind() + f'std::vector<std::vector<{inner_type}>> {node.name} = {{{elements}}};'
             if isinstance(first, Literal) and isinstance(first.value, str):
                 elem_type = self.T.get('stringType', 'std::string')
+                self.array_meta[node.name] = {
+                    'elemType': 'str', 'count': len(node.value.elements),
+                    'isNested': False
+                }
             else:
                 elem_type = self.get_target_type(infer_type(first))
+                self.array_meta[node.name] = {
+                    'elemType': 'int', 'count': len(node.value.elements),
+                    'isNested': False
+                }
             elements = ', '.join(self.expr(e) for e in node.value.elements)
             return self.ind() + f'std::vector<{elem_type}> {node.name} = {{{elements}}};'
         return self.ind() + f'std::vector<{self.get_target_type("Int")}> {node.name} = {{}};'
@@ -192,6 +206,8 @@ class CppTranspiler(CFamilyTranspiler):
         if isinstance(expr_node, VarRef):
             if expr_node.name in self.enums:
                 return self.ind() + self._cout_line(f'"enum {expr_node.name}"')
+            if expr_node.name in self.array_meta:
+                return self._print_whole_array(expr_node.name)
             if expr_node.name in self.double_vars:
                 return self.ind() + self.T['printFloat'].replace('{expr}', self.expr(expr_node))
             # Print whole dict
@@ -230,6 +246,36 @@ class CppTranspiler(CFamilyTranspiler):
                 parts.append('", "')
         parts.append('")"')
         return self.ind() + cout_expr.replace('{expr}', sep.join(parts)) + endl
+
+    def _print_whole_array(self, name):
+        meta = self.array_meta.get(name)
+        if not meta:
+            return self.ind() + self._cout_line(name)
+        if meta['isNested']:
+            lines = []
+            lines.append(self.ind() + self._cout_inline('"["'))
+            for i in range(meta['count']):
+                if i > 0:
+                    lines.append(self.ind() + self._cout_inline('", "'))
+                lines.append(self.ind() + self._cout_inline('"["'))
+                for j in range(meta['innerCount']):
+                    if j > 0:
+                        lines.append(self.ind() + self._cout_inline('", "'))
+                    lines.append(self.ind() + self._cout_inline(f'{name}[{i}][{j}]'))
+                lines.append(self.ind() + self._cout_inline('"]"'))
+            lines.append(self.ind() + self._cout_line('"]"'))
+            return '\n'.join(lines)
+        count = meta['count']
+        lines = []
+        lines.append(self.ind() + self._cout_inline('"["'))
+        lines.append(self.ind() + f'for (int _i = 0; _i < {count}; _i++) {{')
+        self.indent += 1
+        lines.append(self.ind() + 'if (_i > 0) ' + self._cout_inline('", "'))
+        lines.append(self.ind() + self._cout_inline(f'{name}[_i]'))
+        self.indent -= 1
+        lines.append(self.ind() + '}')
+        lines.append(self.ind() + self._cout_line('"]"'))
+        return '\n'.join(lines)
 
     def _resolve_access(self, node):
         """Resolve dict/tuple access to (cpp_var_name, type) or None."""

@@ -77,6 +77,12 @@ public class GoTranspiler: CFamilyTranspiler {
         } else {
             header = header.replacingOccurrences(of: "{INPUT_IMPORT}", with: "")
         }
+        // Replace placeholder with math import or empty
+        if needsMath {
+            header = header.replacingOccurrences(of: "{MATH_IMPORT}", with: "    \"math\"\n")
+        } else {
+            header = header.replacingOccurrences(of: "{MATH_IMPORT}", with: "")
+        }
         // Replace placeholder with rand import or empty
         if needsRandom {
             header = header.replacingOccurrences(of: "{RAND_IMPORT}", with: "    \"math/rand\"\n")

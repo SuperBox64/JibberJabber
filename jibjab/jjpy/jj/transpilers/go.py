@@ -9,7 +9,7 @@ Tuples: stored as numbered variables (_0, _1, _2)
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
     IndexAccess, PrintStmt, LogStmt, FuncDef, EnumDef, Program, StringInterpolation,
-    TryStmt, MethodCallExpr
+    TryStmt, MethodCallExpr, InputExpr
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -23,15 +23,44 @@ class GoTranspiler(CFamilyTranspiler):
         self.tuple_fields = {}  # tuple_name -> [(go_var_name, type)]
         self.needs_math = False
         self.needs_log = False
+        self.needs_random = False
+        self.needs_strings = False
+        self.needs_input_helper = False
+
+    @staticmethod
+    def _detect_input(stmts):
+        """Recursively detect if any statement uses InputExpr."""
+        from ..ast import IfStmt, LoopStmt
+        for s in stmts:
+            if isinstance(s, VarDecl) and isinstance(s.value, InputExpr):
+                return True
+            if isinstance(s, IfStmt):
+                if GoTranspiler._detect_input(s.then_body):
+                    return True
+                if s.else_body and GoTranspiler._detect_input(s.else_body):
+                    return True
+            if isinstance(s, LoopStmt) and GoTranspiler._detect_input(s.body):
+                return True
+            if isinstance(s, FuncDef) and GoTranspiler._detect_input(s.body):
+                return True
+            if isinstance(s, TryStmt):
+                if GoTranspiler._detect_input(s.try_body):
+                    return True
+                if s.oops_body and GoTranspiler._detect_input(s.oops_body):
+                    return True
+        return False
 
     def transpile(self, program: Program) -> str:
         lines = []
+
+        # Detect if input is used
+        self.needs_input_helper = self._detect_input(program.statements)
 
         # Collect function definitions
         funcs = [s for s in program.statements if isinstance(s, FuncDef)]
         main_stmts = [s for s in program.statements if not isinstance(s, FuncDef)]
 
-        # First pass: generate function bodies and main to detect math import need
+        # First pass: generate function bodies and main to detect import needs
         func_lines = []
         for f in funcs:
             func_lines.append(self._func_def(f))
@@ -53,21 +82,37 @@ class GoTranspiler(CFamilyTranspiler):
                     main_lines.append(self.stmt(s))
                 main_lines.append('}')
 
-        # Build header with correct imports
+        # Build header by replacing import placeholders
         header = self.T['header'].replace('\\n', '\n').rstrip()
-        if self.needs_math or self.needs_log:
-            single_import = self.T.get('importSingle', 'import "fmt"').replace('{name}', 'fmt')
-            indent = self.T['indent']
-            import_items = [self.T.get('importItem', '"{name}"').replace('{name}', 'fmt')]
-            if self.needs_log:
-                log_pkg = self.T.get('logImport', 'log')
-                import_items.append(self.T.get('importItem', '"{name}"').replace('{name}', log_pkg))
-            if self.needs_math:
-                import_items.append(self.T.get('importItem', '"{name}"').replace('{name}', 'math'))
-            imports = '\n'.join(f'{indent}{item}' for item in import_items)
-            multi_import = self.T.get('importMulti', 'import (\n{imports}\n)').replace('{imports}', imports)
-            header = header.replace(single_import, multi_import)
+        if self.needs_input_helper:
+            header = header.replace('{INPUT_IMPORT}', '    "bufio"\n    "os"\n    "strconv"\n')
+        else:
+            header = header.replace('{INPUT_IMPORT}', '')
+        if self.needs_log:
+            log_pkg = self.T.get('logImport', 'log')
+            header = header.replace('{LOG_IMPORT}', f'    "{log_pkg}"\n')
+        else:
+            header = header.replace('{LOG_IMPORT}', '')
+        if self.needs_math:
+            header = header.replace('{MATH_IMPORT}', '    "math"\n')
+        else:
+            header = header.replace('{MATH_IMPORT}', '')
+        if self.needs_random:
+            header = header.replace('{RAND_IMPORT}', '    "math/rand"\n')
+        else:
+            header = header.replace('{RAND_IMPORT}', '')
+        if self.needs_strings:
+            header = header.replace('{STRINGS_IMPORT}', '    "strings"\n')
+        else:
+            header = header.replace('{STRINGS_IMPORT}', '')
         lines.append(header)
+
+        # Add input helper if needed
+        if self.needs_input_helper:
+            input_helper = self.T.get('inputHelper', '')
+            if input_helper:
+                lines.append(input_helper.replace('\\n', '\n'))
+
         lines.append('')
 
         # Emit functions
@@ -342,6 +387,7 @@ class GoTranspiler(CFamilyTranspiler):
                     self.needs_math = True
                     return fm.replace('{left}', self.expr(node.left)).replace('{right}', self.expr(node.right))
         if isinstance(node, MethodCallExpr):
+            self.needs_strings = True
             s = self.expr(node.args[0]) if node.args else '""'
             if node.method == 'upper': return f'strings.ToUpper({s})'
             if node.method == 'lower': return f'strings.ToLower({s})'
