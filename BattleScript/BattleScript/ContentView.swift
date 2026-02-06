@@ -33,8 +33,7 @@ struct ContentView: View {
         ("TryOops", "trycatch"),
         ("Logging", "logging"),
         ("Constants", "constants"),
-        ("Numbers", "numbers"),
-        ("Guessinggame", "guessinggame"),
+        ("Hi Lo Game", "guessinggame"),
         ("Input", "input"),
     ]
 
@@ -143,7 +142,13 @@ struct ContentView: View {
             }
         }
         transpileWork = work
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.15, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            guard !work.isCancelled else { return }
+            let thread = Thread { work.perform() }
+            thread.stackSize = 2 * 1024 * 1024  // 2 MB (default background is 512 KB)
+            thread.qualityOfService = .userInitiated
+            thread.start()
+        }
     }
 
     private func stopRunning() {
@@ -264,6 +269,9 @@ struct ContentView: View {
             }
         }
         runWork = work
-        DispatchQueue.global(qos: .userInitiated).async(execute: work)
+        let thread = Thread { work.perform() }
+        thread.stackSize = 2 * 1024 * 1024  // 2 MB
+        thread.qualityOfService = .userInitiated
+        thread.start()
     }
 }
