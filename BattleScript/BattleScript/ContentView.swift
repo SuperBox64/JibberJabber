@@ -58,8 +58,8 @@ struct ContentView: View {
                         .tag(example.file)
                 }
                 .listStyle(.sidebar)
-                .onChange(of: selectedExample) { _, newValue in
-                    loadExample(newValue)
+                .onChange(of: selectedExample) { oldValue, newValue in
+                    loadExample(newValue, from: oldValue)
                 }
             }
         } right: {
@@ -118,11 +118,11 @@ struct ContentView: View {
         }
     }
 
-    private func loadExample(_ name: String) {
+    private func loadExample(_ name: String, from previousExample: String? = nil) {
         guard !name.isEmpty else { return }
-        // Save dirty transpiled outputs before switching away
-        if editMode && userHasEdited {
-            dirtyOutputs[selectedExample] = transpiledOutputs
+        // Save dirty transpiled outputs for the PREVIOUS example
+        if editMode && userHasEdited, let prev = previousExample {
+            dirtyOutputs[prev] = transpiledOutputs
         }
         // Always load JJ source fresh
         userHasEdited = false
