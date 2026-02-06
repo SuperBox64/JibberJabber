@@ -13,7 +13,7 @@
   "importItem": "\"{name}\"",
   "enumAccess": "{name}_{key}",
   "enumConst": "const (\n{cases}\n)",
-  "header": "// Transpiled from JibJab\npackage main\n\nimport (\n    \"fmt\"\n{INPUT_IMPORT}{RAND_IMPORT})\n",
+  "header": "// Transpiled from JibJab\npackage main\n\nimport (\n    \"fmt\"\n{INPUT_IMPORT}{RAND_IMPORT}{STRINGS_IMPORT})\n",
   "inputHelper": "\nvar _scanner = bufio.NewScanner(os.Stdin)\nfunc _input(p string) string { fmt.Println(\"__JJPROMPT__:\" + p); _scanner.Scan(); s := _scanner.Text(); fmt.Println(p + s); return s }\nfunc _inputInt(p string) int { v, _ := strconv.Atoi(_input(p)); return v }",
   "logImport": "log",
   "printInt": "fmt.Println({expr})",

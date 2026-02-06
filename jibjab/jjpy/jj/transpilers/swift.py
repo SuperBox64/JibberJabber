@@ -8,7 +8,7 @@ from ..ast import (
     ASTNode, Program, PrintStmt, LogStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, EnumDef, IndexAccess, ArrayLiteral, DictLiteral,
-    TupleLiteral, StringInterpolation
+    TupleLiteral, StringInterpolation, MethodCallExpr
 )
 
 # Get target config and operators
@@ -260,4 +260,14 @@ class SwiftTranspiler:
             return f"({node.op}{self.expr(node.operand)})"
         elif isinstance(node, FuncCall):
             return T['call'].replace('{name}', node.name).replace('{args}', ', '.join(self.expr(a) for a in node.args))
+        elif isinstance(node, MethodCallExpr):
+            s = self.expr(node.args[0]) if node.args else '""'
+            if node.method == 'upper': return f'{s}.uppercased()'
+            if node.method == 'lower': return f'{s}.lowercased()'
+            if node.method == 'length': return f'{s}.count'
+            if node.method == 'trim': return f'{s}.trimmingCharacters(in: .whitespaces)'
+            if node.method == 'contains' and len(node.args) >= 2: return f'{s}.contains({self.expr(node.args[1])})'
+            if node.method == 'replace' and len(node.args) >= 3: return f'{s}.replacingOccurrences(of: {self.expr(node.args[1])}, with: {self.expr(node.args[2])})'
+            if node.method == 'split' and len(node.args) >= 2: return f'{s}.components(separatedBy: {self.expr(node.args[1])})'
+            if node.method == 'substring' and len(node.args) >= 3: return f'String({s}.dropFirst({self.expr(node.args[1])}).prefix({self.expr(node.args[2])} - {self.expr(node.args[1])}))'
         return ""

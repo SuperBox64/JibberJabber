@@ -8,7 +8,7 @@ from ..ast import (
     ASTNode, Program, PrintStmt, LogStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
-    EnumDef, StringInterpolation
+    EnumDef, StringInterpolation, MethodCallExpr
 )
 
 # Get target config and operators
@@ -151,4 +151,14 @@ class PythonTranspiler:
             return f"input({self.expr(node.prompt)})"
         elif isinstance(node, FuncCall):
             return T['call'].replace('{name}', node.name).replace('{args}', ', '.join(self.expr(a) for a in node.args))
+        elif isinstance(node, MethodCallExpr):
+            s = self.expr(node.args[0]) if node.args else '""'
+            if node.method == 'upper': return f'{s}.upper()'
+            if node.method == 'lower': return f'{s}.lower()'
+            if node.method == 'length': return f'len({s})'
+            if node.method == 'trim': return f'{s}.strip()'
+            if node.method == 'contains' and len(node.args) >= 2: return f'({self.expr(node.args[1])} in {s})'
+            if node.method == 'replace' and len(node.args) >= 3: return f'{s}.replace({self.expr(node.args[1])}, {self.expr(node.args[2])})'
+            if node.method == 'split' and len(node.args) >= 2: return f'{s}.split({self.expr(node.args[1])})'
+            if node.method == 'substring' and len(node.args) >= 3: return f'{s}[{self.expr(node.args[1])}:{self.expr(node.args[2])}]'
         return ""

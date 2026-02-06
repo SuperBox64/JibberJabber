@@ -136,5 +136,11 @@ class TryStmt(ASTNode):
 
 
 @dataclass
+class MethodCallExpr(ASTNode):
+    method: str
+    args: list  # List[ASTNode]
+
+
+@dataclass
 class StringInterpolation(ASTNode):
     parts: list  # List of ('literal', text) or ('variable', name) tuples

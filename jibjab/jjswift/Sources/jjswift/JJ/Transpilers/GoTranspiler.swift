@@ -8,6 +8,7 @@ public class GoTranspiler: CFamilyTranspiler {
     var needsMath = false
     var needsLog = false
     var needsRandom = false
+    var needsStrings = false
     var needsInputHelper = false
     var declaredVars = Set<String>()  // Track declared variables for := vs =
 
@@ -81,6 +82,11 @@ public class GoTranspiler: CFamilyTranspiler {
             header = header.replacingOccurrences(of: "{RAND_IMPORT}", with: "    \"math/rand\"\n")
         } else {
             header = header.replacingOccurrences(of: "{RAND_IMPORT}", with: "")
+        }
+        if needsStrings {
+            header = header.replacingOccurrences(of: "{STRINGS_IMPORT}", with: "    \"strings\"\n")
+        } else {
+            header = header.replacingOccurrences(of: "{STRINGS_IMPORT}", with: "")
         }
         lines.append(header)
 
@@ -358,6 +364,21 @@ public class GoTranspiler: CFamilyTranspiler {
                 return tmpl.replacingOccurrences(of: "{prompt}", with: expr(inputExpr.prompt))
             }
             return "\"\""
+        }
+        if let mc = node as? MethodCallExpr, mc.args.count >= 1 {
+            needsStrings = true
+            let s = expr(mc.args[0])
+            switch mc.method {
+            case "upper": return "strings.ToUpper(\(s))"
+            case "lower": return "strings.ToLower(\(s))"
+            case "length": return "len(\(s))"
+            case "trim": return "strings.TrimSpace(\(s))"
+            case "contains" where mc.args.count >= 2: return "strings.Contains(\(s), \(expr(mc.args[1])))"
+            case "replace" where mc.args.count >= 3: return "strings.ReplaceAll(\(s), \(expr(mc.args[1])), \(expr(mc.args[2])))"
+            case "split" where mc.args.count >= 2: return "strings.Split(\(s), \(expr(mc.args[1])))"
+            case "substring" where mc.args.count >= 3: return "\(s)[\(expr(mc.args[1])):\(expr(mc.args[2]))]"
+            default: return s
+            }
         }
         return super.expr(node)
     }

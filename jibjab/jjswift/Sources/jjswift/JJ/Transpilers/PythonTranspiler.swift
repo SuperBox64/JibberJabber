@@ -269,6 +269,19 @@ public class PythonTranspiler: Transpiling {
                     .replacingOccurrences(of: "{max}", with: expr(randomExpr.max))
             }
             return "0"
+        } else if let mc = node as? MethodCallExpr, mc.args.count >= 1 {
+            let s = expr(mc.args[0])
+            switch mc.method {
+            case "upper": return "\(s).upper()"
+            case "lower": return "\(s).lower()"
+            case "length": return "len(\(s))"
+            case "trim": return "\(s).strip()"
+            case "contains" where mc.args.count >= 2: return "(\(expr(mc.args[1])) in \(s))"
+            case "replace" where mc.args.count >= 3: return "\(s).replace(\(expr(mc.args[1])), \(expr(mc.args[2])))"
+            case "split" where mc.args.count >= 2: return "\(s).split(\(expr(mc.args[1])))"
+            case "substring" where mc.args.count >= 3: return "\(s)[\(expr(mc.args[1])):\(expr(mc.args[2]))]"
+            default: return "\(s)"
+            }
         }
         return ""
     }

@@ -7,6 +7,7 @@ public enum TokenType {
     case const      // ~>grip{f1x}
     case input      // ~>slurp{9f2}
     case random     // ~>roll{d1c}
+    case warp       // ~>warp{s7r} (string methods)
     case loop       // <~loop{...}>>
     case when       // <~when{...}>>
     case `else`     // <~else>>

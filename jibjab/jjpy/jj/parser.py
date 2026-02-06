@@ -11,7 +11,7 @@ from .ast import (
     ASTNode, Program, PrintStmt, LogStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, EnumDef, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, StringInterpolation
+    IndexAccess, StringInterpolation, MethodCallExpr
 )
 
 # Get operator emit values from config
@@ -378,6 +378,19 @@ class Parser:
             return Literal(False)
         if self.match(TokenType.NIL):
             return Literal(None)
+
+        if self.match(TokenType.WARP):
+            self.expect(TokenType.ACTION)
+            method_token = self.expect(TokenType.IDENTIFIER)
+            method_name = method_token.value
+            self.expect(TokenType.LPAREN)
+            args = []
+            if self.peek().type != TokenType.RPAREN:
+                args.append(self.parse_expression())
+                while self.match(TokenType.COMMA):
+                    args.append(self.parse_expression())
+            self.expect(TokenType.RPAREN)
+            return MethodCallExpr(method_name, args)
 
         if self.match(TokenType.INPUT):
             self.expect(TokenType.ACTION)

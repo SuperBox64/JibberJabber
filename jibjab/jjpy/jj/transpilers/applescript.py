@@ -8,7 +8,7 @@ from ..ast import (
     ASTNode, Program, PrintStmt, LogStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
-    EnumDef, StringInterpolation
+    EnumDef, StringInterpolation, MethodCallExpr
 )
 
 # Get target config and operators
@@ -208,4 +208,8 @@ class AppleScriptTranspiler:
         elif isinstance(node, FuncCall):
             args = ', '.join(self.expr(a) for a in node.args)
             return f"{safe_name(node.name)}({args})"
+        elif isinstance(node, MethodCallExpr):
+            s = self.expr(node.args[0]) if node.args else '""'
+            if node.method == 'length': return f'(count of {s})'
+            return f'-- string method {node.method} not supported in AppleScript'
         return ""

@@ -953,8 +953,55 @@ public class CFamilyTranspiler: Transpiling {
                 return tmpl.replacingOccurrences(of: "{prompt}", with: expr(inputExpr.prompt))
             }
             return "\"\""
+        } else if let mc = node as? MethodCallExpr, mc.args.count >= 1 {
+            return exprMethodCall(mc)
         }
         return ""
+    }
+
+    func exprMethodCall(_ mc: MethodCallExpr) -> String {
+        let s = expr(mc.args[0])
+        let target = T.name
+        // C++ / ObjC++ use std::string methods
+        if target == "C++" || target == "Objective-C++" {
+            switch mc.method {
+            case "upper": return "_jj_upper(\(s))"
+            case "lower": return "_jj_lower(\(s))"
+            case "length": return "(int)\(s).length()"
+            case "trim": return "_jj_trim(\(s))"
+            case "contains" where mc.args.count >= 2: return "(\(s).find(\(expr(mc.args[1]))) != std::string::npos)"
+            case "replace" where mc.args.count >= 3: return "_jj_replace(\(s), \(expr(mc.args[1])), \(expr(mc.args[2])))"
+            case "split" where mc.args.count >= 2: return "/* split not supported in C++ */"
+            case "substring" where mc.args.count >= 3: return "\(s).substr(\(expr(mc.args[1])), \(expr(mc.args[2])) - \(expr(mc.args[1])))"
+            default: return s
+            }
+        }
+        // Objective-C uses NSString methods
+        if target == "Objective-C" {
+            switch mc.method {
+            case "upper": return "[\(s) uppercaseString]"
+            case "lower": return "[\(s) lowercaseString]"
+            case "length": return "(int)[\(s) length]"
+            case "trim": return "[\(s) stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]"
+            case "contains" where mc.args.count >= 2: return "[\(s) containsString:\(expr(mc.args[1]))]"
+            case "replace" where mc.args.count >= 3: return "[\(s) stringByReplacingOccurrencesOfString:\(expr(mc.args[1])) withString:\(expr(mc.args[2]))]"
+            case "split" where mc.args.count >= 2: return "[\(s) componentsSeparatedByString:\(expr(mc.args[1]))]"
+            case "substring" where mc.args.count >= 3: return "[\(s) substringWithRange:NSMakeRange(\(expr(mc.args[1])), \(expr(mc.args[2])) - \(expr(mc.args[1])))]"
+            default: return s
+            }
+        }
+        // C uses helper functions
+        switch mc.method {
+        case "upper": return "_jj_upper(\(s))"
+        case "lower": return "_jj_lower(\(s))"
+        case "length": return "(int)strlen(\(s))"
+        case "trim": return "_jj_trim(\(s))"
+        case "contains" where mc.args.count >= 2: return "(strstr(\(s), \(expr(mc.args[1]))) != NULL)"
+        case "replace" where mc.args.count >= 3: return "_jj_replace(\(s), \(expr(mc.args[1])), \(expr(mc.args[2])))"
+        case "split" where mc.args.count >= 2: return "/* split not supported in C */"
+        case "substring" where mc.args.count >= 3: return "_jj_substr(\(s), \(expr(mc.args[1])), \(expr(mc.args[2])))"
+        default: return s
+        }
     }
 
     func exprArray(_ node: ArrayLiteral) -> String {

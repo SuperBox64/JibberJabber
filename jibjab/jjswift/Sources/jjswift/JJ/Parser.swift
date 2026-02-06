@@ -501,6 +501,22 @@ public class Parser {
             return RandomExpr(min: minExpr, max: maxExpr)
         }
 
+        if match(.warp) != nil {
+            _ = try expect(.action)
+            let methodToken = try expect(.identifier)
+            let methodName = (methodToken.value as? String) ?? ""
+            _ = try expect(.lparen)
+            var args: [ASTNode] = []
+            if peek().type != .rparen {
+                args.append(try parseExpression())
+                while match(.comma) != nil {
+                    args.append(try parseExpression())
+                }
+            }
+            _ = try expect(.rparen)
+            return MethodCallExpr(method: methodName, args: args)
+        }
+
         if match(.invoke) != nil {
             _ = try expect(.lbrace)
             let nameToken = try expect(.identifier)

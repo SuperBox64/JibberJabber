@@ -9,7 +9,7 @@ from ..ast import (
     ASTNode, Program, PrintStmt, LogStmt, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, ArrayLiteral, DictLiteral, TupleLiteral, IndexAccess,
-    EnumDef, StringInterpolation
+    EnumDef, StringInterpolation, MethodCallExpr
 )
 
 
@@ -389,6 +389,16 @@ class CFamilyTranspiler:
             return f"({node.op}{self.expr(node.operand)})"
         elif isinstance(node, FuncCall):
             return self.T['call'].replace('{name}', node.name).replace('{args}', ', '.join(self.expr(a) for a in node.args))
+        elif isinstance(node, MethodCallExpr):
+            s = self.expr(node.args[0]) if node.args else '""'
+            if node.method == 'upper': return f'_jj_upper({s})'
+            if node.method == 'lower': return f'_jj_lower({s})'
+            if node.method == 'length': return f'(int)strlen({s})'
+            if node.method == 'trim': return f'_jj_trim({s})'
+            if node.method == 'contains' and len(node.args) >= 2: return f'(strstr({s}, {self.expr(node.args[1])}) != NULL)'
+            if node.method == 'replace' and len(node.args) >= 3: return f'_jj_replace({s}, {self.expr(node.args[1])}, {self.expr(node.args[2])})'
+            if node.method == 'split': return f'/* split not supported in C */'
+            if node.method == 'substring' and len(node.args) >= 3: return f'_jj_substr({s}, {self.expr(node.args[1])}, {self.expr(node.args[2])})'
         return ""
 
     def _expr_array(self, node: ArrayLiteral) -> str:

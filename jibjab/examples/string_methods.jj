@@ -1,0 +1,36 @@
+@@ String Methods Example
+
+~>snag{msg}::val("  Hello World  ")
+
+@@ upper
+~>snag{upper}::val(~>warp{s7r}::upper(msg))
+~>frob{7a3}::emit(upper)
+
+@@ lower
+~>snag{lower}::val(~>warp{s7r}::lower(msg))
+~>frob{7a3}::emit(lower)
+
+@@ length
+~>snag{len}::val(~>warp{s7r}::length(msg))
+~>frob{7a3}::emit(len)
+
+@@ trim
+~>snag{trimmed}::val(~>warp{s7r}::trim(msg))
+~>frob{7a3}::emit(trimmed)
+
+@@ replace
+~>snag{replaced}::val(~>warp{s7r}::replace(msg, "World", "JJ"))
+~>frob{7a3}::emit(replaced)
+
+@@ contains
+~>snag{has}::val(~>warp{s7r}::contains(msg, "Hello"))
+~>frob{7a3}::emit(has)
+
+@@ substring
+~>snag{sub}::val(~>warp{s7r}::substring(msg, #2, #7))
+~>frob{7a3}::emit(sub)
+
+@@ split
+~>snag{name}::val("one-two-three")
+~>snag{parts}::val(~>warp{s7r}::split(name, "-"))
+~>frob{7a3}::emit(parts)

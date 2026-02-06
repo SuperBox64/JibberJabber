@@ -26,6 +26,7 @@ class TokenType(Enum):
     INVOKE = auto()
     ENUM = auto()
     TRY = auto()
+    WARP = auto()
     OOPS = auto()
     BLOCK_END = auto()
 
@@ -267,6 +268,9 @@ class Lexer:
             return
         if self.match(JJ['keywords']['invoke']):
             self.add_token(TokenType.INVOKE)
+            return
+        if self.match(JJ['keywords'].get('string', '~>warp{s7r}')):
+            self.add_token(TokenType.WARP)
             return
         if self.match(JJ['keywords']['enum']):
             self.add_token(TokenType.ENUM)

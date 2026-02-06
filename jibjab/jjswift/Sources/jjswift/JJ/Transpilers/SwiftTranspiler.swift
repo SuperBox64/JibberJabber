@@ -371,6 +371,22 @@ public class SwiftTranspiler: Transpiling {
                 return tmpl.replacingOccurrences(of: "{prompt}", with: expr(inputExpr.prompt))
             }
             return "\"\""
+        } else if let mc = node as? MethodCallExpr, mc.args.count >= 1 {
+            let s = expr(mc.args[0])
+            switch mc.method {
+            case "upper": return "\(s).uppercased()"
+            case "lower": return "\(s).lowercased()"
+            case "length": return "\(s).count"
+            case "trim": return "\(s).trimmingCharacters(in: .whitespaces)"
+            case "contains" where mc.args.count >= 2: return "\(s).contains(\(expr(mc.args[1])))"
+            case "replace" where mc.args.count >= 3: return "\(s).replacingOccurrences(of: \(expr(mc.args[1])), with: \(expr(mc.args[2])))"
+            case "split" where mc.args.count >= 2: return "\(s).components(separatedBy: \(expr(mc.args[1])))"
+            case "substring" where mc.args.count >= 3:
+                let a = expr(mc.args[1])
+                let b = expr(mc.args[2])
+                return "String(\(s).dropFirst(\(a)).prefix(\(b) - \(a)))"
+            default: return "\(s)"
+            }
         }
         return ""
     }

@@ -121,6 +121,10 @@ public class Lexer {
             addToken(.random)
             return
         }
+        if match(JJ.keywords.string) != nil {
+            addToken(.warp)
+            return
+        }
         if match(JJ.keywords.yeet) != nil {
             addToken(.yeet)
             return

@@ -20,6 +20,7 @@ public struct JJCoreConfig: Codable {
         public let const: String
         public let input: String
         public let random: String
+        public let string: String
         public let yeet: String
         public let kaboom: String
         public let snag: String
@@ -783,7 +784,7 @@ public struct JJPatterns {
 
     public static var keyword: String {
         let kw = JJ.keywords
-        return [kw.print, kw.log, kw.const, kw.input, kw.snag, kw.invoke, kw.yeet, kw.kaboom, kw.enum].map { keyword in
+        return [kw.print, kw.log, kw.const, kw.input, kw.string, kw.snag, kw.invoke, kw.yeet, kw.kaboom, kw.enum].map { keyword in
             if let braceIdx = keyword.firstIndex(of: "{") {
                 return esc(String(keyword[..<braceIdx])) + "\\{[a-zA-Z0-9]*\\}"
             }

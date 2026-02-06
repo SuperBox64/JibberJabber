@@ -145,6 +145,11 @@ public struct RandomExpr: ASTNode {
     public let max: ASTNode
 }
 
+public struct MethodCallExpr: ASTNode {
+    public let method: String
+    public let args: [ASTNode]
+}
+
 public struct CommentNode: ASTNode {
     public let text: String
 }

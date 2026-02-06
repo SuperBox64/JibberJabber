@@ -1152,6 +1152,8 @@ public class NativeCompiler {
                 }
                 addBranch(to: "_\(call.name)", type: .bl)
             }
+        } else if node is MethodCallExpr {
+            // String methods not supported in native compiler
         }
     }
 

@@ -9,7 +9,8 @@ Enums: NS_ENUM (typedef)
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, EnumDef, PrintStmt, LogStmt, FuncDef, StringInterpolation
+    IndexAccess, EnumDef, PrintStmt, LogStmt, FuncDef, StringInterpolation,
+    MethodCallExpr
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -435,6 +436,16 @@ class ObjCTranspiler(CFamilyTranspiler):
             resolved = self._resolve_access(node)
             if resolved:
                 return resolved[0]
+        if isinstance(node, MethodCallExpr):
+            s = self.expr(node.args[0]) if node.args else '@""'
+            if node.method == 'upper': return f'[{s} uppercaseString]'
+            if node.method == 'lower': return f'[{s} lowercaseString]'
+            if node.method == 'length': return f'(int)[{s} length]'
+            if node.method == 'trim': return f'[{s} stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]]'
+            if node.method == 'contains' and len(node.args) >= 2: return f'[{s} containsString:{self.expr(node.args[1])}]'
+            if node.method == 'replace' and len(node.args) >= 3: return f'[{s} stringByReplacingOccurrencesOfString:{self.expr(node.args[1])} withString:{self.expr(node.args[2])}]'
+            if node.method == 'split' and len(node.args) >= 2: return f'[{s} componentsSeparatedByString:{self.expr(node.args[1])}]'
+            if node.method == 'substring' and len(node.args) >= 3: return f'[{s} substringWithRange:NSMakeRange({self.expr(node.args[1])}, {self.expr(node.args[2])} - {self.expr(node.args[1])})]'
         return super().expr(node)
 
     def _box_str(self, e: str) -> str:

@@ -217,6 +217,19 @@ public class JavaScriptTranspiler: Transpiling {
                 return tmpl.replacingOccurrences(of: "{prompt}", with: expr(inputExpr.prompt))
             }
             return "\"\""
+        } else if let mc = node as? MethodCallExpr, mc.args.count >= 1 {
+            let s = expr(mc.args[0])
+            switch mc.method {
+            case "upper": return "\(s).toUpperCase()"
+            case "lower": return "\(s).toLowerCase()"
+            case "length": return "\(s).length"
+            case "trim": return "\(s).trim()"
+            case "contains" where mc.args.count >= 2: return "\(s).includes(\(expr(mc.args[1])))"
+            case "replace" where mc.args.count >= 3: return "\(s).replaceAll(\(expr(mc.args[1])), \(expr(mc.args[2])))"
+            case "split" where mc.args.count >= 2: return "\(s).split(\(expr(mc.args[1])))"
+            case "substring" where mc.args.count >= 3: return "\(s).substring(\(expr(mc.args[1])), \(expr(mc.args[2])))"
+            default: return "\(s)"
+            }
         }
         return ""
     }

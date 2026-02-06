@@ -8,7 +8,8 @@ Dict/Tuple string fields: NSString * with @"..." values
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, EnumDef, PrintStmt, LogStmt, FuncDef, StringInterpolation
+    IndexAccess, EnumDef, PrintStmt, LogStmt, FuncDef, StringInterpolation,
+    MethodCallExpr
 )
 from .objc import ObjCTranspiler
 from .cfamily import infer_type

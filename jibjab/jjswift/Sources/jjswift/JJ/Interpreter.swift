@@ -271,6 +271,50 @@ public class Interpreter {
             let minVal = toInt(try evaluate(randomExpr.min))
             let maxVal = toInt(try evaluate(randomExpr.max))
             return Int.random(in: minVal...maxVal)
+        } else if let methodCall = node as? MethodCallExpr {
+            let args = try methodCall.args.map { try evaluate($0) }
+            switch methodCall.method {
+            case "upper":
+                guard args.count >= 1 else { throw RuntimeError.error("upper() requires 1 argument") }
+                return stringify(args[0]).uppercased()
+            case "lower":
+                guard args.count >= 1 else { throw RuntimeError.error("lower() requires 1 argument") }
+                return stringify(args[0]).lowercased()
+            case "length":
+                guard args.count >= 1 else { throw RuntimeError.error("length() requires 1 argument") }
+                return stringify(args[0]).count
+            case "replace":
+                guard args.count >= 3 else { throw RuntimeError.error("replace() requires 3 arguments") }
+                let str = stringify(args[0])
+                let old = stringify(args[1])
+                let new = stringify(args[2])
+                return str.replacingOccurrences(of: old, with: new)
+            case "trim":
+                guard args.count >= 1 else { throw RuntimeError.error("trim() requires 1 argument") }
+                return stringify(args[0]).trimmingCharacters(in: .whitespaces)
+            case "contains":
+                guard args.count >= 2 else { throw RuntimeError.error("contains() requires 2 arguments") }
+                let str = stringify(args[0])
+                let sub = stringify(args[1])
+                return str.contains(sub)
+            case "split":
+                guard args.count >= 2 else { throw RuntimeError.error("split() requires 2 arguments") }
+                let str = stringify(args[0])
+                let delim = stringify(args[1])
+                return str.components(separatedBy: delim) as [Any]
+            case "substring":
+                guard args.count >= 3 else { throw RuntimeError.error("substring() requires 3 arguments") }
+                let str = stringify(args[0])
+                let start = toInt(args[1])
+                let end = toInt(args[2])
+                let s = max(0, min(start, str.count))
+                let e = max(s, min(end, str.count))
+                let startIdx = str.index(str.startIndex, offsetBy: s)
+                let endIdx = str.index(str.startIndex, offsetBy: e)
+                return String(str[startIdx..<endIdx])
+            default:
+                throw RuntimeError.error("Unknown string method: \(methodCall.method)")
+            }
         } else if let funcCall = node as? FuncCall {
             guard let func_ = functions[funcCall.name] else {
                 throw RuntimeError.error("Undefined function: \(funcCall.name)")

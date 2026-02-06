@@ -10,7 +10,7 @@ Tuples: stored as numbered variables (_0, _1, _2) with cout for printing
 
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, PrintStmt, LogStmt, EnumDef, StringInterpolation
+    IndexAccess, PrintStmt, LogStmt, EnumDef, StringInterpolation, MethodCallExpr
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -261,4 +261,14 @@ class CppTranspiler(CFamilyTranspiler):
             resolved = self._resolve_access(node)
             if resolved:
                 return resolved[0]
+        if isinstance(node, MethodCallExpr):
+            s = self.expr(node.args[0]) if node.args else '""'
+            if node.method == 'upper': return f'_jj_upper({s})'
+            if node.method == 'lower': return f'_jj_lower({s})'
+            if node.method == 'length': return f'(int){s}.length()'
+            if node.method == 'trim': return f'_jj_trim({s})'
+            if node.method == 'contains' and len(node.args) >= 2: return f'({s}.find({self.expr(node.args[1])}) != std::string::npos)'
+            if node.method == 'replace' and len(node.args) >= 3: return f'_jj_replace({s}, {self.expr(node.args[1])}, {self.expr(node.args[2])})'
+            if node.method == 'split': return f'/* split not supported in C++ */'
+            if node.method == 'substring' and len(node.args) >= 3: return f'{s}.substr({self.expr(node.args[1])}, {self.expr(node.args[2])} - {self.expr(node.args[1])})'
         return super().expr(node)

@@ -6,6 +6,7 @@
     "input": "~>slurp{9f2}",
     "const": "~>grip{f1x}",
     "random": "~>roll{d1c}",
+    "string": "~>warp{s7r}",
     "yeet": "~>yeet",
     "kaboom": "~>kaboom",
     "snag": "~>snag",
@@ -64,7 +65,8 @@
     "slurp": "9f2",
     "spew": "b4d",
     "grip": "f1x",
-    "roll": "d1c"
+    "roll": "d1c",
+    "warp": "s7r"
   },
   "tokenSymbols": {
     "action": "::",

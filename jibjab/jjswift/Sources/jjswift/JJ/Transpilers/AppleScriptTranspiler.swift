@@ -323,6 +323,12 @@ public class AppleScriptTranspiler: Transpiling {
                 return tmpl.replacingOccurrences(of: "{prompt}", with: expr(inputExpr.prompt))
             }
             return "\"\""
+        } else if let mc = node as? MethodCallExpr, mc.args.count >= 1 {
+            let s = expr(mc.args[0])
+            switch mc.method {
+            case "length": return "(count of \(s))"
+            default: return "-- string method \(mc.method) not supported in AppleScript"
+            }
         }
         return ""
     }

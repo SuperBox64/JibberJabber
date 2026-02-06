@@ -9,7 +9,7 @@ Tuples: stored as numbered variables (_0, _1, _2)
 from ..ast import (
     Literal, VarRef, VarDecl, ArrayLiteral, DictLiteral, TupleLiteral,
     IndexAccess, PrintStmt, LogStmt, FuncDef, EnumDef, Program, StringInterpolation,
-    TryStmt
+    TryStmt, MethodCallExpr
 )
 from .cfamily import CFamilyTranspiler, infer_type
 
@@ -341,4 +341,14 @@ class GoTranspiler(CFamilyTranspiler):
                 if fm:
                     self.needs_math = True
                     return fm.replace('{left}', self.expr(node.left)).replace('{right}', self.expr(node.right))
+        if isinstance(node, MethodCallExpr):
+            s = self.expr(node.args[0]) if node.args else '""'
+            if node.method == 'upper': return f'strings.ToUpper({s})'
+            if node.method == 'lower': return f'strings.ToLower({s})'
+            if node.method == 'length': return f'len({s})'
+            if node.method == 'trim': return f'strings.TrimSpace({s})'
+            if node.method == 'contains' and len(node.args) >= 2: return f'strings.Contains({s}, {self.expr(node.args[1])})'
+            if node.method == 'replace' and len(node.args) >= 3: return f'strings.ReplaceAll({s}, {self.expr(node.args[1])}, {self.expr(node.args[2])})'
+            if node.method == 'split' and len(node.args) >= 2: return f'strings.Split({s}, {self.expr(node.args[1])})'
+            if node.method == 'substring' and len(node.args) >= 3: return f'{s}[{self.expr(node.args[1])}:{self.expr(node.args[2])}]'
         return super().expr(node)

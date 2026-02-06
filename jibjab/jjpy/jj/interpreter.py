@@ -10,7 +10,7 @@ from .ast import (
     ASTNode, Program, PrintStmt, InputExpr, VarDecl, VarRef, Literal,
     BinaryOp, UnaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall,
     ReturnStmt, ThrowStmt, EnumDef, ArrayLiteral, DictLiteral, TupleLiteral,
-    IndexAccess, StringInterpolation
+    IndexAccess, StringInterpolation, MethodCallExpr
 )
 
 OP = JJ['operators']
@@ -181,6 +181,29 @@ class Interpreter:
         elif isinstance(node, InputExpr):
             prompt = self.evaluate(node.prompt)
             return input(prompt)
+        elif isinstance(node, MethodCallExpr):
+            args = [self.evaluate(a) for a in node.args]
+            s = self.stringify(args[0]) if args else ''
+            if node.method == 'upper':
+                return s.upper()
+            elif node.method == 'lower':
+                return s.lower()
+            elif node.method == 'length':
+                return len(s)
+            elif node.method == 'replace' and len(args) >= 3:
+                return s.replace(self.stringify(args[1]), self.stringify(args[2]))
+            elif node.method == 'trim':
+                return s.strip()
+            elif node.method == 'contains' and len(args) >= 2:
+                return self.stringify(args[1]) in s
+            elif node.method == 'split' and len(args) >= 2:
+                return s.split(self.stringify(args[1]))
+            elif node.method == 'substring' and len(args) >= 3:
+                start = int(args[1])
+                end = int(args[2])
+                return s[start:end]
+            else:
+                raise Exception(f"Unknown string method: {node.method}")
         elif isinstance(node, FuncCall):
             func = self.functions.get(node.name)
             if not func:

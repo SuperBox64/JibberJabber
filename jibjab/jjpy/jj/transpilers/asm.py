@@ -8,7 +8,7 @@ from ..ast import (
     ASTNode, Program, PrintStmt, LogStmt, VarDecl, VarRef, Literal,
     BinaryOp, LoopStmt, IfStmt, TryStmt, FuncDef, FuncCall, ReturnStmt, ThrowStmt,
     EnumDef, ArrayLiteral, IndexAccess, TupleLiteral, DictLiteral,
-    UnaryOp, StringInterpolation
+    UnaryOp, StringInterpolation, MethodCallExpr
 )
 
 T = load_target_config('asm')

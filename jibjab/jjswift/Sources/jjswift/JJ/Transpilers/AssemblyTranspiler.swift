@@ -1382,6 +1382,8 @@ public class AssemblyTranspiler: Transpiling {
             genInputExpr(inputExpr)
         } else if let randomExpr = node as? RandomExpr {
             genRandomExpr(randomExpr)
+        } else if node is MethodCallExpr {
+            asmLines.append("    // string method not supported in assembly")
         }
     }
 
