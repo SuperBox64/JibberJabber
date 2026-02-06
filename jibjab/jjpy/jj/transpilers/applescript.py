@@ -52,10 +52,18 @@ class AppleScriptTranspiler:
         self.dict_vars = set()
         self.bool_vars = set()
         self.needs_string_helpers = False
+        self.uses_input = False
 
     def transpile(self, program: Program) -> str:
+        self.uses_input = self._needs_input(program.statements)
         self.needs_string_helpers = self._contains_string_method(program.statements)
-        lines = [T['header'].rstrip()]
+        header = T['header'].rstrip()
+        if not self.uses_input:
+            header = header.replace('\nset _jj_out to ""', '')
+        lines = [header]
+        if self.uses_input and 'inputHelper' in T:
+            lines.append('')
+            lines.append(T['inputHelper'])
         if self.needs_string_helpers:
             lines.append('')
             lines.append(self._string_helpers())
@@ -66,20 +74,25 @@ class AppleScriptTranspiler:
     def ind(self) -> str:
         return T['indent'] * self.indent
 
+    @property
+    def _print_tmpl(self):
+        return T['print'] if self.uses_input else T['log']
+
     def stmt(self, node: ASTNode) -> str:
         if isinstance(node, PrintStmt):
             if isinstance(node.expr, VarRef) and node.expr.name in self.dict_vars:
                 name = safe_name(node.expr.name)
                 tab = T['indent']
+                tmpl = self._print_tmpl
                 lines = [
                     self.ind() + f'if {name} is {{}} then',
-                    self.ind() + tab + 'log "{}"',
+                    self.ind() + tab + tmpl.replace('{expr}', '"{}"'),
                     self.ind() + 'else',
-                    self.ind() + tab + f'log {name}',
+                    self.ind() + tab + tmpl.replace('{expr}', name),
                     self.ind() + 'end if',
                 ]
                 return '\n'.join(lines)
-            return self.ind() + T['print'].replace('{expr}', self.expr(node.expr))
+            return self.ind() + self._print_tmpl.replace('{expr}', self.expr(node.expr))
         elif isinstance(node, LogStmt):
             return self.ind() + T['log'].replace('{expr}', self.expr(node.expr))
         elif isinstance(node, VarDecl):
@@ -229,6 +242,20 @@ class AppleScriptTranspiler:
                 return f'(text ({self.expr(node.args[1])} + 1) thru {self.expr(node.args[2])} of {s})'
             return '""'
         return ""
+
+    @staticmethod
+    def _needs_input(stmts):
+        for s in stmts:
+            if isinstance(s, VarDecl) and isinstance(s.value, InputExpr): return True
+            if isinstance(s, IfStmt):
+                if AppleScriptTranspiler._needs_input(s.then_body): return True
+                if s.else_body and AppleScriptTranspiler._needs_input(s.else_body): return True
+            if isinstance(s, LoopStmt) and AppleScriptTranspiler._needs_input(s.body): return True
+            if isinstance(s, FuncDef) and AppleScriptTranspiler._needs_input(s.body): return True
+            if isinstance(s, TryStmt):
+                if AppleScriptTranspiler._needs_input(s.try_body): return True
+                if s.oops_body and AppleScriptTranspiler._needs_input(s.oops_body): return True
+        return False
 
     @staticmethod
     def _contains_string_method(stmts):

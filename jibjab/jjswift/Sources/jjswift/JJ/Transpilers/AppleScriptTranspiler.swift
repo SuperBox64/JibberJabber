@@ -12,6 +12,7 @@ public class AppleScriptTranspiler: Transpiling {
     private var inputStringVars = Set<String>()
     private var inNumericConversionContext = false
     private var needsStringHelpers = false
+    private var usesInput = false
 
     private lazy var reserved: Set<String> = Set(T.reservedWords.map { $0.lowercased() })
 
@@ -20,9 +21,15 @@ public class AppleScriptTranspiler: Transpiling {
     }
 
     public func transpile(_ program: Program) -> String {
+        usesInput = needsInput(program.statements)
         needsStringHelpers = containsStringMethod(program.statements)
-        var lines = [T.header.trimmingCharacters(in: .newlines)]
-        if needsInput(program.statements), let inputHelper = T.inputHelper {
+        var header = T.header.trimmingCharacters(in: .newlines)
+        if !usesInput {
+            // Remove _jj_out init — only needed for input dialog tracking
+            header = header.replacingOccurrences(of: "\nset _jj_out to \"\"", with: "")
+        }
+        var lines = [header]
+        if usesInput, let inputHelper = T.inputHelper {
             lines.append("")
             lines.append(inputHelper)
         }
@@ -65,6 +72,10 @@ public class AppleScriptTranspiler: Transpiling {
         return String(repeating: T.indent, count: indentLevel)
     }
 
+    private var printTemplate: String {
+        usesInput ? T.print : T.log
+    }
+
     private func stmtToString(_ node: ASTNode) -> String {
         if let printStmt = node as? PrintStmt {
             if let varRef = printStmt.expr as? VarRef, dictVars.contains(varRef.name) {
@@ -72,13 +83,13 @@ public class AppleScriptTranspiler: Transpiling {
                 let blockEndIf = T.blockEndIf ?? T.blockEnd
                 var lines: [String] = []
                 lines.append(ind() + T.if.replacingOccurrences(of: "{condition}", with: "\(name) is {}"))
-                lines.append(ind() + T.indent + T.print.replacingOccurrences(of: "{expr}", with: "\"{}\""))
+                lines.append(ind() + T.indent + printTemplate.replacingOccurrences(of: "{expr}", with: "\"{}\""))
                 lines.append(ind() + T.else)
-                lines.append(ind() + T.indent + T.print.replacingOccurrences(of: "{expr}", with: name))
+                lines.append(ind() + T.indent + printTemplate.replacingOccurrences(of: "{expr}", with: name))
                 lines.append(ind() + blockEndIf)
                 return lines.joined(separator: "\n")
             }
-            return ind() + T.print.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
+            return ind() + printTemplate.replacingOccurrences(of: "{expr}", with: expr(printStmt.expr))
         } else if let logStmt = node as? LogStmt {
             return ind() + T.log.replacingOccurrences(of: "{expr}", with: expr(logStmt.expr))
         } else if let varDecl = node as? VarDecl {
