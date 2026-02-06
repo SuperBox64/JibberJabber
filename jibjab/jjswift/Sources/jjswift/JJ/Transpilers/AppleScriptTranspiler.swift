@@ -11,6 +11,7 @@ public class AppleScriptTranspiler: Transpiling {
     private var intVars = Set<String>()
     private var inputStringVars = Set<String>()
     private var inNumericConversionContext = false
+    private var needsStringHelpers = false
 
     private lazy var reserved: Set<String> = Set(T.reservedWords.map { $0.lowercased() })
 
@@ -19,10 +20,15 @@ public class AppleScriptTranspiler: Transpiling {
     }
 
     public func transpile(_ program: Program) -> String {
+        needsStringHelpers = containsStringMethod(program.statements)
         var lines = [T.header.trimmingCharacters(in: .newlines)]
         if needsInput(program.statements), let inputHelper = T.inputHelper {
             lines.append("")
             lines.append(inputHelper)
+        }
+        if needsStringHelpers {
+            lines.append("")
+            lines.append(stringHelpers())
         }
         lines.append("")  // Blank line after header/imports
         var hadCode = false
@@ -326,10 +332,85 @@ public class AppleScriptTranspiler: Transpiling {
         } else if let mc = node as? MethodCallExpr, mc.args.count >= 1 {
             let s = expr(mc.args[0])
             switch mc.method {
+            case "upper": return "_jj_upper(\(s))"
+            case "lower": return "_jj_lower(\(s))"
             case "length": return "(count of \(s))"
-            default: return "-- string method \(mc.method) not supported in AppleScript"
+            case "trim": return "_jj_trim(\(s))"
+            case "replace" where mc.args.count >= 3:
+                return "_jj_replace(\(s), \(expr(mc.args[1])), \(expr(mc.args[2])))"
+            case "contains" where mc.args.count >= 2:
+                return "(\(s) contains \(expr(mc.args[1])))"
+            case "split" where mc.args.count >= 2:
+                return "_jj_split(\(s), \(expr(mc.args[1])))"
+            case "substring" where mc.args.count >= 3:
+                return "(text (\(expr(mc.args[1])) + 1) thru \(expr(mc.args[2])) of \(s))"
+            default: return "\"\""
             }
         }
         return ""
+    }
+
+    private func containsStringMethod(_ stmts: [ASTNode]) -> Bool {
+        for s in stmts {
+            if containsStringMethodInNode(s) { return true }
+        }
+        return false
+    }
+
+    private func containsStringMethodInNode(_ node: ASTNode) -> Bool {
+        if node is MethodCallExpr { return true }
+        if let v = node as? VarDecl { return containsStringMethodInNode(v.value) }
+        if let c = node as? ConstDecl { return containsStringMethodInNode(c.value) }
+        if let p = node as? PrintStmt { return containsStringMethodInNode(p.expr) }
+        if let l = node as? LogStmt { return containsStringMethodInNode(l.expr) }
+        if let i = node as? IfStmt {
+            if containsStringMethodInNode(i.condition) { return true }
+            if containsStringMethod(i.thenBody) { return true }
+            if let e = i.elseBody, containsStringMethod(e) { return true }
+        }
+        if let loop = node as? LoopStmt { return containsStringMethod(loop.body) }
+        if let fn = node as? FuncDef { return containsStringMethod(fn.body) }
+        if let t = node as? TryStmt {
+            if containsStringMethod(t.tryBody) { return true }
+            if let o = t.oopsBody, containsStringMethod(o) { return true }
+        }
+        if let b = node as? BinaryOp {
+            return containsStringMethodInNode(b.left) || containsStringMethodInNode(b.right)
+        }
+        if let u = node as? UnaryOp { return containsStringMethodInNode(u.operand) }
+        if let r = node as? ReturnStmt { return containsStringMethodInNode(r.value) }
+        return false
+    }
+
+    private func stringHelpers() -> String {
+        return """
+        on _jj_upper(s)
+        \treturn do shell script "echo " & quoted form of s & " | tr '[:lower:]' '[:upper:]'"
+        end _jj_upper
+
+        on _jj_lower(s)
+        \treturn do shell script "echo " & quoted form of s & " | tr '[:upper:]' '[:lower:]'"
+        end _jj_lower
+
+        on _jj_trim(s)
+        \treturn do shell script "echo " & quoted form of s & " | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'"
+        end _jj_trim
+
+        on _jj_replace(s, old, new)
+        \tset AppleScript's text item delimiters to old
+        \tset parts to text items of s
+        \tset AppleScript's text item delimiters to new
+        \tset r to parts as text
+        \tset AppleScript's text item delimiters to ""
+        \treturn r
+        end _jj_replace
+
+        on _jj_split(s, d)
+        \tset AppleScript's text item delimiters to d
+        \tset parts to text items of s
+        \tset AppleScript's text item delimiters to ""
+        \treturn parts
+        end _jj_split
+        """
     }
 }

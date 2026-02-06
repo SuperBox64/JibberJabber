@@ -51,9 +51,14 @@ class AppleScriptTranspiler:
         self.indent = 0
         self.dict_vars = set()
         self.bool_vars = set()
+        self.needs_string_helpers = False
 
     def transpile(self, program: Program) -> str:
+        self.needs_string_helpers = self._contains_string_method(program.statements)
         lines = [T['header'].rstrip()]
+        if self.needs_string_helpers:
+            lines.append('')
+            lines.append(self._string_helpers())
         for stmt in program.statements:
             lines.append(self.stmt(stmt))
         return '\n'.join(lines)
@@ -210,6 +215,75 @@ class AppleScriptTranspiler:
             return f"{safe_name(node.name)}({args})"
         elif isinstance(node, MethodCallExpr):
             s = self.expr(node.args[0]) if node.args else '""'
+            if node.method == 'upper': return f'_jj_upper({s})'
+            if node.method == 'lower': return f'_jj_lower({s})'
             if node.method == 'length': return f'(count of {s})'
-            return f'-- string method {node.method} not supported in AppleScript'
+            if node.method == 'trim': return f'_jj_trim({s})'
+            if node.method == 'replace' and len(node.args) >= 3:
+                return f'_jj_replace({s}, {self.expr(node.args[1])}, {self.expr(node.args[2])})'
+            if node.method == 'contains' and len(node.args) >= 2:
+                return f'({s} contains {self.expr(node.args[1])})'
+            if node.method == 'split' and len(node.args) >= 2:
+                return f'_jj_split({s}, {self.expr(node.args[1])})'
+            if node.method == 'substring' and len(node.args) >= 3:
+                return f'(text ({self.expr(node.args[1])} + 1) thru {self.expr(node.args[2])} of {s})'
+            return '""'
         return ""
+
+    @staticmethod
+    def _contains_string_method(stmts):
+        for s in stmts:
+            if AppleScriptTranspiler._has_method(s):
+                return True
+        return False
+
+    @staticmethod
+    def _has_method(node):
+        if isinstance(node, MethodCallExpr): return True
+        if isinstance(node, VarDecl): return AppleScriptTranspiler._has_method(node.value)
+        if isinstance(node, PrintStmt): return AppleScriptTranspiler._has_method(node.expr)
+        if isinstance(node, LogStmt): return AppleScriptTranspiler._has_method(node.expr)
+        if isinstance(node, BinaryOp):
+            return AppleScriptTranspiler._has_method(node.left) or AppleScriptTranspiler._has_method(node.right)
+        if isinstance(node, UnaryOp): return AppleScriptTranspiler._has_method(node.operand)
+        if isinstance(node, IfStmt):
+            if AppleScriptTranspiler._has_method(node.condition): return True
+            if AppleScriptTranspiler._contains_string_method(node.then_body): return True
+            if node.else_body and AppleScriptTranspiler._contains_string_method(node.else_body): return True
+        if isinstance(node, LoopStmt): return AppleScriptTranspiler._contains_string_method(node.body)
+        if isinstance(node, FuncDef): return AppleScriptTranspiler._contains_string_method(node.body)
+        if isinstance(node, TryStmt):
+            if AppleScriptTranspiler._contains_string_method(node.try_body): return True
+            if node.oops_body and AppleScriptTranspiler._contains_string_method(node.oops_body): return True
+        if isinstance(node, ReturnStmt): return AppleScriptTranspiler._has_method(node.value)
+        return False
+
+    @staticmethod
+    def _string_helpers():
+        return """on _jj_upper(s)
+\treturn do shell script "echo " & quoted form of s & " | tr '[:lower:]' '[:upper:]'"
+end _jj_upper
+
+on _jj_lower(s)
+\treturn do shell script "echo " & quoted form of s & " | tr '[:upper:]' '[:lower:]'"
+end _jj_lower
+
+on _jj_trim(s)
+\treturn do shell script "echo " & quoted form of s & " | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'"
+end _jj_trim
+
+on _jj_replace(s, old, new)
+\tset AppleScript's text item delimiters to old
+\tset parts to text items of s
+\tset AppleScript's text item delimiters to new
+\tset r to parts as text
+\tset AppleScript's text item delimiters to ""
+\treturn r
+end _jj_replace
+
+on _jj_split(s, d)
+\tset AppleScript's text item delimiters to d
+\tset parts to text items of s
+\tset AppleScript's text item delimiters to ""
+\treturn parts
+end _jj_split"""
