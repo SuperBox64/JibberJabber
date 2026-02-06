@@ -145,7 +145,7 @@ struct ContentView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             guard !work.isCancelled else { return }
             let thread = Thread { work.perform() }
-            thread.stackSize = 2 * 1024 * 1024  // 2 MB (default background is 512 KB)
+            thread.stackSize = 8 * 1024 * 1024  // 8 MB (matches main thread)
             thread.qualityOfService = .userInitiated
             thread.start()
         }
@@ -270,7 +270,7 @@ struct ContentView: View {
         }
         runWork = work
         let thread = Thread { work.perform() }
-        thread.stackSize = 2 * 1024 * 1024  // 2 MB
+        thread.stackSize = 8 * 1024 * 1024  // 8 MB (matches main thread)
         thread.qualityOfService = .userInitiated
         thread.start()
     }
