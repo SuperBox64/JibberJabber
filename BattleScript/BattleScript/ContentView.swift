@@ -35,6 +35,7 @@ struct ContentView: View {
         ("TryOops", "trycatch"),
         ("Logging", "logging"),
         ("Constants", "constants"),
+        ("Strings", "string_methods"),
         ("Hi Lo Game", "guessinggame"),
         ("Input", "input"),
     ]
