@@ -9,6 +9,21 @@ This is the CLI entry point. The implementation is in the jj/ package.
 import sys
 import os
 import subprocess
+from pathlib import Path
+
+
+def _augmented_env():
+    env = os.environ.copy()
+    home = env.get('HOME', str(Path.home()))
+    extra = ':'.join([
+        '/opt/homebrew/bin',
+        '/usr/local/bin',
+        '/usr/local/go/bin',
+        f'{home}/go/bin',
+        '/opt/local/bin',
+    ])
+    env['PATH'] = extra + ':' + env.get('PATH', '/usr/bin:/bin')
+    return env
 from jj import (
     Lexer, Parser, Interpreter, NativeCompiler,
     PythonTranspiler, JavaScriptTranspiler, CTranspiler, AssemblyTranspiler, SwiftTranspiler,
@@ -67,7 +82,7 @@ def compile_src(target, src_file, out_file):
     cfg = get_target_cfg(target)
     if cfg and 'compile' in cfg:
         cmd = [a.replace('{src}', src_file).replace('{out}', out_file) for a in cfg['compile']]
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, env=_augmented_env())
         return True
     return False
 
@@ -77,7 +92,7 @@ def run_src(target, src_file):
     cfg = get_target_cfg(target)
     if cfg and 'run' in cfg:
         cmd = [a.replace('{src}', src_file) for a in cfg['run']]
-        subprocess.run(cmd)
+        subprocess.run(cmd, env=_augmented_env())
         return True
     return False
 

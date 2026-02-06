@@ -6,6 +6,20 @@
 import Foundation
 import JJLib
 
+private func augmentedEnv() -> [String: String] {
+    var env = ProcessInfo.processInfo.environment
+    let home = env["HOME"] ?? NSHomeDirectory()
+    let extra = [
+        "/opt/homebrew/bin",
+        "/usr/local/bin",
+        "/usr/local/go/bin",
+        "\(home)/go/bin",
+        "/opt/local/bin",
+    ].joined(separator: ":")
+    env["PATH"] = extra + ":" + (env["PATH"] ?? "/usr/bin:/bin")
+    return env
+}
+
 private let transpilerRegistry: [String: () -> Any] = [
     "py": { PythonTranspiler() },
     "js": { JavaScriptTranspiler() },
@@ -70,6 +84,7 @@ func compileSrc(_ target: String, _ srcFile: String, _ outFile: String) -> Bool 
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
     process.arguments = cmd
+    process.environment = augmentedEnv()
     do {
         try process.run()
         process.waitUntilExit()
@@ -84,6 +99,7 @@ func runSrc(_ target: String, _ srcFile: String) -> Bool {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
     process.arguments = cmd
+    process.environment = augmentedEnv()
     try? process.run()
     process.waitUntilExit()
     return true
