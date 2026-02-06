@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var waitingForInputTabs: Set<String> = []  // Per-tab input state
     @State private var inputPrompts: [String: String] = [:]  // Per-tab prompts
     @State private var inputContinuations: [String: CheckedContinuation<String?, Never>] = [:]  // Per-tab continuations
+    @State private var transpileCache: [String: [String: String]] = [:]  // example -> {target -> output}
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -109,6 +110,7 @@ struct ContentView: View {
 
     private func loadExample(_ name: String) {
         guard !name.isEmpty else { return }
+        userHasEdited = false
         let basePath = Bundle.main.resourcePath ?? ""
         let path = basePath + "/examples/\(name).jj"
         if let content = try? String(contentsOfFile: path, encoding: .utf8) {
@@ -122,7 +124,14 @@ struct ContentView: View {
             transpiledOutputs = [:]
             return
         }
+        // Use cache for unedited examples
+        if !userHasEdited, let cached = transpileCache[selectedExample] {
+            transpiledOutputs = cached
+            return
+        }
         let code = sourceCode
+        let example = selectedExample
+        let edited = userHasEdited
         let work = DispatchWorkItem {
             do {
                 let program = try JJEngine.parse(code)
@@ -132,6 +141,9 @@ struct ContentView: View {
                 }
                 DispatchQueue.main.async {
                     transpiledOutputs = outputs
+                    if !edited {
+                        transpileCache[example] = outputs
+                    }
                 }
             } catch {
                 let errorMsg = "// Parse error: \(error)"
