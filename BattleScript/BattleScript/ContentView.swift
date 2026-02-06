@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var inputPrompts: [String: String] = [:]  // Per-tab prompts
     @State private var inputContinuations: [String: CheckedContinuation<String?, Never>] = [:]  // Per-tab continuations
     @State private var transpileCache: [String: [String: String]] = [:]  // example -> {target -> output}
+    @State private var dirtySources: [String: String] = [:]  // example -> edited source code
 
     private let targets = ["jj", "py", "js", "c", "cpp", "swift", "objc", "objcpp", "go", "asm", "applescript"]
     private let examples: [(name: String, file: String)] = [
@@ -110,11 +111,21 @@ struct ContentView: View {
 
     private func loadExample(_ name: String) {
         guard !name.isEmpty else { return }
-        userHasEdited = false
-        let basePath = Bundle.main.resourcePath ?? ""
-        let path = basePath + "/examples/\(name).jj"
-        if let content = try? String(contentsOfFile: path, encoding: .utf8) {
-            sourceCode = content
+        // Save dirty state before switching away
+        if editMode && userHasEdited {
+            dirtySources[selectedExample] = sourceCode
+        }
+        // Restore dirty version if edit mode is on
+        if editMode, let dirty = dirtySources[name] {
+            userHasEdited = true
+            sourceCode = dirty
+        } else {
+            userHasEdited = false
+            let basePath = Bundle.main.resourcePath ?? ""
+            let path = basePath + "/examples/\(name).jj"
+            if let content = try? String(contentsOfFile: path, encoding: .utf8) {
+                sourceCode = content
+            }
         }
     }
 
