@@ -3,9 +3,9 @@
   <div><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BattleScript</b></div>
 </div>
 
-## JJ aka JibberJabber AI programming language 1.0 by Todd Bruss
+## JJ aka JibberJabber AI programming language 1.0 by Heisenburg
 
-An **AI-first programming language** created by [Todd Bruss](https://github.com/SuperBox64). JibberJabber is a polyglot engine designed to integrate AI models as primary execution components rather than external tools. It supports transcoding and cross-compilation across multiple environments, bridging high-level AI logic and system performance.
+An **AI-first programming language** created by [Heisenburg](https://github.com/SuperBox64). JibberJabber is a polyglot engine designed to integrate AI models as primary execution components rather than external tools. It supports transcoding and cross-compilation across multiple environments, bridging high-level AI logic and system performance.
 
 ```jj
 ~>frob{7a3}::emit("Greetings Earthling!")
